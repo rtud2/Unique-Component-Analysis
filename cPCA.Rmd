@@ -1,8 +1,11 @@
 ---
-title: "cPCA"
-author: "Robin"
-date: "9/4/2019"
-output: html_document
+title: "PCA, cPCA, occPCA"
+author: "Robin Tu"
+date: "10/1/2019"
+output:
+  html_document:
+    code_folding: "hide"
+
 ---
 
 ```{r setup, include=FALSE}
@@ -17,125 +20,208 @@ library('Rcpp')
 
 (Author's written function in Python)["https://github.com/rtud2/contrastive/blob/master/contrastive/__init__.py"]
 
-```{python, eval = F}
-import numpy as np
-from numpy import linalg as LA
 
-def cpca_alpha(self, n_components = 2, alpha=1, return_eigenvectors=False):
-        #return None, self.cpca.cpca_alpha(dataset=self.active,alpha=alpha), None
-        sigma = self.active_cov - alpha*self.bg_cov
-        w, v = LA.eig(sigma)
-        eig_idx = np.argpartition(w, -n_components)[-n_components:]
-        eig_idx = eig_idx[np.argsort(-w[eig_idx])]
-        v_top = v[:,eig_idx]
-        reduced_foreground = self.active.dot(v_top)
-        reduced_background = self.bg.dot(v_top)
+```{R, fig.align='center'}
+data(iris)
+iris <- data.table(iris)
+scaled_iris <- scale(iris[, .SD, .SDcols = - "Species"])
 
-        reduced_foreground[:,0] = reduced_foreground[:,0]*np.sign(reduced_foreground[0,0])
-        reduced_foreground[:,1] = reduced_foreground[:,1]*np.sign(reduced_foreground[0,1])
-        
-        
-        if (return_eigenvectors):
-            #return eig_idx, reduced_foreground, reduced_background, v_top
-            print("WHat?")
-            return None
-        else:
-            #return eig_idx, reduced_foreground, reduced_background
-            return None, reduced_foreground, None
+# double checking that the results of eigen and svd are the same up to a sign change
+expect_equivalent(abs(svd(cov(scaled_iris))$v), abs(eigen(cov(scaled_iris))$vectors))
+
+iris_pca <- cbind((data.matrix(iris[, .SD, .SDcols = -"Species"]) %*% svd(cov(scaled_iris), nv = 2)$v), iris[, .SD, .SDcols ="Species"])
+setnames(iris_pca, c("PCA1", "PCA2", "Species"))
+
+ggplot(data = iris_pca)+
+  geom_point(aes(x = PCA1, y = PCA2, color = Species))
+
 ```
 
+### Helper Functions:
 
-cPCA function:
-  
-  * inputs:
-    * target: Target dataset
-    * bg: Background dataset
-    * n_components: number of Principal components to use
-    * alpha: tuning parameter for how hard to subtract the background data
-    * return_eigenvectors: (logical) whether eigenvectors should be returned # Not implemented yet
-  * output: 
-    * Data projected on the contrastive principal components
-
-Here are some helper functions to standardize, clear out zeros, etc.
+#### Turning NA's to Zeros.
 ```{r helper functions}
-## Center variables
-center = function(mat){
-  return(mat - colMeans(mat, na.rm = T))
-  }
-
-## Standardize variables
-standardized = function(mat){
-  return(center(mat)/apply(mat,2, sd))
-}
-
 ## convert NA values to zero
 NAtoZero = function(mat){
   mat[is.na(mat)] <- 0
   return(mat)
-  }
-
+}
 ```
+
+#### Plotitng diagnostics for Principal Components
+
+SVD decomposes a $n \times p$ matrix into a left matrix $U$, diagonal matrix $D$, right matrix $V$...
+
+```{R}
+#screeplot for an SVD object
+scree = function(svd_obj){
+  var_explained <- svd_obj$d^2
+  var_explained_plot <- data.table("Components" = 1:length(var_explained), "Value"=cumsum(var_explained)/(sum(var_explained)), "Analysis"="Total Prop. Explained")
+  scree_plot <- data.table("Components" = 1:length(var_explained), "Value"=var_explained, "Analysis"="Variance")
+  
+  plot_dat <- rbind(var_explained_plot, scree_plot)
+
+  ggplot(data = plot_dat)+
+    geom_point(aes(x = Components, y = Value))+
+    geom_line(aes(x = Components, y = Value), color = "dodgerblue3")+
+    facet_grid(Analysis~., scales = "free")+
+    ggtitle("Diagnostic Plots")
+  }
+```
+
 
 Some crude tests to make sure my helper functions work as they should
 ```{r test helper function}
 test_mat <- matrix(rnorm(1000*4, mean = 100, sd = 20), ncol = 4)
 
-# make sure values are close to zero
-round(colMeans(center(test_mat)))
+centered_scaled_obj <- scale(test_mat)
+scaled_obj <- scale(test_mat, center = F, scale = apply(test_mat, 2, sd, na.rm=T))
 
-# make sure near 1
-apply(standardized(test_mat), 2, sd)
+# make sure the column means are close to zero (ie less than machine epsilon)
+expect_equivalent(apply(centered_scaled_obj, 2, mean),expected = rep(0, 4))
+# make sure variances are 1 
+expect_equivalent(apply(centered_scaled_obj, 2, var), expected = rep(1, 4))
+
+# make sure the column means do not change
+expect_equal(apply(scaled_obj, 2, mean), expected = colMeans(scaled_obj))
+# make sure variances are 1 
+expect_equivalent(apply(scaled_obj, 2, var), expected = rep(1, 4))
+
+
 ```
 
-### cPCA and PCA functions I quickly wrote myself:
+### PCA, cPCA, occPCA functions:
+
+#### PCA: Principal Component Analysis
+
+```{r PCA function}
+PCA = function(target, n_components = 2, standardize = T, return_eigenvectors = F){
+  if(!is.matrix(target)){
+    target <- as.matrix(target)
+  }
+  og_target <- target
+  if(standardize){
+    target = scale(target);
+  }
+  
+  target_cov = cov(target);
+  v_top <- svd(target_cov, nv = n_components)$v
+  reduced_target <- og_target %*% v_top 
+  
+  if(return_eigenvectors){
+    return(list("reduced_target"=reduced_target, "vectors"=v_top))
+  }else{
+    return(list("reduced_target"=reduced_target))  
+  }
+}
+```
+
+#### cPCA: Contrastive PCA
+
+  * Description: 
+  
+  * Function inputs:
+    * target: Target dataset
+    * bg: Background dataset
+    * n_components: number of Principal components to use
+    * alpha: tuning parameter for how hard to subtract the background data
+    * return_all: (logical) whether top eigenvectors should be returned
+  * Function outputs: 
+    * Data projected on the contrastive principal components
+
+
 ```{r cPCA function}
-cPCA = function(target, bg, n_components = 2, alpha = 1, standardize = F, return_eigenvectors = F){
+cPCA = function(target, bg, n_components = 2, alpha = 1, standardize = T, return_all = F){
   
   if(!is.matrix(target) | !is.matrix(bg)){
     target <- as.matrix(target)
     bg <- as.matrix(bg)
   }
+  og_target <- target
   
   if(standardize){
-    transformed_target = standardized(target);
-    transform_bg = standardized(bg);
-  }else{
-    transformed_target = center(target);
-    transformed_bg = center(bg)
+    target = scale(target);
+    bg = scale(bg);
   }
   
   target_cov = cov(target);
-  bg_cov = crossprod(transformed_bg);
+  bg_cov = cov(bg);
   
   sigma = target_cov - alpha * bg_cov
-  
-  eigen_decomp <- eigen(sigma)
-  v_top <- eigen_decomp$vectors[, 1:n_components]
-  reduced_target <- target %*% v_top
+  v_top <- svd(sigma, nv = n_components)$v
+  reduced_target <- og_target %*% v_top
   reduced_bg <- bg %*% v_top
   
-  return(list("reduced_target" = reduced_target, "reduced_bg" = reduced_bg))
+  if(return_all){
+    return(list("reduced_target" = reduced_target, "reduced_bg" = reduced_bg, "vectors" = v_top))
+  }else{
+    return(list("reduced_target" = reduced_target))  
+  }
 }
 
-PCA = function(mat, n_components = 2, standardize = F, return_eigenvectors = F){
-    if(!is.matrix(mat)){
-    mat <- as.matrix(mat)
-    }
-  if(standardize){
-    transform_mat = standardized(mat);
-  }else{
-    transformed_mat = center(mat);
-  }
-  
-  v_top <- eigen(cov(transformed_mat))$vectors[, 1:n_components]
-  reduced_mat <- mat %*% v_top
-  return(reduced_mat)  
-}
 ```
 
-[Authors Data Analysis]("https://github.com/rtud2/contrastive/blob/master/experiments/Mice%20Protein%20(Figure%202).ipynb?short_path=b1a901a")
+#### occPCA: Orthogonal Complement cPCA
+
+Procedure:
+
+1. Calculate the Top Principal Components of the background data
+2. Compute the projection onto the Top Principal Components of the background data
+  + since the eigenvectors computed by `SVD` are orthonormal, the projection $P_{bg} = V_{bg}(V_{bg}'V_{bg})^{-1}V_{bg}'$ simplifies to $V_{bg}V_{bg}'$ because $(V_{bg}'V_{bg})^{-1} = I$
+3. Project the target onto the orthogonal complement of the background, $X_{target} P_{bg}$
+4. Find the PCs of the target projected onto the orthogonal complement of the background.
+5. Rotate the Target data onto the new PCs
+
+* Function inputs:
+ * target: Target dataset
+ * bg: Background dataset
+ * n_components: number of Principal components to use
+ * bg_components: number of background principal components used. Tuning parameter because this affects the Orthogonal Complement 
+ * return_all: (logical) whether to return the background PCs and target projected on the Orthogonal Complement of the background
+* Function outputs: 
+ * Data projected on the Orthogonal Complement contrastive principal components
+
+
+```{R, fig.align='center'}
+occPCA = function(target, bg, n_components = 2, bg_components = 2, standardize = T, return_all = F){
+  if(!is.matrix(target) | !is.matrix(bg)){
+    target <- as.matrix(target)
+    bg <- as.matrix(bg)
+  }
+  og_target <- target
+  
+  if(standardize){
+    target = scale(target);
+    bg = scale(bg);
+  }
+  # Rotate the background
+  bg_svd <-svd(bg, nv = bg_components)
+  
+  # since bg_svd$v is an orthonormal basis, the projection matrix is V %*% t(V)
+  # a simple test: 
+  # bg_space <- bg %*% bg_svd$v 
+  # expect_equivalent(bg_space %*% tcrossprod(bg_svd$v) -  bg_space, matrix(0, nrow =nrow(bg_space), ncol=ncol(bg_space)))
+  
+  bg_projection <- tcrossprod(bg_svd$v)
+  
+  #projection onto the orthogonal complement
+  oc_target <-  target %*% (diag(nrow = nrow(bg_projection)) - bg_projection)
+  
+  reduced_target <- og_target %*% svd(oc_target, nv = n_components)$v
+ 
+  if(return_all){
+    return(list("reduced_target" = reduced_target, "bg_svd" = bg_svd, "oc_target" = oc_target))
+  }else{
+    return(list("reduced_target" = reduced_target))  
+  }
+}
+
+
+```
 
 ### Replicating Figure 3a. in the paper
+
+[Authors Data Analysis]("https://github.com/rtud2/contrastive/blob/master/experiments/Mice%20Protein%20(Figure%202).ipynb?short_path=b1a901a")
 
 The original data had some missing data in it. From the Author's anaylsis, missing values were turned to zero.
 
@@ -149,15 +235,15 @@ background <- mouse[Behavior == "S/C" & Treatment == "Saline" & Genotype == "Ts6
 
 
 
-```{r}
+```{r, fig.align='center'}
 results_cPCA <- cPCA(target = targ[, .SD, .SDcols = -c("Genotype", "Treatment", "Behavior")],
      bg = background[, .SD, .SDcols = -c("Genotype", "Treatment", "Behavior")],
-     alpha = .9)
+     alpha = 1)
 
 reduced_target <- data.table(results_cPCA[[1]])
 reduced_target <- cbind(reduced_target,  targ[, .SD, .SDcols = c("Genotype")], "Contrastive")
 
-normal_pca <- data.table(PCA(mat = targ[, .SD, .SDcols = -c("Genotype", "Treatment", "Behavior")]))
+normal_pca <- data.table(PCA(target = targ[, .SD, .SDcols = -c("Genotype", "Treatment", "Behavior")])[[1]])
 normal_pca <- cbind(normal_pca, targ[, .SD, .SDcols = c("Genotype")], "Normal")
 
 first_pass_plot <- rbind(reduced_target, normal_pca)
@@ -165,7 +251,39 @@ setnames(first_pass_plot, c("PCA.1", "PCA.2", "Down.Syndrome", "Method"))
 
 ggplot(data = first_pass_plot)+
   geom_point(aes(x = PCA.1, y=PCA.2, color = Down.Syndrome))+
-  facet_wrap(~Method, scale = "free")
+  facet_wrap(~Method, scale = "free")+
+  theme(legend.position = "bottom")
+
+```
+
+### occPCA
+
+
+```{R}
+results_occPCA <- occPCA(target = targ[, .SD, .SDcols = -c("Genotype", "Treatment", "Behavior")],
+     bg = background[, .SD, .SDcols = -c("Genotype", "Treatment", "Behavior")],
+     bg_components = 5,
+     return_all = T)
+
+
+
+occ_reduced_target <- data.table(results_occPCA[[1]])
+occ_reduced_target <- cbind(occ_reduced_target,  targ[, .SD, .SDcols = c("Genotype")], "OCC")
+setnames(occ_reduced_target, c("PCA.1", "PCA.2", "Down.Syndrome", "Method"))
+
+second_pass_plot <- rbind(first_pass_plot[Method == "Contrastive"], occ_reduced_target)
+```
+
+
+
+```{R}
+#screeplot
+scree(results_occPCA$bg_svd)
+
+ggplot(data = second_pass_plot)+
+  geom_point(aes(x = PCA.1, y=PCA.2, color = Down.Syndrome))+
+  facet_wrap(~Method, scale = "free")+
+  theme(legend.position = "bottom")
 
 ```
 
@@ -190,4 +308,10 @@ ggplot(data = tuning_alpha_plot)+
   theme(legend.position = "bottom")+
   labs(title = "Mouse Down Syndrome Data: Contrastive PCA with different alpha")
 
+```
+
+
+Choosing $\alpha$ using log-spacing and spectral clustering 
+```{R}
+search_grid2 <- c(0, 10^(seq(-1, log10(1000), length.out = 9)))
 ```
