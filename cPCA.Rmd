@@ -16,29 +16,21 @@ library("ggplot2")
 library('Rcpp')
 ```
 
-## Implementing cPCA: contrastive PCA
+### Recap of SVD and some nice properties:
 
-(Author's written function in Python)["https://github.com/rtud2/contrastive/blob/master/contrastive/__init__.py"]
+SVD decomposes a $n \times p$ matrix $X = UDV^T$:
 
+  * $U$ is a left unitary $n \times n$ matrix. $U$ is the orthonormal eigenvectors for $XX^T = UDV^T (UDV^T)^T = UD^2U^T$
+  * $D$ is a rectangular diagonal $n\times p$ matrix
+  * $V^T$ is a right unitary $p\times p$ matrix.  $V$ are the orthonormal eigenvectors for $X^TX=(UDV^T)^TUDV^T = VD^2V^T$.
+ 
+where  Since $U$ and $V$ are unitary, $U^T = U^{-1} \Rightarrow U^TU=  I_{n}$ and $V^T = V^{-1} \Rightarrow  VV^T= V^TV= I_{p}$. 
 
-```{R, fig.align='center'}
-data(iris)
-iris <- data.table(iris)
-scaled_iris <- scale(iris[, .SD, .SDcols = - "Species"])
+This decomposition can be thought of as rotation, scaling, and rotation again. SVD also allows you to compute the eigenvectors of the covariance matrix without calculating the covariance matrix and doing an eigen/spectral decomposition on the $p \times p$ matrix. 
 
-# double checking that the results of eigen and svd are the same up to a sign change
-expect_equivalent(abs(svd(cov(scaled_iris))$v), abs(eigen(cov(scaled_iris))$vectors))
-
-iris_pca <- cbind((data.matrix(iris[, .SD, .SDcols = -"Species"]) %*% svd(cov(scaled_iris), nv = 2)$v), iris[, .SD, .SDcols ="Species"])
-setnames(iris_pca, c("PCA1", "PCA2", "Species"))
-
-ggplot(data = iris_pca)+
-  geom_point(aes(x = PCA1, y = PCA2, color = Species))
-
-```
+**Why can the diagonal elements of $D$ be described as the variance explained by each dimension??**
 
 ### Helper Functions:
-
 #### Turning NA's to Zeros.
 ```{r helper functions}
 ## convert NA values to zero
@@ -48,10 +40,7 @@ NAtoZero = function(mat){
 }
 ```
 
-#### Plotitng diagnostics for Principal Components
-
-SVD decomposes a $n \times p$ matrix into a left matrix $U$, diagonal matrix $D$, right matrix $V$...
-
+#### Ploting diagnostics for Principal Components
 ```{R}
 #screeplot for an SVD object
 scree = function(svd_obj){
@@ -69,8 +58,9 @@ scree = function(svd_obj){
   }
 ```
 
+#### Crude Tests 
+make sure my helper functions work as they should
 
-Some crude tests to make sure my helper functions work as they should
 ```{r test helper function}
 test_mat <- matrix(rnorm(1000*4, mean = 100, sd = 20), ncol = 4)
 
@@ -93,6 +83,34 @@ expect_equivalent(apply(scaled_obj, 2, var), expected = rep(1, 4))
 ### PCA, cPCA, occPCA functions:
 
 #### PCA: Principal Component Analysis
+
+PCA seeks to find the direction $v$ that maximizes the variance/covariance of $Xv$.
+
+\begin{align*}
+cov(Xv) &= v^TC_xv\\
+\end{align*}
+
+In other words, $v = \text{argmax}_{v}v^TC_x v$ where $C_x$ is the covariance matrix of $X$. This could be found using eigen/spectral decomposition, or using the matrix $V$ from the SVD decomposition, $X = UDV^T$. $V$ gives the eigenvectors corresponding to the rotation explaining the largest variance to the smallest variance.
+
+An example of using PCA on the `iris` dataset:
+
+```{R,  fig.align='center'}
+data(iris)
+iris <- data.table(iris)
+scaled_iris <- scale(iris[, .SD, .SDcols = - "Species"])
+
+# double checking that the results of eigen and svd are the same up to a sign change
+expect_equivalent(abs(svd(cov(scaled_iris))$v), abs(eigen(cov(scaled_iris))$vectors))
+
+iris_pca <- cbind((data.matrix(iris[, .SD, .SDcols = -"Species"]) %*% svd(cov(scaled_iris), nv = 2)$v), iris[, .SD, .SDcols ="Species"])
+setnames(iris_pca, c("PCA1", "PCA2", "Species"))
+
+ggplot(data = iris_pca)+
+  geom_point(aes(x = PCA1, y = PCA2, color = Species))
+
+```
+
+PCA function: 
 
 ```{r PCA function}
 PCA = function(target, n_components = 2, standardize = T, return_eigenvectors = F){
@@ -118,7 +136,15 @@ PCA = function(target, n_components = 2, standardize = T, return_eigenvectors = 
 
 #### cPCA: Contrastive PCA
 
-  * Description: 
+[Author's written function in Python]("https://github.com/rtud2/contrastive/blob/master/contrastive/__init__.py")
+
+  * Description: Suppose you have two datasets, a `target` and a `background` where the `target` were a dataset containing information on cases and `background` contained information on controls, or uninteresting variation.  cPCA works directly on the covariance matrices and seeks to find the directions/rotation (eigenvector) that maximizes the variance explained in the `target` and minimize the variance explained in the `background`.  More specifically:
+  
+  \begin{align*}
+    \textbf{v}^* &= \text{argmax}_{\textbf{v}\in \mathbb{R^d_{unit}}}{v^T\left(C_{target} - \alpha C_{bg}\right)v}
+  \end{align*}
+  
+  Where 
   
   * Function inputs:
     * target: Target dataset
@@ -167,19 +193,20 @@ Procedure:
 
 1. Calculate the Top Principal Components of the background data
 2. Compute the projection onto the Top Principal Components of the background data
-  + since the eigenvectors computed by `SVD` are orthonormal, the projection $P_{bg} = V_{bg}(V_{bg}'V_{bg})^{-1}V_{bg}'$ simplifies to $V_{bg}V_{bg}'$ because $(V_{bg}'V_{bg})^{-1} = I$
+    + since the eigenvectors, $V_{bg}$ computed by `SVD` are orthonormal, the projection simplifies to $V_{bg}V_{bg}'$
+    + this is because $P_{bg} = V_{bg}(V_{bg}'V_{bg})^{-1}V_{bg}'$, but $(V_{bg}'V_{bg})^{-1} = I_{k}$
 3. Project the target onto the orthogonal complement of the background, $X_{target} P_{bg}$
 4. Find the PCs of the target projected onto the orthogonal complement of the background.
 5. Rotate the Target data onto the new PCs
 
 * Function inputs:
- * target: Target dataset
- * bg: Background dataset
- * n_components: number of Principal components to use
- * bg_components: number of background principal components used. Tuning parameter because this affects the Orthogonal Complement 
- * return_all: (logical) whether to return the background PCs and target projected on the Orthogonal Complement of the background
+  * target: Target dataset
+  * bg: Background dataset
+  * n_components: number of Principal components to use
+  * bg_components: number of background principal components used. Tuning parameter because this affects the Orthogonal Complement 
+  * return_all: (logical) whether to return the background PCs and target projected on the Orthogonal Complement of the background
 * Function outputs: 
- * Data projected on the Orthogonal Complement contrastive principal components
+  * Data projected on the Orthogonal Complement contrastive principal components
 
 
 ```{R, fig.align='center'}
@@ -234,7 +261,6 @@ background <- mouse[Behavior == "S/C" & Treatment == "Saline" & Genotype == "Ts6
 ```
 
 
-
 ```{r, fig.align='center'}
 results_cPCA <- cPCA(target = targ[, .SD, .SDcols = -c("Genotype", "Treatment", "Behavior")],
      bg = background[, .SD, .SDcols = -c("Genotype", "Treatment", "Behavior")],
@@ -257,15 +283,11 @@ ggplot(data = first_pass_plot)+
 ```
 
 ### occPCA
-
-
-```{R}
+```{R,  fig.align='center'}
 results_occPCA <- occPCA(target = targ[, .SD, .SDcols = -c("Genotype", "Treatment", "Behavior")],
      bg = background[, .SD, .SDcols = -c("Genotype", "Treatment", "Behavior")],
-     bg_components = 5,
+     bg_components = 3,
      return_all = T)
-
-
 
 occ_reduced_target <- data.table(results_occPCA[[1]])
 occ_reduced_target <- cbind(occ_reduced_target,  targ[, .SD, .SDcols = c("Genotype")], "OCC")
@@ -275,8 +297,7 @@ second_pass_plot <- rbind(first_pass_plot[Method == "Contrastive"], occ_reduced_
 ```
 
 
-
-```{R}
+```{R,  fig.align='center'}
 #screeplot
 scree(results_occPCA$bg_svd)
 
@@ -290,7 +311,7 @@ ggplot(data = second_pass_plot)+
 ### Playing with the tuning parameter alpha
 Contrastive PCA seems very sensitive to the tuning parameter $\alpha$
 
-```{r}
+```{r,  fig.align='center'}
 search_grid <- seq(0, 2.25, by = 0.25)
 
 tuning_alpha <- lapply(search_grid, function(xx) cPCA(target = targ[, .SD, .SDcols = -c("Genotype", "Treatment", "Behavior")],
