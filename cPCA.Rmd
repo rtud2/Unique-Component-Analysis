@@ -5,7 +5,9 @@ date: "10/1/2019"
 output:
   html_document:
     code_folding: "hide"
-
+    toc: true
+    toc_float: true
+    collapsed: false
 ---
 
 ```{r setup, include=FALSE}
@@ -24,11 +26,14 @@ SVD decomposes a $n \times p$ matrix $X = UDV^T$:
   * $D$ is a rectangular diagonal $n\times p$ matrix
   * $V^T$ is a right unitary $p\times p$ matrix.  $V$ are the orthonormal eigenvectors for $X^TX=(UDV^T)^TUDV^T = VD^2V^T$.
  
-where  Since $U$ and $V$ are unitary, $U^T = U^{-1} \Rightarrow U^TU=  I_{n}$ and $V^T = V^{-1} \Rightarrow  VV^T= V^TV= I_{p}$. 
+Since $U$ and $V$ are unitary
+
+  * $U^T = U^{-1} \Rightarrow U^TU=  I_{n}$
+  * $V^T = V^{-1} \Rightarrow  VV^T= V^TV= I_{p}$
 
 This decomposition can be thought of as rotation, scaling, and rotation again. SVD also allows you to compute the eigenvectors of the covariance matrix without calculating the covariance matrix and doing an eigen/spectral decomposition on the $p \times p$ matrix. 
 
-**Why can the diagonal elements of $D$ be described as the variance explained by each dimension??**
+**Why can the diagonal elements of $D^2$ be described as the variance explained by each dimension??**
 
 ### Helper Functions:
 #### Turning NA's to Zeros.
@@ -90,7 +95,16 @@ PCA seeks to find the direction $v$ that maximizes the variance/covariance of $X
 cov(Xv) &= v^TC_xv\\
 \end{align*}
 
-In other words, $v = \text{argmax}_{v}v^TC_x v$ where $C_x$ is the covariance matrix of $X$. This could be found using eigen/spectral decomposition, or using the matrix $V$ from the SVD decomposition, $X = UDV^T$. $V$ gives the eigenvectors corresponding to the rotation explaining the largest variance to the smallest variance.
+In other words, $v = \text{argmax}_{\|v\|_2=1}v^TC_x v$ where $C_x$ is the covariance matrix of $X$. This could be found using eigen/spectral decomposition, or using the matrix $V$ from the SVD decomposition, $X = UDV^T$. $V$ gives the eigenvectors corresponding to the rotation explaining the largest variance to the smallest variance.
+
+Another way to look at PCA is one of minimizing the reconstruction error of a generative model. Suppose $x_i  \approx f\left(\lambda_i\right)$, where  the function 
+$$f\left(\lambda\right) = \mu + V_r\lambda$$
+parameterizes an affine set of dimension $r$.  $\mu \in \mathbb{R}^{p}$, $V_r \in \mathbb{R}^{p\times r}$ is an matrix with orthonormal columns and $\lambda \in \mathbb{R}^r$ is a parameter vector over samples. Finding the $V_r$ that minimizes:
+$$\frac{1}{N}\sum^{N}_{i=1}{\|x_i - \mu - V_r\lambda_i\|^2_2}$$
+
+For some $\mu$ and $\lambda$ yields the same solution. If data has been precentered, where $\mu = 0$ this simplifies to:
+$$\frac{1}{N}\sum^{N}_{i=1}{\|x_i - V_rV_r^Tx_i\|^2_2}$$
+
 
 An example of using PCA on the `iris` dataset:
 
@@ -111,6 +125,13 @@ ggplot(data = iris_pca)+
 ```
 
 PCA function: 
+
+ * Function inputs:
+    * `target`: Target dataset - dataset of interest
+    * `n_components`: number of Principal components to calculate
+    * `return_all`: (logical) whether top eigenvectors should be returned
+  * Function outputs: 
+    * Data projected on the principal components
 
 ```{r PCA function}
 PCA = function(target, n_components = 2, standardize = T, return_eigenvectors = F){
@@ -141,17 +162,17 @@ PCA = function(target, n_components = 2, standardize = T, return_eigenvectors = 
   * Description: Suppose you have two datasets, a `target` and a `background` where the `target` were a dataset containing information on cases and `background` contained information on controls, or uninteresting variation.  cPCA works directly on the covariance matrices and seeks to find the directions/rotation (eigenvector) that maximizes the variance explained in the `target` and minimize the variance explained in the `background`.  More specifically:
   
   \begin{align*}
-    \textbf{v}^* &= \text{argmax}_{\textbf{v}\in \mathbb{R^d_{unit}}}{v^T\left(C_{target} - \alpha C_{bg}\right)v}
+    \textbf{v}^* &= \text{argmax}_{\textbf{v}\in \mathbb{R}^d_{unit}}{v^T\left(C_{target} - \alpha C_{bg}\right)v}
   \end{align*}
   
-  Where 
+  Where $C_{target}$ and $C_{bg}$ are the sample covariance matrices. 
   
   * Function inputs:
-    * target: Target dataset
-    * bg: Background dataset
-    * n_components: number of Principal components to use
-    * alpha: tuning parameter for how hard to subtract the background data
-    * return_all: (logical) whether top eigenvectors should be returned
+    * `target`: Target dataset - dataset of interest
+    * `bg`: Background dataset
+    * `n_components`: number of Principal components to calculate
+    * `alpha`: tuning parameter for how hard to weight minimizing the variance of the rotated background data
+    * `return_all`: (logical) whether top eigenvectors should be returned
   * Function outputs: 
     * Data projected on the contrastive principal components
 
@@ -189,6 +210,19 @@ cPCA = function(target, bg, n_components = 2, alpha = 1, standardize = T, return
 
 #### occPCA: Orthogonal Complement cPCA
 
+Description:
+  Finding the principal components of the target data projected onto the space orthogonal to the vectors that explain the most variation in the background data
+
+Assumption:
+  
+  * target data exists in a lower dimensional subspace spanned by background data.
+  
+Advantages:
+  
+  * You can repeat this procedure on more than 1 background dataset by repeatedly projecting onto the orthogonal complement of the background data.
+  * Since the objective function is not working on the covariance matrix, you can extend to other methods which have objective functions that work with the reconstruction error. NMF, penalized PCA, Factor Analysis, etc.
+  * Do not have to tune $\alpha$, the weight in cPCA, but still need to pick the number of dimensions that captures most of the variation in the background data. Arguably, there are already best practices (total variance explained/screeplot) for this and it's less abstract/abitrary than tuning $\alpha$ in cPCA, and the results don't differ much based on the tuning parameter
+  
 Procedure:
 
 1. Calculate the Top Principal Components of the background data
@@ -196,15 +230,17 @@ Procedure:
     + since the eigenvectors, $V_{bg}$ computed by `SVD` are orthonormal, the projection simplifies to $V_{bg}V_{bg}'$
     + this is because $P_{bg} = V_{bg}(V_{bg}'V_{bg})^{-1}V_{bg}'$, but $(V_{bg}'V_{bg})^{-1} = I_{k}$
 3. Project the target onto the orthogonal complement of the background, $X_{target} P_{bg}$
+    + $X_{target}P_{bg}$ projects $X_{target}$ onto the rowspace of $P_{bg}$
+    + $P_{bg} = P_{bg}^T$ means that $X_{target}$ is also projected onto the column space of $P_{bg}$ 
 4. Find the PCs of the target projected onto the orthogonal complement of the background.
 5. Rotate the Target data onto the new PCs
 
 * Function inputs:
-  * target: Target dataset
-  * bg: Background dataset
-  * n_components: number of Principal components to use
-  * bg_components: number of background principal components used. Tuning parameter because this affects the Orthogonal Complement 
-  * return_all: (logical) whether to return the background PCs and target projected on the Orthogonal Complement of the background
+  * `target`: Target dataset - dataset of interest
+  * `bg`: Background dataset
+  * `n_components`: number of Principal components to calculate for the target data, after being projected onto the orthogonal complement of the background
+  * `bg_components`: number of background principal components used. Tuning parameter because this affects the span of the Orthogonal Complement 
+  * `return_all`: (logical) whether to return the background PCs and target projected on the Orthogonal Complement of the background
 * Function outputs: 
   * Data projected on the Orthogonal Complement contrastive principal components
 
@@ -224,11 +260,7 @@ occPCA = function(target, bg, n_components = 2, bg_components = 2, standardize =
   # Rotate the background
   bg_svd <-svd(bg, nv = bg_components)
   
-  # since bg_svd$v is an orthonormal basis, the projection matrix is V %*% t(V)
-  # a simple test: 
-  # bg_space <- bg %*% bg_svd$v 
-  # expect_equivalent(bg_space %*% tcrossprod(bg_svd$v) -  bg_space, matrix(0, nrow =nrow(bg_space), ncol=ncol(bg_space)))
-  
+  # Background Projection Matrix
   bg_projection <- tcrossprod(bg_svd$v)
   
   #projection onto the orthogonal complement
@@ -282,33 +314,7 @@ ggplot(data = first_pass_plot)+
 
 ```
 
-### occPCA
-```{R,  fig.align='center'}
-results_occPCA <- occPCA(target = targ[, .SD, .SDcols = -c("Genotype", "Treatment", "Behavior")],
-     bg = background[, .SD, .SDcols = -c("Genotype", "Treatment", "Behavior")],
-     bg_components = 3,
-     return_all = T)
-
-occ_reduced_target <- data.table(results_occPCA[[1]])
-occ_reduced_target <- cbind(occ_reduced_target,  targ[, .SD, .SDcols = c("Genotype")], "OCC")
-setnames(occ_reduced_target, c("PCA.1", "PCA.2", "Down.Syndrome", "Method"))
-
-second_pass_plot <- rbind(first_pass_plot[Method == "Contrastive"], occ_reduced_target)
-```
-
-
-```{R,  fig.align='center'}
-#screeplot
-scree(results_occPCA$bg_svd)
-
-ggplot(data = second_pass_plot)+
-  geom_point(aes(x = PCA.1, y=PCA.2, color = Down.Syndrome))+
-  facet_wrap(~Method, scale = "free")+
-  theme(legend.position = "bottom")
-
-```
-
-### Playing with the tuning parameter alpha
+#### Playing with the tuning parameter alpha
 Contrastive PCA seems very sensitive to the tuning parameter $\alpha$
 
 ```{r,  fig.align='center'}
@@ -331,8 +337,78 @@ ggplot(data = tuning_alpha_plot)+
 
 ```
 
+Using the log spaced values for the tuning parameter $\alpha$... They chose the best $\alpha$ based on Spectral Clustering
 
-Choosing $\alpha$ using log-spacing and spectral clustering 
-```{R}
+```{R,  fig.align='center'}
 search_grid2 <- c(0, 10^(seq(-1, log10(1000), length.out = 9)))
+
+tuning_alpha <- lapply(search_grid2, function(xx) cPCA(target = targ[, .SD, .SDcols = -c("Genotype", "Treatment", "Behavior")],
+     bg = background[, .SD, .SDcols = -c("Genotype", "Treatment", "Behavior")],
+     alpha = xx))
+
+tuning_alpha_plot <- data.table(do.call(rbind, lapply(tuning_alpha, "[[", 1)),
+                                sort(rep(round(search_grid2, 4), nrow(targ))),
+                                unlist(rep(targ[, "Genotype"],length(search_grid2))))
+setnames(tuning_alpha_plot, c("PCA.1", "PCA.2", "alpha", "Down.Syndrome"))
+
+ggplot(data = tuning_alpha_plot)+
+  geom_point(aes(x = PCA.1, y = PCA.2, color = Down.Syndrome), alpha = 0.7)+
+  facet_wrap(~alpha, scales = "free", nrow = 2)+
+  theme(legend.position = "bottom")+
+  labs(title = "Mouse Down Syndrome Data: Contrastive PCA with different alpha")
+
 ```
+
+
+#### occPCA
+```{R,  fig.align='center'}
+results_occPCA <- occPCA(target = targ[, .SD, .SDcols = -c("Genotype", "Treatment", "Behavior")],
+     bg = background[, .SD, .SDcols = -c("Genotype", "Treatment", "Behavior")],
+     bg_components = 3,
+     return_all = T)
+
+occ_reduced_target <- data.table(results_occPCA[[1]])
+occ_reduced_target <- cbind(occ_reduced_target,  targ[, .SD, .SDcols = c("Genotype")], "OCC")
+setnames(occ_reduced_target, c("PCA.1", "PCA.2", "Down.Syndrome", "Method"))
+
+second_pass_plot <- rbind(first_pass_plot[Method == "Contrastive"], occ_reduced_target)
+```
+
+#### diagnostic plots for the background data
+```{R,  fig.align='center'}
+#screeplot
+scree(results_occPCA$bg_svd)
+
+ggplot(data = second_pass_plot)+
+  geom_point(aes(x = PCA.1, y=PCA.2, color = Down.Syndrome))+
+  facet_wrap(~Method, scale = "free")+
+  theme(legend.position = "bottom")
+
+```
+
+
+
+### Playing with the tuning bg_components
+
+The results are robust to first $k$ number of background principal components, unlike choosing the $\alpha$ parameter in cPCA. Clean seperation occurs at every $k$ background principal components.
+
+```{r,  fig.align='center'}
+search_grid <- 1:10
+
+tuning_bg <- lapply(search_grid, function(xx) occPCA(target = targ[, .SD, .SDcols = -c("Genotype", "Treatment", "Behavior")],
+     bg = background[, .SD, .SDcols = -c("Genotype", "Treatment", "Behavior")],
+     bg_components = xx))
+
+tuning_bg_plot <- data.table(do.call(rbind, lapply(tuning_bg, "[[", 1)),
+                                sort(rep(search_grid, nrow(targ))),
+                                unlist(rep(targ[, "Genotype"],length(search_grid))))
+setnames(tuning_bg_plot, c("PCA.1", "PCA.2", "alpha", "Down.Syndrome"))
+
+ggplot(data = tuning_bg_plot)+
+  geom_point(aes(x = PCA.1, y = PCA.2, color = Down.Syndrome), alpha = 0.6)+
+  facet_wrap(~alpha, scales = "free", nrow = 2)+
+  theme(legend.position = "bottom")+
+  labs(title = "Mouse Down Syndrome Data: occPCA with different Background Components")
+
+```
+
