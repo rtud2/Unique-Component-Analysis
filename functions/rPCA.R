@@ -7,6 +7,7 @@
 #' @param n_components number of Principal components to calculate for the target data, after being projected onto the orthogonal complement of the background
 #' @param bg_components number of background principal components used. Tuning parameter because this affects the span of the Orthogonal Complement
 #'                   if NULL, then bg_components chooses automatically based on finding the best linear spline with respect to squared-error.
+#' @param standardize (logical) default TRUE. Standardize the target to the colMean and sd of the background. Scale the background data.                   
 #' @param return_all (logical) whether to return the background PCs and target projected on the Orthogonal Complement of the background
 #' @return  Data projected on the Orthogonal Complement contrastive principal components
 
@@ -19,7 +20,6 @@ rPCA = function(target, bg, n_components = 2, bg_components = NULL, standardize 
   
   if(standardize){
     target = scale(target,center = colMeans(bg),scale = apply(bg, 2, sd));
-    #target = scale(target)
     bg = scale(bg);
   }
   # Rotate the background

@@ -10,18 +10,21 @@
 #' @param n_components number of Principal components to calculate (default is 2)
 #' @param alpha tuning parameter for how hard to weight minimizing the variance of the rotated background data
 #' @param return_all default FALSE. (logical) whether top eigenvectors and the reduced background should be returned
+#' @param standardize (logical) default TRUE. Standardize the target to the colMean and sd of the background. Scale the background data. 
 #' @return either return the reduced target data, or if `return_all=TRUE`, also return top eigenvectors and the reduced background
 
 
-cPCA = function(target, bg, n_components = 2, alpha = 1, return_all = F){
+cPCA = function(target, bg, n_components = 2, alpha = 1, standardize = T, return_all = F){
   
   if(!is.matrix(target) | !is.matrix(bg)){
     target <- as.matrix(target)
     bg <- as.matrix(bg)
   }
   
-  target = scale(target);
-  bg = scale(bg);
+  if(standardize){
+    target = scale(target,center = colMeans(bg),scale = apply(bg, 2, sd));
+    bg = scale(bg); 
+  }
   
   target_cov = cov(target);
   bg_cov = cov(bg);
