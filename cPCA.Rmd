@@ -1,9 +1,9 @@
 ---
-title: "PCA, cPCA, occPCA"
+title: "PCA, cPCA, rPCA"
 author: "Robin Tu"
 date: "10/1/2019"
 output:
-  html_document:
+  html_document: 
     code_folding: "hide"
     toc: true
     toc_float: true
@@ -33,7 +33,14 @@ Since $U$ and $V$ are unitary
 
 This decomposition can be thought of as rotation, scaling, and rotation again. SVD also allows you to compute the eigenvectors of the covariance matrix without calculating the covariance matrix and doing an eigen/spectral decomposition on the $p \times p$ matrix. 
 
-**Why can the diagonal elements of $D^2$ be described as the variance explained by each dimension??**
+The diagonal elements of $D^2$ be described as the variance explained by each dimension. When $X$ is centered:
+
+\begin{align*}
+\text{Cov}\left(XV\right) &= V^T\text{Cov}\left(X\right)V\\
+&=V^TX^TXV\\
+&=V^TVD^2V^TV\\
+&=D^2
+\end{align*}
 
 ### Helper Functions:
 #### Turning NA's to Zeros.
@@ -145,8 +152,8 @@ PCA = function(target, n_components = 2, standardize = T, return_eigenvectors = 
   
   target_cov = cov(target);
   v_top <- svd(target_cov, nv = n_components)$v
-  reduced_target <- og_target %*% v_top 
-  
+  #reduced_target <- og_target %*% v_top 
+  reduced_target <- target %*% v_top 
   if(return_eigenvectors){
     return(list("reduced_target"=reduced_target, "vectors"=v_top))
   }else{
@@ -196,7 +203,8 @@ cPCA = function(target, bg, n_components = 2, alpha = 1, standardize = T, return
   
   sigma = target_cov - alpha * bg_cov
   v_top <- svd(sigma, nv = n_components)$v
-  reduced_target <- og_target %*% v_top
+  #reduced_target <- og_target %*% v_top
+  reduced_target <- target %*% v_top
   reduced_bg <- bg %*% v_top
   
   if(return_all){
@@ -208,15 +216,12 @@ cPCA = function(target, bg, n_components = 2, alpha = 1, standardize = T, return
 
 ```
 
-#### occPCA: Orthogonal Complement cPCA
+#### rPCA: residual PCA
+(originally occPCA)
 
 Description:
   Finding the principal components of the target data projected onto the space orthogonal to the vectors that explain the most variation in the background data
 
-Assumption:
-  
-  * target data exists in a lower dimensional subspace spanned by background data.
-  
 Advantages:
   
   * You can repeat this procedure on more than 1 background dataset by repeatedly projecting onto the orthogonal complement of the background data.
@@ -254,7 +259,8 @@ occPCA = function(target, bg, n_components = 2, bg_components = 2, standardize =
   og_target <- target
   
   if(standardize){
-    target = scale(target);
+    #target = scale(target,center = colMeans(bg),scale = apply(bg, 2, sd));
+    target = scale(target)
     bg = scale(bg);
   }
   # Rotate the background
@@ -264,9 +270,9 @@ occPCA = function(target, bg, n_components = 2, bg_components = 2, standardize =
   bg_projection <- tcrossprod(bg_svd$v)
   
   #projection onto the orthogonal complement
-  oc_target <-  target %*% (diag(nrow = nrow(bg_projection)) - bg_projection)
+  oc_target <-  scale(target %*% (diag(nrow = nrow(bg_projection)) - bg_projection))
   
-  reduced_target <- og_target %*% svd(oc_target, nv = n_components)$v
+  reduced_target <- oc_target %*% svd(oc_target, nv = n_components)$v
  
   if(return_all){
     return(list("reduced_target" = reduced_target, "bg_svd" = bg_svd, "oc_target" = oc_target))
@@ -277,6 +283,77 @@ occPCA = function(target, bg, n_components = 2, bg_components = 2, standardize =
 
 
 ```
+
+Dave's version of code OG:
+
+  1. did not project. $Xv$ was calculated, but not $X(I -P_{bg}) \Leftrightarrow Xv_{k+1:p}v_{k+1:p}^T$
+  2. Projecting using the last columns vs calculating the $I -P_{bg}$ yielded the same result
+
+```{R, eval = F}
+X = targ[, .SD, .SDcols = -c("Genotype", "Treatment", "Behavior")]
+B = background[, .SD, .SDcols = -c("Genotype", "Treatment", "Behavior")]
+
+v = svd(scale(B, center = TRUE, scale = apply(B, 2, sd)), nv = ncol(B))$v
+k = 2 ## first k PCs of B explain variation in background
+newX = scale(X, center = colMeans(B), scale = apply(B, 2, sd)) %*% v[,-(1:k)] ## part of data not explained by v
+newX = scale(newX, center = TRUE, scale = apply(newX, 2, sd))
+
+reduced_target = data.table(scale(newX, center = TRUE, scale = apply(newX, 2, sd)) %*% svd(newX)$v[,1:2])
+
+```
+
+
+Stepping through the scale function, `scale(X)` is equivalent to `scale(X, center = T, scale = apply(X, 2, sd))`. For example:
+
+```{R, eval = F}
+mouse <- fread('../contrastive/experiments/datasets/Data_Cortex_Nuclear.csv')
+mouse <- NAtoZero(mouse)
+background <- mouse[Behavior == "S/C" & Treatment == "Saline" & Genotype == "Ts65Dn", .SD, .SDcols = -c("MouseID","class")]
+
+B = background[, .SD, .SDcols = -c("Genotype", "Treatment", "Behavior")]
+expect_equivalent(scale(B), scale(B, center = T, scale = apply(B, 2, sd)))
+```
+
+Cleaned up for readability
+
+```{R}
+dave_occPCA = function(target,
+                       bg,
+                       n_components = 2,
+                       bg_components = 2 ## first k PCs of B explain variation in background
+                       ){
+  X = data.matrix(target)
+  B = data.matrix(bg)
+  v = svd(scale(B))$v # SVD on scaled background data, no difference here
+
+    newX = scale(X, center = colMeans(B), scale = apply(B, 2, sd)) %*% v[,-(1:bg_components)] ## part of data not explained by v
+    newX = scale(newX, center = TRUE, scale = apply(newX, 2, sd))
+    reduced_target = data.table(scale(newX, center = TRUE, scale = apply(newX, 2, sd)) %*% svd(newX)$v[,1:n_components])
+
+  return(reduced_target)  
+}
+
+mod_dave_occPCA = function(target,
+                       bg,
+                       n_components = 2,
+                       bg_components = 2 ## first k PCs of B explain variation in background
+                       ){
+  X = data.matrix(target)
+  B = data.matrix(bg)
+  v = svd(scale(B))$v # SVD on scaled background data, no difference here
+  selected_v <- v[,-(1:bg_components)]
+  newX = scale(X, center = colMeans(B), scale = apply(B, 2, sd)) %*%  tcrossprod(selected_v) # why scale to the background??
+  #newX = scale(newX)
+  reduced_target = data.table(X %*% svd(scale(newX))$v[,1:n_components])
+  return(reduced_target)  
+}
+
+```
+
+Questions to address:
+**Why scale the target data to the background**
+**You're visualizing the data via principal components. Should visualized data be scaled**
+
 
 ### Replicating Figure 3a. in the paper
 
@@ -369,6 +446,7 @@ results_occPCA <- occPCA(target = targ[, .SD, .SDcols = -c("Genotype", "Treatmen
 
 occ_reduced_target <- data.table(results_occPCA[[1]])
 occ_reduced_target <- cbind(occ_reduced_target,  targ[, .SD, .SDcols = c("Genotype")], "OCC")
+
 setnames(occ_reduced_target, c("PCA.1", "PCA.2", "Down.Syndrome", "Method"))
 
 second_pass_plot <- rbind(first_pass_plot[Method == "Contrastive"], occ_reduced_target)
@@ -412,3 +490,52 @@ ggplot(data = tuning_bg_plot)+
 
 ```
 
+## Checking Dave's Code
+
+tuning_g for dave's code
+
+### Using Dave's pretty much OG code
+
+```{R}
+search_grid <- 1:10
+
+#Dave's code in function form
+tuning_bg_dave1 <- lapply(search_grid, function(xx) dave_occPCA(target = targ[, .SD, .SDcols = -c("Genotype", "Treatment", "Behavior")],
+     bg = background[, .SD, .SDcols = -c("Genotype", "Treatment", "Behavior")],
+     bg_components = xx))
+
+tuning_bg_dave_plot1 <- data.table(do.call(rbind, tuning_bg_dave1),
+                                sort(rep(search_grid, nrow(targ))),
+                                unlist(rep(targ[, "Genotype"],length(search_grid))))
+
+setnames(tuning_bg_dave_plot1, c("PCA.1", "PCA.2", "alpha", "Down.Syndrome"))
+
+ggplot(data = tuning_bg_dave_plot1)+
+  geom_point(aes(x = PCA.1, y = PCA.2, color = Down.Syndrome), alpha = 0.6)+
+  facet_wrap(~alpha, scales = "free", nrow = 2)+
+  theme(legend.position = "bottom")+
+  labs(title = "Mouse Down Syndrome Data: occPCA with different Background Components [Daves Code]")
+
+```
+
+### Modified to remove a bunch of scaling to verify same results
+
+```{R}
+#Robin modifies Dave's code in function form
+tuning_bg_dave2 <- lapply(search_grid, function(xx) mod_dave_occPCA(target = targ[, .SD, .SDcols = -c("Genotype", "Treatment", "Behavior")],
+     bg = background[, .SD, .SDcols = -c("Genotype", "Treatment", "Behavior")],
+     bg_components = xx))
+
+tuning_bg_dave_plot2 <- data.table(do.call(rbind, tuning_bg_dave2),
+                                sort(rep(search_grid, nrow(targ))),
+                                unlist(rep(targ[, "Genotype"],length(search_grid))))
+
+setnames(tuning_bg_dave_plot2, c("PCA.1", "PCA.2", "alpha", "Down.Syndrome"))
+
+ggplot(data = tuning_bg_dave_plot2)+
+  geom_point(aes(x = PCA.1, y = PCA.2, color = Down.Syndrome), alpha = 0.6)+
+  facet_wrap(~alpha, scales = "free", nrow = 2)+
+  theme(legend.position = "bottom")+
+  labs(title = "Mouse Down Syndrome Data: occPCA with different Background Components [Robin mod Daves Code]")
+
+```
