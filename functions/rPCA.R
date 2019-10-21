@@ -9,9 +9,10 @@
 #'                   if NULL, then bg_components chooses automatically based on finding the best linear spline with respect to squared-error.
 #' @param standardize (logical) default TRUE. Standardize the target to the colMean and sd of the background. Scale the background data.                   
 #' @param return_all (logical) whether to return the background PCs and target projected on the Orthogonal Complement of the background
+#' @param total_component optional argument to be passed into choose_pc if bg_components is unspecified.
 #' @return  Data projected on the Orthogonal Complement contrastive principal components
 
-rPCA = function(target, bg, n_components = 2, bg_components = NULL, standardize = T, return_all = F){
+rPCA = function(target, bg, n_components = 2, bg_components = NULL, standardize = T, return_all = F, ...){
   if(!is.matrix(target) | !is.matrix(bg)){
     target <- as.matrix(target)
     bg <- as.matrix(bg)
