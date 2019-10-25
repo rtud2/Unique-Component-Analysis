@@ -13,15 +13,21 @@
 #' @return either data projected on the principal components, or if `return_all=TRUE`, also return top eigenvectors
 
 
-PCA = function(target, n_components = 2, standardize = T, return_all = F){
+PCA = function(target, n_components = NULL, standardize = T, return_all = F){
   if(!is.matrix(target)){
     target <- as.matrix(target)
   }
   if(standardize){
     target = scale(target);
   }
-  target_cov = cov(target);
-  v_top <- svd(target_cov, nv = n_components)$v
+  
+  if(is.null(n_components)){
+    targ_svd_all <- svd(target)
+    n_components <- choose_pc(targ_svd_all$d)
+    warning(paste0("n_components is NULL, auto-selecting ", n_components, " components"))
+    cat("\n");
+  }
+  v_top <- svd(target, nv = n_components)$v
   reduced_target <- target %*% v_top 
   if(return_all){
     return(list("reduced_target"=reduced_target, "vectors"=v_top))
