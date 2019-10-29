@@ -19,11 +19,12 @@ choose_pc <- function(d, total_component = 20, return_all = F){
   
   fit_list <- sapply(2:upper, function(xx) mean((d - lm(d ~ bs(x, degree = 1, knots = xx))$fitted.value)^2))
   res_dat <- data.frame(n_component = 2:upper, mse = fit_list)
-  
+  # best fitting linear spline at the elbow, means we take only the components before it
+  n_comp <- res_dat[which.min(res_dat$mse), "n_component"] - 1
   if(return_all == T){
-    return(list("n_component" = res_dat[which.min(res_dat$mse), "n_component"], "MSE" = res_dat))
+    return(list("n_component" = n_comp, "MSE" = res_dat))
   }else{
-    return(c("n_component" = res_dat[which.min(res_dat$mse), "n_component"]));
+    return(c("n_component" = n_comp));
   }
   
 }
