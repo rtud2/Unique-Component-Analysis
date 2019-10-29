@@ -45,10 +45,11 @@ rPCA = function(target, bg, n_components = NULL, bg_components = NULL, standardi
     warning(paste0("n_components is NULL, auto-selecting ", n_components, " components"))
     cat("\n");
   }
-  reduced_target <- oc_target %*% svd(oc_target, nv = n_components)$v
+  res_target_svd <- svd(oc_target, nv = n_components)$v
+  reduced_target <- oc_target %*% res_target_svd
   
   if(return_all){
-    return(list("reduced_target" = reduced_target, "bg_svd" = bg_svd, "oc_target" = oc_target))
+    return(list("reduced_target" = reduced_target, "bg_svd" = bg_svd, "res_target_svd" = res_target_svd, "oc_target" = oc_target))
   }else{
     return(reduced_target)
   }
