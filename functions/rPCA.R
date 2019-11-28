@@ -31,13 +31,11 @@ rPCA = function(target, bg, n_components = NULL, bg_components = NULL, standardi
     warning(paste0("bg_components is NULL, auto-selecting ", bg_components, " components"))
     cat("\n");
     }
-  bg_svd <-svd(bg, nv = bg_components)
-  
-  # Background Projection Matrix
-  bg_projection <- tcrossprod(bg_svd$v)
+  #calculating eigenvectors of the background data
+  bg_svd <-svd(bg, nv = bg_components)$v
   
   #projection onto the orthogonal complement
-  oc_target <-  target %*% (diag(nrow = nrow(bg_projection)) - bg_projection)
+  oc_target <-  target - tcrossprod(target %*% bg_svd, bg_svd)
   
   if(is.null(n_components)){
     oc_target_svd_all <- svd(oc_target)

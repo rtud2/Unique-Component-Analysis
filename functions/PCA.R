@@ -6,7 +6,7 @@
 #'  variance explained in the `background`.
 #' 
 #' @param target dataset - dataset of interest
-#' @param n_components number of Principal components to calculate (default is 2)
+#' @param n_components number of Principal components to calculate. if NULL, then n_components chooses automatically based on finding the best linear spline with respect to squared-error.
 #' @param alpha tuning parameter for how hard to weight minimizing the variance of the rotated background data
 #' @param standardize (logical) default TRUE. Standardize the target
 #' @param return_all default FALSE. (logical) whether top eigenvectors should be returned
