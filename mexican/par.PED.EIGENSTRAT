@@ -1,0 +1,8 @@
+genotypename:    merged_all_gender.ped
+snpname:         merged_all_gender.map # or example.map, either works 
+indivname:       merged_all_gender.ped # or example.ped, either works
+outputformat:    EIGENSTRAT
+genotypeoutname: merged_all_gender.geno
+snpoutname:      merged_all_gender.snp
+indivoutname:    merged_all_gender.ind
+familynames:     NO

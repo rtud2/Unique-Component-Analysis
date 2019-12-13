@@ -16,6 +16,7 @@ library("testthat")
 library("data.table")
 library("ggplot2")
 library('Rcpp')
+library("splines")
 ```
 
 ### Recap of SVD and some nice properties:
@@ -29,7 +30,7 @@ SVD decomposes a $n \times p$ matrix $X = UDV^T$:
 Since $U$ and $V$ are unitary
 
   * $U^T = U^{-1} \Rightarrow U^TU=  I_{n}$
-  * $V^T = V^{-1} \Rightarrow  VV^T= V^TV= I_{p}$
+  * $V^T = V^{-1} \Rightarrow V^TV= I_{p}$
 
 This decomposition can be thought of as rotation, scaling, and rotation again. SVD also allows you to compute the eigenvectors of the covariance matrix without calculating the covariance matrix and doing an eigen/spectral decomposition on the $p \times p$ matrix. 
 
@@ -202,7 +203,7 @@ cPCA = function(target, bg, n_components = 2, alpha = 1, standardize = T, return
   bg_cov = cov(bg);
   
   sigma = target_cov - alpha * bg_cov
-  v_top <- svd(sigma, nv = n_components)$v
+  v_top <- eigen(sigma)$vectors[,1:n_components]
   #reduced_target <- og_target %*% v_top
   reduced_target <- target %*% v_top
   reduced_bg <- bg %*% v_top
@@ -217,7 +218,6 @@ cPCA = function(target, bg, n_components = 2, alpha = 1, standardize = T, return
 ```
 
 #### rPCA: residual PCA
-(originally occPCA)
 
 Description:
   Finding the principal components of the target data projected onto the space orthogonal to the vectors that explain the most variation in the background data
@@ -225,6 +225,7 @@ Description:
 Advantages:
   
   * You can repeat this procedure on more than 1 background dataset by repeatedly projecting onto the orthogonal complement of the background data.
+  * Avoid calculating the eigenvalue decomposition of the difference in the variance-covariance matrices. Just calculating the difference between the variance-covariance matrices when $p$ is large is a big memory problem.
   * Since the objective function is not working on the covariance matrix, you can extend to other methods which have objective functions that work with the reconstruction error. NMF, penalized PCA, Factor Analysis, etc.
   * Do not have to tune $\alpha$, the weight in cPCA, but still need to pick the number of dimensions that captures most of the variation in the background data. Arguably, there are already best practices (total variance explained/screeplot) for this and it's less abstract/abitrary than tuning $\alpha$ in cPCA, and the results don't differ much based on the tuning parameter
   
@@ -234,24 +235,26 @@ Procedure:
 2. Compute the projection onto the Top Principal Components of the background data
     + since the eigenvectors, $V_{bg}$ computed by `SVD` are orthonormal, the projection simplifies to $V_{bg}V_{bg}'$
     + this is because $P_{bg} = V_{bg}(V_{bg}'V_{bg})^{-1}V_{bg}'$, but $(V_{bg}'V_{bg})^{-1} = I_{k}$
-3. Project the target onto the orthogonal complement of the background, $X_{target} P_{bg}$
-    + $X_{target}P_{bg}$ projects $X_{target}$ onto the rowspace of $P_{bg}$
-    + $P_{bg} = P_{bg}^T$ means that $X_{target}$ is also projected onto the column space of $P_{bg}$ 
+3. Project the target onto the orthogonal complement of the background, $X_{target} \left[I - P_{bg}\right]$
+    + $X_{target} \left[I - P_{bg}\right]$ projects $X_{target}$ onto the rowspace of $\left[I - P_{bg}\right]$
+    + Since $\left[I - P_{bg}\right]$ is a projection matrix, $\left[I - P_{bg}\right] = \left[I - P_{bg}\right]^T$ means that $X_{target}$ is also projected onto the column space of $\left[I - P_{bg}\right]$ 
+    + In the event that $X$ is high dimensional, it's easier to distribute the $X_{target}$ variable, and Calcualte $X_{bg} - \left(X_{bg}v_{bg} \right)v_{bg}^T$ 
 4. Find the PCs of the target projected onto the orthogonal complement of the background.
 5. Rotate the Target data onto the new PCs
+
 
 * Function inputs:
   * `target`: Target dataset - dataset of interest
   * `bg`: Background dataset
-  * `n_components`: number of Principal components to calculate for the target data, after being projected onto the orthogonal complement of the background
-  * `bg_components`: number of background principal components used. Tuning parameter because this affects the span of the Orthogonal Complement 
+  * `n_components`: number of Principal components to calculate for the target data, after being projected onto the orthogonal complement of the background.  if NULL, then n_components chooses automatically based on finding the best linear spline with respect to squared-error.
+  * `bg_components`: number of background principal components used. Tuning parameter because this affects the span of the Orthogonal Complement.  if NULL, then bg_components chooses automatically based on finding the best linear spline with respect to squared-error.
   * `return_all`: (logical) whether to return the background PCs and target projected on the Orthogonal Complement of the background
 * Function outputs: 
   * Data projected on the Orthogonal Complement contrastive principal components
 
 
 ```{R, fig.align='center'}
-occPCA = function(target, bg, n_components = 2, bg_components = 2, standardize = T, return_all = F){
+rPCA = function(target, bg, n_components = NULL, bg_components = NULL, standardize = T, return_all = F, ...){
   if(!is.matrix(target) | !is.matrix(bg)){
     target <- as.matrix(target)
     bg <- as.matrix(bg)
@@ -259,30 +262,77 @@ occPCA = function(target, bg, n_components = 2, bg_components = 2, standardize =
   og_target <- target
   
   if(standardize){
-    #target = scale(target,center = colMeans(bg),scale = apply(bg, 2, sd));
-    target = scale(target)
+    target = scale(target,center = colMeans(bg),scale = apply(bg, 2, sd));
     bg = scale(bg);
   }
   # Rotate the background
-  bg_svd <-svd(bg, nv = bg_components)
-  
-  # Background Projection Matrix
-  bg_projection <- tcrossprod(bg_svd$v)
+  if(is.null(bg_components)){
+    bg_svd_all <- svd(bg)
+    bg_components <- choose_pc(bg_svd_all$d)
+    warning(paste0("bg_components is NULL, auto-selecting ", bg_components, " components"))
+    cat("\n");
+    }
+  #calculating eigenvectors of the background data
+  bg_svd <-svd(bg, nv = bg_components)$v
   
   #projection onto the orthogonal complement
-  oc_target <-  scale(target %*% (diag(nrow = nrow(bg_projection)) - bg_projection))
+  oc_target <-  target - tcrossprod(target %*% bg_svd, bg_svd)
   
-  reduced_target <- oc_target %*% svd(oc_target, nv = n_components)$v
- 
+  if(is.null(n_components)){
+    oc_target_svd_all <- svd(oc_target)
+    n_components <- choose_pc(oc_target_svd_all$d)
+    warning(paste0("n_components is NULL, auto-selecting ", n_components, " components"))
+    cat("\n");
+  }
+  res_target_svd <- svd(oc_target, nv = n_components)$v
+  reduced_target <- oc_target %*% res_target_svd
+  
   if(return_all){
-    return(list("reduced_target" = reduced_target, "bg_svd" = bg_svd, "oc_target" = oc_target))
+    return(list("reduced_target" = reduced_target, "bg_svd" = bg_svd, "res_target_svd" = res_target_svd, "oc_target" = oc_target))
   }else{
-    return(list("reduced_target" = reduced_target))  
+    return(reduced_target)
   }
 }
 
 
 ```
+
+
+### Choose PC Function
+
+An automatic method of chooseing the number of principal components using the elbow method.
+From the top 20 components, choose the best linear single knot spline. The linear spline with knot at `k` with the lowest MSE
+is the number of components we should choose. 
+
+* Function Inputs:
+  * `d` the vector of diagonals from an SVD
+  * `total_component` default is 20. The most number of components to include when fitting linear single knot splines 
+  * `return_all` default FALSE.  If TRUE, then data.frame of mean squared error for the linear spline with knot for each principal component is outputted
+
+* Function Output:
+either return the number optimal number of principal components or additionally, the data.frame of squared error for the linear spline with knot for each principal component is outputted
+
+```{R}
+choose_pc <- function(d, total_component = 20, return_all = F){
+  
+  n_diag <- min(length(d), total_component) # capping at the number of components we look at to be the min of (n_components, total_component)
+  upper <- n_diag - 1
+  x <- 1:n_diag
+  d <- d[1:n_diag]^2
+  
+  fit_list <- sapply(2:upper, function(xx) mean((d - lm(d ~ bs(x, degree = 1, knots = xx))$fitted.value)^2))
+  res_dat <- data.frame(n_component = 2:upper, mse = fit_list)
+  # best fitting linear spline at the elbow, means we take only the components before it
+  n_comp <- res_dat[which.min(res_dat$mse), "n_component"] - 1
+  if(return_all == T){
+    return(list("n_component" = n_comp, "MSE" = res_dat))
+  }else{
+    return(c("n_component" = n_comp));
+  }
+  
+}
+```
+
 
 Dave's version of code OG:
 
@@ -437,26 +487,25 @@ ggplot(data = tuning_alpha_plot)+
 ```
 
 
-#### occPCA
+#### rPCA
 ```{R,  fig.align='center'}
-results_occPCA <- occPCA(target = targ[, .SD, .SDcols = -c("Genotype", "Treatment", "Behavior")],
+results_occPCA <- rPCA(target = targ[, .SD, .SDcols = -c("Genotype", "Treatment", "Behavior")],
      bg = background[, .SD, .SDcols = -c("Genotype", "Treatment", "Behavior")],
-     bg_components = 3,
+     bg_components = NULL,
+     n_components = 2,
      return_all = T)
 
 occ_reduced_target <- data.table(results_occPCA[[1]])
-occ_reduced_target <- cbind(occ_reduced_target,  targ[, .SD, .SDcols = c("Genotype")], "OCC")
+occ_reduced_target <- cbind(occ_reduced_target,  targ[, .SD, .SDcols = c("Genotype")], "rPCA")
 
 setnames(occ_reduced_target, c("PCA.1", "PCA.2", "Down.Syndrome", "Method"))
 
 second_pass_plot <- rbind(first_pass_plot[Method == "Contrastive"], occ_reduced_target)
 ```
 
-#### diagnostic plots for the background data
-```{R,  fig.align='center'}
-#screeplot
-scree(results_occPCA$bg_svd)
+Plot rPCA vs Contrastive PCA
 
+```{R,  fig.align='center'}
 ggplot(data = second_pass_plot)+
   geom_point(aes(x = PCA.1, y=PCA.2, color = Down.Syndrome))+
   facet_wrap(~Method, scale = "free")+
@@ -473,20 +522,23 @@ The results are robust to first $k$ number of background principal components, u
 ```{r,  fig.align='center'}
 search_grid <- 1:10
 
-tuning_bg <- lapply(search_grid, function(xx) occPCA(target = targ[, .SD, .SDcols = -c("Genotype", "Treatment", "Behavior")],
+tuning_bg <- lapply(search_grid, function(xx) data.table(rPCA(target = targ[, .SD, .SDcols = -c("Genotype", "Treatment", "Behavior")],
      bg = background[, .SD, .SDcols = -c("Genotype", "Treatment", "Behavior")],
-     bg_components = xx))
+     bg_components = xx,
+     n_components = 2,
+     return_all = F)))
 
-tuning_bg_plot <- data.table(do.call(rbind, lapply(tuning_bg, "[[", 1)),
+tuning_bg_plot <- data.table(rbindlist(tuning_bg),
                                 sort(rep(search_grid, nrow(targ))),
                                 unlist(rep(targ[, "Genotype"],length(search_grid))))
+
 setnames(tuning_bg_plot, c("PCA.1", "PCA.2", "alpha", "Down.Syndrome"))
 
 ggplot(data = tuning_bg_plot)+
   geom_point(aes(x = PCA.1, y = PCA.2, color = Down.Syndrome), alpha = 0.6)+
   facet_wrap(~alpha, scales = "free", nrow = 2)+
   theme(legend.position = "bottom")+
-  labs(title = "Mouse Down Syndrome Data: occPCA with different Background Components")
+  labs(title = "Mouse Down Syndrome Data: rPCA with different Background Components")
 
 ```
 
