@@ -16,7 +16,7 @@ library("data.table")
 library("ggplot2")
 library("gridExtra")
 library("splines")
-options(scipen = -2, digits =5)
+options(scipen = -2, digits =3)
 theme_set(theme_bw())
 #theme_set(theme_bw())
 function_dir <- "../functions/"
@@ -112,8 +112,34 @@ ggplot(data = combined_plot, aes(x = X, y=Y))+
   theme(legend.position = "bottom")
 ```
 
+# Contrasting Disease vs. Nondiseased Blood, then projecting Hannon Brain
 
-#contrasting edgar only, projecting hannon brain
+This is because blood is exactly the same in both data sets.  Perhaps blood is directly related with alzhimers we can learn something about the brain.
+
+```{R}
+blood_no_disease <- dcast(formula = subject ~ geneSymbol, data = avg_combined[feature == features[feat] & disease == 0], value.var = "blood")[, subject := NULL]
+
+blood_disease <- dcast(formula = subject ~ geneSymbol, data = avg_combined[feature == features[feat] & disease == 1], value.var = "blood")[, subject := NULL]
+
+blood_disease_rpca <- rPCA(target = blood_disease, bg = blood_no_disease, n_components = 2, return_all = T)
+
+brain_all <- dcast(subject ~ geneSymbol, value.var = "brain", data = avg_combined[feature==features[feat]])[, subject := NULL]
+
+brain_on_blood_plot <- data.table(avg_combined[,.(disease = unique(disease),
+                group = unique(group)), by = subject], 
+data.matrix(brain_all) %*% blood_disease_rpca$res_target_svd)
+
+setnames(brain_on_blood_plot, c("V1","V2"), c("rPC1","rPC2"))
+
+ggplot(data = brain_on_blood_plot, aes(x = rPC1, y = rPC2))+
+  geom_point(aes(color = as.factor(disease), shape = group))+
+  theme(legend.position = "bottom")+
+  labs(title = "Brain data projected onto the directions found by rPCA\n with Blood Diseased as target and Blood non-diseased as background")
+```
+
+
+
+# contrasting edgar only, projecting hannon brain
 Only used edgar as the background and target. Then Projecting Hannon Brain
 
 ```{R}
