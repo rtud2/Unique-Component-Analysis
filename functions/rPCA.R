@@ -2,8 +2,8 @@
 #'
 #' `rPCA` returns the target data (scaled to the background) projected onto the orthogonal complement of the first `bg_components` principal components of the background
 #' 
-#' @param target Target dataset - dataset of interest
-#' @param bg Background dataset
+#' @param target Target dataset - dataset of interest (data.table)
+#' @param bg Background dataset (data.table)
 #' @param n_components number of Principal components to calculate for the target data, after being projected onto the orthogonal complement of the background
 #' if NULL, then n_components chooses automatically based on finding the best linear spline with respect to squared-error.
 #' @param bg_components number of background principal components used. Tuning parameter because this affects the span of the Orthogonal Complement
@@ -14,16 +14,15 @@
 #' @return  Data projected on the Orthogonal Complement contrastive principal components
 
 rPCA = function(target, bg, n_components = NULL, bg_components = NULL, standardize = T, return_all = F, ...){
-  if(!is.matrix(target) | !is.matrix(bg)){
-    target <- as.matrix(target)
-    bg <- as.matrix(bg)
+ 
+   if(standardize){
+    target = scale(target, center = bg[, lapply(.SD, mean)], scale = bg[, lapply(.SD, sd)]);
+    bg = bg[, lapply(.SD, scale)];
   }
-  og_target <- target
+  #convert to matrix types
+  target <- data.matrix(target)
+  bg <- data.matrix(bg)
   
-  if(standardize){
-    target = scale(target,center = colMeans(bg),scale = apply(bg, 2, sd));
-    bg = scale(bg);
-  }
   # Rotate the background
   if(is.null(bg_components)){
     bg_svd_all <- svd(bg)
