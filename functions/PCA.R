@@ -5,7 +5,7 @@
 #'  and seeks to find the directions/rotation (eigenvector) that maximizes the variance explained in the `target` and minimize the 
 #'  variance explained in the `background`.
 #' 
-#' @param target dataset - dataset of interest
+#' @param target dataset (data.table) - dataset of interest
 #' @param n_components number of Principal components to calculate. if NULL, then n_components chooses automatically based on finding the best linear spline with respect to squared-error.
 #' @param alpha tuning parameter for how hard to weight minimizing the variance of the rotated background data
 #' @param standardize (logical) default TRUE. Standardize the target
@@ -14,12 +14,11 @@
 
 
 PCA = function(target, n_components = NULL, standardize = T, return_all = F){
-  if(!is.matrix(target)){
-    target <- as.matrix(target)
-  }
+
   if(standardize){
-    target = scale(target);
+    target = target[, lapply(.SD, scale)];
   }
+  target <- data.matrix(target)
   
   if(is.null(n_components)){
     targ_svd_all <- svd(target)
