@@ -22,6 +22,18 @@ rPCA = function(target, bg, n_components = NULL, bg_components = NULL, standardi
   }else{
     min_dim <- min(dim(bg))
   }
+  #check if matrices are all numeric
+  if(target[, sum(!sapply(.SD, is.numeric))] > 0 | bg[, sum(!sapply(.SD, is.numeric))] > 0){
+    stop("at least one column is not numeric")
+  }
+  
+  #check if variance is zero in target and background.
+  if(length(target[, {temp_sd = sapply(.SD, sd);
+  which(temp_sd ==0 | !is.finite(temp_sd))}]) + 
+    length(bg[, {temp_sd = sapply(.SD, sd);
+  which(temp_sd ==0 | !is.finite(temp_sd))}])>0){
+    stop("variance is zero in either target or background")
+  }
   
    if(standardize){
     target = scale(target, center = bg[, lapply(.SD, mean)], scale = bg[, lapply(.SD, sd)]);
