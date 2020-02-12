@@ -14,31 +14,36 @@
 #' @param total_component (optional) argument to be passed into choose_pc if bg_components is unspecified.
 #' @return  Data projected on the Orthogonal Complement contrastive principal components
 
-rPCA = function(target, bg, n_components = NULL, bg_components = NULL, standardize = T, return_all = F, ...){
+rPCA = function(target, bg, n_components = NULL, bg_components = NULL, standardize = T, return_all = F, check = F, ...){
  
-  #check that the dimensions of target and bg are the same
-  if(ncol(target) != ncol(bg)){
-    stop("Dimension mismatch: Please check target and bg have the same number of columns")
-  }else{
-    min_dim <- min(dim(bg))
-  }
-  #check if matrices are all numeric
-  if(target[, sum(!sapply(.SD, is.numeric))] > 0 | bg[, sum(!sapply(.SD, is.numeric))] > 0){
-    stop("at least one column is not numeric")
-  }
   
-  #check if variance is zero in target and background.
-  if(length(target[, {temp_sd = sapply(.SD, sd);
-  which(temp_sd ==0 | !is.finite(temp_sd))}]) + 
+  if(check){
+    #check that the dimensions of target and bg are the same
+    if(ncol(target) != ncol(bg)){
+      stop("Dimension mismatch: Please check target and bg have the same number of columns")
+    }
+    #check if matrices are all numeric
+    if(target[, sum(!sapply(.SD, is.numeric))] > 0 | bg[, sum(!sapply(.SD, is.numeric))] > 0){
+      stop("at least one column is not numeric")
+    }
+    
+    #check if variance is zero in target and background.
+    if(length(target[, {temp_sd = sapply(.SD, sd);
+    which(temp_sd ==0 | !is.finite(temp_sd))}]) + 
     length(bg[, {temp_sd = sapply(.SD, sd);
-  which(temp_sd ==0 | !is.finite(temp_sd))}])>0){
-    stop("variance is zero in either target or background")
+    which(temp_sd ==0 | !is.finite(temp_sd))}])>0){
+      stop("variance is zero in either target or background")
+    }
+      
   }
   
    if(standardize){
     target = scale(target, center = bg[, lapply(.SD, mean)], scale = bg[, lapply(.SD, sd)]);
     bg = bg[, lapply(.SD, scale)];
-  }
+   }
+  
+  min_dim <- min(dim(bg))
+  
   #convert to matrix types
   target <- data.matrix(target)
   bg <- data.matrix(bg)
@@ -61,7 +66,7 @@ rPCA = function(target, bg, n_components = NULL, bg_components = NULL, standardi
   bg_svd <-svd(bg, nv = bg_components)$v
   
   #projection onto the orthogonal complement
-  returned_obj <- lapply(seq_along(bg_component_vector), function(zz){
+  returned_obj <- future_lapply(seq_along(bg_component_vector), function(zz){
     temp_bg_svd <- bg_svd[,1:bg_component_vector[zz]]
     oc_target <- target - tcrossprod(target %*% temp_bg_svd, temp_bg_svd)
     

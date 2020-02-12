@@ -3,11 +3,13 @@ title: "rPCA methylation"
 author: "Robin Tu"
 date: "12/15/2019"
 output:
-  html_document: 
-    code_folding: "hide"
-    toc: true
-    toc_float: true
-    collapsed: false
+  pdf_document:
+    toc: yes
+  html_document:
+    code_folding: hide
+    collapsed: no
+    toc: yes
+    toc_float: yes
 ---
 
 
@@ -78,7 +80,7 @@ bg_brain <- dcast(formula = subject ~ geneSymbol, data = avg_combined[(feature =
 
 targ_brain <- dcast(formula = subject ~ geneSymbol, data = avg_combined[(feature == features[feat])& (disease == 1)], value.var = "brain")[, subject := NULL]
 
-rPCA_fExon_brain <- rPCA(target = targ_brain, bg = bg_brain, n_components = 2, return_all = T)
+rPCA_fExon_brain <- rPCA(target = targ_brain, bg = bg_brain, n_components = 2, bg_components = c(2:3), return_all = F)
 
 rPCA_fExon_plot <- data.table(avg_combined[disease !=0, .(disease = as.factor(unique(disease))), by = subject], rPCA_fExon_brain$reduced_target)
 rPCA_fExon_plot[,group:= substr(subject,start = 1,stop =1)]
