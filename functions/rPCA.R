@@ -50,7 +50,7 @@ rPCA = function(target, bg, n_components = NULL, bg_components = NULL, standardi
   
   # Rotate the background
   if(length(bg_components) == 0){
-    bg_svd_all <- svd(bg)
+    bg_svd_all <- irlba(bg)
     bg_components <- choose_pc(bg_svd_all$d)
     bg_component_vector <- bg_components
     warning(paste0("bg_components is NULL, auto-selecting ", bg_components, " components"))
@@ -63,7 +63,7 @@ rPCA = function(target, bg, n_components = NULL, bg_components = NULL, standardi
   }
   
   #calculating eigenvectors of the background data
-  bg_svd <-svd(bg, nv = bg_components)$v
+  bg_svd <-irlba(bg, nv = bg_components)$v
   
   #projection onto the orthogonal complement
   returned_obj <- future_lapply(seq_along(bg_component_vector), function(zz){
@@ -71,12 +71,12 @@ rPCA = function(target, bg, n_components = NULL, bg_components = NULL, standardi
     oc_target <- target - tcrossprod(target %*% temp_bg_svd, temp_bg_svd)
     
     if(is.null(n_components)){
-      oc_target_svd_all <- svd(oc_target)
+      oc_target_svd_all <- irlba(oc_target)
       n_components <- choose_pc(oc_target_svd_all$d)
       warning(paste0("n_components is NULL, auto-selecting ", n_components, " components"))
       cat("\n");
     }
-    res_target_svd <- svd(oc_target, nv = n_components)$v
+    res_target_svd <- irlba(oc_target, nv = n_components)$v
 
     reduced_target <- oc_target %*% res_target_svd
     
