@@ -37,6 +37,9 @@ cPCA = function(target, bg, n_components = 2, bg_components = ncol(bg), alpha = 
   if(between(bg_components, 1, ncol(bg), incbounds = F)){ # when bg_cov lies in low rank space
     top_bg <- irlba(bg, nv = bg_components)
     bg_cov <- tcrossprod(top_bg$v %*% diag(top_bg$d[1:bg_components]^2), top_bg$v)/nrow(bg)
+  }else if(bg_components == 1){
+    top_bg <- irlba(bg, nv = bg_components)
+    bg_cov <- tcrossprod(top_bg$v)*top_bg$d[1]^2/nrow(bg)
   }else if(bg_components == ncol(bg)){
     bg_cov = crossprod(bg)/nrow(bg);
   }else{

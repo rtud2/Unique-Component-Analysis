@@ -1,0 +1,168 @@
+---
+title: "Scaling"
+author: "Robin Tu"
+date: "10/8/2019"
+output:
+  html_document: 
+    code_folding: "hide"
+    toc: true
+    toc_float: true
+    collapsed: false
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library("testthat")
+library("data.table")
+library("ggplot2")
+library('Rcpp')
+library('irlba') #fast svd
+library("splines") #for calculating elbows
+library("future.apply")
+library("microbenchmark")
+
+function_dir <- "functions/"
+sapply(list.files(function_dir), function(xx) source(paste0(function_dir, xx)))
+```
+
+```{r}
+mouse <- fread('../contrastive/experiments/datasets/Data_Cortex_Nuclear.csv')
+mouse <- NAtoZero(mouse)
+
+targ <- mouse[Behavior == "S/C" & Treatment == "Saline" & Genotype %in% c("Control", "Ts65Dn"), .SD, .SDcols = -c("MouseID","class")]
+background <- mouse[Behavior == "S/C" & Treatment == "Saline" & Genotype == "Ts65Dn", .SD, .SDcols = -c("MouseID","class")]
+mouse_labels <- targ[, .SD, .SDcols = c("Genotype")]
+
+normal_pca <- data.table(PCA(target = targ[, .SD, .SDcols = -c("Genotype", "Treatment", "Behavior")], n_components = 2)[[1]])
+
+results_cPCA <- cPCA(target = targ[, .SD, .SDcols = -c("Genotype", "Treatment", "Behavior")],
+     bg = background[, .SD, .SDcols = -c("Genotype", "Treatment", "Behavior")], n_components = 2,
+     alpha = 1,return_all = F)$reduced_target
+
+results_rPCA <- rPCA(target = targ[, .SD, .SDcols = -c("Genotype", "Treatment", "Behavior")],
+     bg = background[, .SD, .SDcols = -c("Genotype", "Treatment", "Behavior")],
+     bg_components = 2,
+     n_components = 2)[[1]]
+# results_rPCA_dz <- rPCA_dz(target = targ[, .SD, .SDcols = -c("Genotype", "Treatment", "Behavior")],
+#      bg = background[, .SD, .SDcols = -c("Genotype", "Treatment", "Behavior")],
+#      bg_components = 3,
+#      n_components = 2)
+
+
+normal_pca <- cbind(normal_pca, mouse_labels, "Normal")
+contrastive_PCA <- cbind(results_cPCA, mouse_labels, "Contrastive")
+residual_PCA <- cbind(results_rPCA, mouse_labels, "Residual")
+#residual_PCA_dz <- cbind(results_rPCA_dz, mouse_labels, "Residual_DZ")
+
+first_pass_plot <- rbind(normal_pca, contrastive_PCA, residual_PCA)#, residual_PCA_dz)
+
+setnames(first_pass_plot, c("PCA.1", "PCA.2", "Down.Syndrome", "Method"))
+
+ggplot(data = first_pass_plot)+
+  geom_point(aes(x = PCA.1, y=PCA.2, color = Down.Syndrome))+
+  facet_wrap(~Method, scale = "free")+
+  theme(legend.position = "bottom")
+
+```
+
+```{R}
+search_grid <- 1:10
+
+tuning_bg <- lapply(search_grid, function(xx){
+    data.table(cbind(rPCA(target = targ[, .SD, .SDcols = -c("Genotype", "Treatment", "Behavior")],
+     bg = background[, .SD, .SDcols = -c("Genotype", "Treatment", "Behavior")],
+     #standardize = F,
+     bg_components = xx,
+     n_components = 2)[[1]], xx))})
+
+tuning_bg_plot <- cbind(rbindlist(tuning_bg), unlist(rep(targ[, "Genotype"],length(search_grid))))
+
+setnames(tuning_bg_plot, c("PCA.1", "PCA.2", "alpha", "Down.Syndrome"))
+
+ggplot(data = tuning_bg_plot)+
+  geom_point(aes(x = PCA.1, y = PCA.2, color = Down.Syndrome), alpha = 0.6)+
+  facet_wrap(~alpha, scales = "free", nrow = 2)+
+  theme(legend.position = "bottom")+
+  labs(title = "Mouse Down Syndrome Data: rPCA with different Background Components")
+```
+
+
+```{R, eval = F, include = F}
+search_grid <- 1:10
+
+tuning_bg <- lapply(search_grid, function(xx) rPCA_dz(target = targ[, .SD, .SDcols = -c("Genotype", "Treatment", "Behavior")],
+     bg = background[, .SD, .SDcols = -c("Genotype", "Treatment", "Behavior")],
+     bg_components = xx))
+
+tuning_bg_plot <- data.table(do.call(rbind,tuning_bg),
+                                sort(rep(search_grid, nrow(targ))),
+                                unlist(rep(targ[, "Genotype"],length(search_grid))))
+setnames(tuning_bg_plot, c("PCA.1", "PCA.2", "alpha", "Down.Syndrome"))
+
+ggplot(data = tuning_bg_plot)+
+  geom_point(aes(x = PCA.1, y = PCA.2, color = Down.Syndrome), alpha = 0.6)+
+  facet_wrap(~alpha, scales = "free", nrow = 2)+
+  theme(legend.position = "bottom")+
+  labs(title = "Mouse Down Syndrome Data: rPCA_dz with different Background Components")
+```
+
+cPCA with low rank background matrix
+
+```{R}
+scaled_target <- targ[,lapply(.SD, scale) , .SDcols = -c("Genotype", "Treatment", "Behavior")] 
+scaled_bg <- background[, lapply(.SD, scale), .SDcols = -c("Genotype", "Treatment", "Behavior")] 
+
+params = expand.grid(al = c(0.5, 1, 10), bg_comps = c(1, 2, 3, ncol(scaled_bg)))
+
+cPCA_plot <- do.call(rbind, apply(params,1, function(zz){
+  data.table(zz["al"],zz["bg_comps"] ,cPCA(target = scaled_target, bg = background[, lapply(.SD, scale), .SDcols = -c("Genotype", "Treatment", "Behavior")], n_components = 2,
+                       bg_components = zz["bg_comps"],
+                       alpha = zz["al"], 
+                       standardize = F, return_all = F)$reduced_target)
+}))
+
+cPCA_plot <- data.table(mouse_labels, cPCA_plot)
+
+setnames(cPCA_plot, c("Down.Syndrome", "Alpha", "Background.Components", "cPC1", "cPC2"))
+
+ggplot(data = cPCA_plot)+
+  geom_point(aes(x = cPC1, y=cPC2, color = Down.Syndrome), alpha = 0.6)+
+  facet_grid(Alpha~Background.Components)+
+  theme(legend.position = "bottom")+
+  labs(title = "Mouse Down Syndrome Data: cPCA low rank and various alpha")
+
+
+```
+
+Benchmark times
+```{R}
+microbenchmark(cPCA_low_rank =  cPCA(target = scaled_target, bg = background[, lapply(.SD, scale), .SDcols = -c("Genotype", "Treatment", "Behavior")], n_components = 2, bg_components = 3, alpha = 1, standardize = F, return_all = F)$reduced_target,
+cPCA_full_rank = cPCA(target = scaled_target, bg = background[, lapply(.SD, scale), .SDcols = -c("Genotype", "Treatment", "Behavior")], n_components = 2, alpha = 1, standardize = F, return_all = F)$reduced_target)
+```
+
+
+cPCA with Multiple Background
+
+```{R, eval = F}
+all_samples <- 1:nrow(background)
+background_1 <- sample(x = all_samples, size = 65, replace = F)
+background_2 <- all_samples[!all_samples %in% background_1]
+
+scaled_target <- targ[,lapply(.SD, scale) , .SDcols = -c("Genotype", "Treatment", "Behavior")] 
+scaled_bg1 <- background[background_1, lapply(.SD, scale), .SDcols = -c("Genotype", "Treatment", "Behavior")] 
+scaled_bg2 <- background[background_2, lapply(.SD, scale), .SDcols = -c("Genotype", "Treatment", "Behavior")]
+
+sigma <- crossprod(data.matrix(scaled_target)) - 1*crossprod(data.matrix(scaled_bg1)) - 1*crossprod(data.matrix(scaled_bg2))
+cPCA_multiple_random <- eigen(sigma)$vectors
+
+cPCA_single <- cPCA(target = scaled_target, bg = background[, lapply(.SD, scale), .SDcols = -c("Genotype", "Treatment", "Behavior")], n_components = 2, alpha = 1, standardize = F, return_all = F)$reduced_target
+
+cPCA_multiple_random_plot <- rbind(data.table(data.matrix(scaled_target) %*% cPCA_multiple_random[, 1:2], mouse_labels, "Split"),
+                                   data.table(cPCA_single, mouse_labels, "Not Split"))
+
+setnames(cPCA_multiple_random_plot, c("cPC1", "cPC2", "Down.Syndrome", "Background"))
+
+ggplot(data = cPCA_multiple_random_plot)+
+  geom_point(aes(x = cPC1, y=cPC2, color = Down.Syndrome))+
+  facet_wrap(~Background)
+```
