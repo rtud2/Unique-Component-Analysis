@@ -9,16 +9,11 @@
 #' @return list of tau and value of derivative, the optimal lagrangian
 
 
-score_calc = function(A, B, nv, tau, return_all = F){
+score_calc = function(A, B, nv, tau){
   eigen_calc <- partial_eigen ( A - tau * B, n = nv, symmetric = T)
   v <- matrix(eigen_calc$vectors, ncol = nv)
   score = 1 - sum(diag(crossprod(v, B)%*% v)) #derivative of  sum(diag(crossprod(v, (A - tau * B) %*% v))) + tau
-  if(return_all){
-    list(vector = v, score = score, tau = tau, nv = nv)
-  }else{
-    return(score)
-    
-  }
+  return(list(vector = v, score = score, tau = tau, nv = nv))
   }
 
 #' bisection
@@ -29,6 +24,7 @@ score_calc = function(A, B, nv, tau, return_all = F){
 #' @param B Background dataset(s). 
 #' @param nv number of eigenvectors to use
 #' @param limit a vector of c(lower, upper) bounds
+#' @param maxit maxium number of iterations for the algorithm to run
 #' @param tol tolerance for when to stop the algorithm
 #' @return tau, the optimal lagrangian
 
@@ -46,17 +42,16 @@ bisection = function(A, B, nv = 1, limit = c(0,100), maxit = 1E5, tol = 1E-4, ch
   for(iter in 1:maxit){
     if( max(limit) - min(limit) < tol) break;
     
-    tau = sum(limit)/2
-    if(score_calc(A, B, nv = nv, tau = tau) < 0){
-      limit[1] = tau
+    tau_score = score_calc(A, B, nv = nv, tau = sum(limit)/2)
+    if(tau_score$score < 0){
+      limit[1] = tau_score$tau
     }else{
-      limit[2] = tau
+      limit[2] = tau_score$tau
     }
   }
-  final = score_calc(A, B, nv = nv, tau = tau, return_all = T) 
-   
-  return(final)
+  return(tau_score)
 }
+
 
 #' bisection.multiple: bisection method but for multiple background datasets
 #'
@@ -75,7 +70,6 @@ bisection.multiple = function(A, B, ...){
    warning(paste0("replicating A ", length(B), " times to match length(B)"))
    A = replicate(n = length(B),expr =  A, simplify = F)
  }
-  
   if( length(list(...)) > 0){
     mapply(FUN = bisection, A, B, list(...), SIMPLIFY = F)
   }else{
