@@ -53,6 +53,10 @@ bisection = function(A, B, nv = 1, limit = c(0,100), maxit = 1E5, tol = 1E-4, ch
 }
 
 
+#calculate A*, let j denote which bg data you're working on
+# B list of matrix
+# lambda <- 1:length(B)
+
 #' bisection.multiple: bisection method but for multiple background datasets
 #'
 #' Use bisection method to find the optimal Lagrangian for solving discriminant PCA of each background dataset. depends on irlba
@@ -60,27 +64,29 @@ bisection = function(A, B, nv = 1, limit = c(0,100), maxit = 1E5, tol = 1E-4, ch
 #' @param A Target Covariance Matrix
 #' @param B list of background covariance(s).
 #' @param ... other parameters to pass in to bisection(...)
-#' @return for each background covariance matrix in B, return list of tau (the optimal lagrangian), eigenvector associated with tau, and derivative value of the lagrange multiplier
+#' @return for each background covariance matrix in B, return list of lambda (the optimal lagrangian), eigenvector associated with largest eigenvalue, and derivative value of the lagrange multiplier
 #' 
  
-bisection.multiple = function(A, B, ...){
+bisection.multiple = function(A, B, lambda, max_iter = 1000, tol = 1E-5, ...){
  if(!is.list(B) & !is.matrix(B)){
    stop("B is not a list of matrices or a matrix")
  }else if(is.matrix(B)){
    warning("B is being coerced into a list")
    B <- list(B)
  }
-  
-  if(!is.list(A)){
-   warning(paste0("matrix A is replicating ", length(B), " times to match length(B)"))
-   A = replicate(n = length(B),expr =  A, simplify = F)
- }
-  if( length(list(...)) > 0){
-   mapply(FUN = bisection, A, B, list(...), SIMPLIFY = F)
-  }else{
-   mapply(FUN = bisection, A, B, SIMPLIFY = F)
-  }
+  score = 0; #initialize
+    for(i in 1:max_iter){
+      old.score <- score
+      for (j in 1:length(B)){
+        A_star = A - Reduce("+", mapply("*", lambda[-j], B[[-j]], SIMPLIFY = F))
+        lambda[j] = bisection(A_star, B[[j]], ...)$tau
+      }
+      score <- partial_eigen(A - Reduce( "+", mapply( "*", lambda, B, SIMPLIFY = F)), n = 1, symmetric = T)$values + sum(lambda) 
+      if(score - old.score < tol) break;
+    }
+ return(lambda) 
 }
+  
 
 #' dca: discriminant component analysis
 #'
@@ -94,10 +100,7 @@ bisection.multiple = function(A, B, ...){
 
 
 dca_f = function(A, B, n = 2, ...){
-  if(length(list(...)) > 0 ){
-    lagrangian_res <- bisection.multiple(A, B, list(...))  
-  }else{
-    lagrangian_res <- bisection.multiple(A, B)
+    lagrangian_res <- bisection.multiple(A, B, ...)  
   }
   if(is.list(B)){
     # mapply multiplies the lagrangian found by bisection to the background matrices. Reduce adds them together
