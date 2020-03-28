@@ -28,7 +28,7 @@ score_calc = function(A, B, tau){
 #' @return the final list of tau (the optimal lagrange multiplier), vector (eigenvector)
 #'  associated with tau, value (eigenvalue), and score (derivative value of the lagrangian)
  
-bisection = function(A, B, limit = c(0,100), maxit = 1E5, tol = 1E-6, checks = F){
+bisection = function(A, B, limit = c(0,100), maxit = 1E5, nv = 1, tol = 1E-6, checks = F){
   
   if(checks == T){
     if(sign(score_calc(A, B, tau = upper)$score) + sign(score_calc(A, B, nv = nv, tau = lower)$score) !=0){
@@ -38,18 +38,29 @@ bisection = function(A, B, limit = c(0,100), maxit = 1E5, tol = 1E-6, checks = F
       stop("upper value must be larger than lower value")
     }
   }
-
+  
+  f_val = rep(NA,2)
+  
   for(iter in 1:maxit){
-    if( max(limit) - min(limit) < tol * min(limit)) break;
+    if( limit[2] - limit[1] < tol * limit[1]) break;
     
-    tau_score = score_calc(A, B, tau = sum(limit)/2)
+    if(sum(is.na(f_val)) == 0 & iter > 10){ #false positioning after at least 10 iterations of bisection
+      c = (limit[1]*f_val[2] - limit[2]*f_val[1])/(f_val[2]-f_val[1])
+    }else{
+      c = sum(limit)/2
+    }
+    
+    tau_score = score_calc(A, B, tau = c)
     if(tau_score$score < 0){
       limit[1] = tau_score$tau
+      f_val[1] = tau_score$score
     }else{
       limit[2] = tau_score$tau
+      f_val[2] = tau_score$score
     }
   }
-  return(dca = tau_score)
+  return(dca = tau_score)  
+  
 }
 
 
