@@ -1,6 +1,6 @@
 #' score_calc: calculating the derivative for specific value of lagrangian
 #'
-#' Calculate the derivative of Lagrangian. depends on irlba
+#' Calculate the derivative of Lagrangian. depends on RSpectra
 #' 
 #' @param A Target Covariance Matrix
 #' @param B list of background covariance(s).
@@ -9,10 +9,10 @@
 
 
 score_calc = function(A, B, tau){
-  eigen_calc <- partial_eigen ( A - tau * B, n = 1, symmetric = T)
+  eigen_calc <- eigs_sym ( A - tau * B, 1, "LA")
   v <- matrix(eigen_calc$vectors, ncol = 1)
-  score = 1 - crossprod(v, B %*% v) #derivative of  sum(diag(crossprod(v, (A - tau * B) %*% v))) + tau
-  return(list(score = score, values = eigen_calc$values, vectors = eigen_calc$vectors, tau = tau))
+  score = as.numeric(1 - crossprod(v, B %*% v)) #derivative of  sum(diag(crossprod(v, (A - tau * B) %*% v))) + tau
+  return(list(score = score, values = eigen_calc$values, tau = tau))
   }
 
 #' bisection
@@ -27,41 +27,40 @@ score_calc = function(A, B, tau){
 #' @param tol tolerance for when to stop the algorithm
 #' @return the final list of tau (the optimal lagrange multiplier), vector (eigenvector)
 #'  associated with tau, value (eigenvalue), and score (derivative value of the lagrangian)
- 
-bisection = function(A, B, limit = c(0,100), maxit = 1E5, nv = 1, tol = 1E-6, checks = F){
+
+bisection = function(A, B, limit = c(0,20), maxit = 1E5, nv = 1, tol = 1E-6){
   
-  if(checks == T){
-    if(sign(score_calc(A, B, tau = upper)$score) + sign(score_calc(A, B, nv = nv, tau = lower)$score) !=0){
-      stop("bisection will not work with the initial lower and upper values chosen.")
-    }
-    if(upper < lower){
-      stop("upper value must be larger than lower value")
-    }
-  }
+  f_val = lapply(limit, function(z) score_calc(A, B, z))
+  maxit_flag = F;
+  initial <- sapply(f_val, "[[", 1)
   
-  f_val = rep(NA,2)
-  
-  for(iter in 1:maxit){
-    if( limit[2] - limit[1] < tol * limit[1]) break;
+  if(sum(sign(initial)) == 2){
+    warning("initial f(a) and f(b) are positive. Setting lambda to 0 \n")
+    return(f_val[[1]])
+  }else{
     
-    if(sum(is.na(f_val)) == 0 & iter > 10){ #false positioning after at least 10 iterations of bisection
-      c = (limit[1]*f_val[2] - limit[2]*f_val[1])/(f_val[2]-f_val[1])
-    }else{
-      c = sum(limit)/2
-    }
+    for(iter in 1:maxit){
+      limit <- sapply(f_val, "[[", 3)
+      if( max(limit) - min(limit) < tol * min(limit)) break;
+      if(iter == maxit) maxit_flag == T;
+      
+      tau_score = score_calc(A, B, tau = sum(limit)/2)
+      
+      if(tau_score$score < 0){
+        f_val[[1]] = tau_score
+      }else{
+        f_val[[2]] = tau_score
+      }
+    }  
     
-    tau_score = score_calc(A, B, tau = c)
-    if(tau_score$score < 0){
-      limit[1] = tau_score$tau
-      f_val[1] = tau_score$score
-    }else{
-      limit[2] = tau_score$tau
-      f_val[2] = tau_score$score
+    if(maxit_flag == T){
+      warning("maximum iteration reached: solution may not be optimal \n")
     }
+    min_fval <- which.min(abs(sapply(f_val, "[[", 1)))
+    return(f_val[[min_fval]]) 
   }
-  return(dca = tau_score)  
-  
 }
+
 
 
 #calculate A*, let j denote which bg data you're working on
@@ -78,9 +77,10 @@ bisection = function(A, B, limit = c(0,100), maxit = 1E5, nv = 1, tol = 1E-6, ch
 #' @return for each background covariance matrix in B, return list of tau (the optimal lagrange multiplier), vectors(eigenvector)
 #'  associated with largest value (eigenvalue)
  
-bisection.multiple = function(A, B, lambda=NULL, nv = 2, max_iter = 1000, tol = 1E-6, ...){
+bisection.multiple = function(A, B, lambda=NULL, nv = 2, max_iter = 1E5, tol = 1E-6, ...){
+  
   #initialize starting point if one isn't supplied
-  if(length(lambda) == 0){lambda = rep(10, length(B))}
+  if(length(lambda) == 0){lambda = sapply(1:length(B), function(zz){bisection(A,B[[zz]])$tau})}
   score = Inf; 
   
     for(i in 1:max_iter){
@@ -91,9 +91,9 @@ bisection.multiple = function(A, B, lambda=NULL, nv = 2, max_iter = 1000, tol = 
         lambda[j] = bisection_j$tau
       }
       score <- bisection_j$values + sum(lambda)
-      if(abs(old.score - score) < tol * old.score) break;
+      if(abs(old.score - score) < tol * abs(old.score)) break;
     }
-  dca <- partial_eigen(A - Reduce("+", Map("*", lambda, B)), n = nv, symmetric = T)
+  dca <- eigs_sym(A - Reduce("+", Map("*", lambda, B)), nv, "LA")
  return(list(values = dca$values, vectors = dca$vectors, tau = lambda))
 }
   
@@ -108,14 +108,17 @@ bisection.multiple = function(A, B, lambda=NULL, nv = 2, max_iter = 1000, tol = 
 #' @return values(eigenvalues), vectors (eigenvectors), tau (Lagrange Multiplier) associated with discriminant component analysis
 
 
-dca = function(A, B, ...){
+dca = function(A, B, nv = 2, ...){
   if(!is.list(B) & !is.matrix(B)){
     stop("B is not a list of matrices or a matrix")
   }
   
   if(is.list(B) & length(B) > 1){
-    bisection.multiple(A, B, ... )
+    bisection.multiple(A=A, B=B, nv=nv, ... )
   }else{
-    bisection(A, B, ...)
+    if(is.list(B)) B = B[[1]]
+    tmp_res <- bisection(A=A, B=B, nv=nv, ...)
+    res <- eigs_sym(A - tmp_res$tau*B, nv, "LA")
+    return(list(values = res$values, vectors = res$vectors, tau = tmp_res$tau))
   }
 }
