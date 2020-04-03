@@ -1,0 +1,203 @@
+---
+title: "DCA_network"
+author: "Robin Tu"
+date: "3/23/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+libraries <- c("data.table", "MASS", "ggplot2", "splines","gridExtra","RSpectra")
+
+lapply(libraries, library, character.only = T)
+
+dca_dir <- "functions/"
+lapply(list.files(dca_dir), function(zz) source(paste0(dca_dir,zz)))
+```
+
+Read in the data
+
+```{R}
+monday <- fread("../MachineLearningCVE/Monday-WorkingHours.pcap_ISCX.csv")
+tuesday <- fread("../MachineLearningCVE/Tuesday-WorkingHours.pcap_ISCX.csv")
+wednesday <- fread("../MachineLearningCVE/Wednesday-workingHours.pcap_ISCX.csv")
+thurs1 <- fread("../MachineLearningCVE/Thursday-WorkingHours-Morning-WebAttacks.pcap_ISCX.csv")
+thurs2 <- fread("../MachineLearningCVE/Thursday-WorkingHours-Afternoon-Infilteration.pcap_ISCX.csv")
+fri1 <- fread("../MachineLearningCVE/Friday-WorkingHours-Morning.pcap_ISCX.csv")
+fri2 <- fread("../MachineLearningCVE/Friday-WorkingHours-Afternoon-DDos.pcap_ISCX.csv")
+fri3 <- fread("../MachineLearningCVE/Friday-WorkingHours-Afternoon-PortScan.pcap_ISCX.csv")
+monday[, day := "monday"]
+tuesday[, day := "tuesday"]
+wednesday[, day := "wednesday"]
+thurs1 [, day := "thurs1"]
+thurs2 [, day := "thurs2"]
+fri1[, day := "fri1"]
+fri2[, day := "fri2"]
+fri3[, day := "fri3"]
+
+all_dat <- rbind(monday, tuesday, wednesday, thurs1, thurs2, fri1, fri2, fri3)
+all_dat <- all_dat[complete.cases(all_dat)]
+rm(list = c("monday","tuesday","wednesday","thurs1","thurs2","fri1","fri2","fri3"))
+gc()
+```
+
+
+```{R}
+cols_to_rm <- grep(colnames(all_dat), pattern = "(Flag|Count|Min|Max|Fwd Header Length|Active|Idle)", value = T)
+plot_char <- c("Destination Port","Label","day")
+
+no_variability <- all_dat[day == "monday",
+        {
+        var_sd <- sapply(.SD, sd);
+        names(var_sd)[!is.finite(var_sd) | var_sd == 0]},
+        .SDcols = -c(cols_to_rm, plot_char)]
+
+```
+
+```{R}
+
+port_subset <- c(21, 22) #53, 443, 80
+
+monday_temp <- all_dat[day == "monday" & `Destination Port` %in% port_subset, .SD, .SDcols = -c(cols_to_rm, no_variability, "Label", "day")]
+monday_na_fill <- monday_temp[, lapply(.SD, function(col){ col[is.na(col)] = mean(col, na.rm = T); return(col)}), keyby = `Destination Port`]
+
+all_dat[day =='tuesday' & `Destination Port` %in% port_subset, .N, by = c("Label", "Destination Port")]
+
+tues_temp <- all_dat[day == "tuesday" & `Destination Port` %in% port_subset, .SD, .SDcols = -c(cols_to_rm, no_variability, "Label", "day")]
+tues_na_fill <- tues_temp[, lapply(.SD, function(col){ col[is.na(col)] = mean(col, na.rm = T); return(col)}), keyby = `Destination Port`]
+
+bg_list_scaled_og <- list()
+bg_list_cov <- list()
+
+for(jj in seq_along(port_subset)){
+  bg_list_scaled_og[[jj]] <- data.table("Destination Port" = port_subset[jj], monday_na_fill[`Destination Port` == port_subset[jj], scale(.SD), .SDcols = -"Destination Port"])
+  bg_list_cov[[jj]] <- bg_list_scaled_og[[jj]][, cov(.SD), .SDcols = -"Destination Port"]
+  
+  #tg_list_scaled_og[[jj]] <- data.table("Destination Port" = port_subset[jj], tues_na_fill[`Destination Port` == port_subset[jj], scale(.SD), .SDcols = -"Destination Port"])
+  }
+
+# bg_all <- do.call(rbind, bg_list_scaled_og)
+# tg_all <- do.call(rbind, tg_list_scaled_og)
+
+bg_all <- data.table(monday_na_fill[, scale(.SD), .SDcols = -"Destination Port"])
+tg_all <- data.table(tues_na_fill[, scale(.SD), .SDcols = -"Destination Port"])
+
+
+bg_all_cov <- bg_all[, cov(.SD)]
+tues_targ <- tg_all[, cov(.SD)]
+
+tues_raw <- data.matrix(tg_all)
+
+tuesday_single <- dca(A = tues_targ, B = bg_all_cov, nv = 2)
+tuesday_multiple <- dca(A = tues_targ, B = bg_list_cov, nv = 2)
+tuesday_plot_char <- all_dat[day == "tuesday" & `Destination Port` %in% port_subset, .SD, .SDcols = plot_char]
+
+tuesday_pca_plot <- data.table(tues_raw  %*% svds(data.matrix(tues_raw),k = 2, which = "LA")$v, tuesday_plot_char, "Background" = "None")
+tuesday_single_plot <- data.table(tues_raw %*% tuesday_single$vectors, tuesday_plot_char, "Background" = "Single")
+tuesday_multiple_plot <- data.table(tues_raw %*% tuesday_multiple$vectors, tuesday_plot_char, "Background" = "Multiple")
+
+temp_plot <- rbind(tuesday_pca_plot ,tuesday_single_plot, tuesday_multiple_plot)
+setnames(temp_plot, c("V1","V2"), c("DC1","DC2"))
+
+ggplot(data = temp_plot)+
+  geom_point(aes(x = DC1, y = DC2, color = Label), alpha = 0.3)+
+  facet_wrap(~Background, scale = "free")
+
+```
+
+
+```{R}
+ggplot(data = temp_plot)+
+  geom_point(aes(x = DC1, y = DC2, color = as.factor(`Destination Port`)), alpha = 0.25)+
+  facet_wrap(~Background, scale = "free")
+```
+
+# port 80 wednesday
+
+```{R}
+monday_temp <- all_dat[day == "monday" & `Destination Port` ==80, .SD, .SDcols = -c(cols_to_rm, no_variability, "Label", "day")]
+monday_na_fill <- monday_temp[, lapply(.SD, function(col){ col[is.na(col)] = mean(col, na.rm = T); return(col)}), keyby = `Destination Port`]
+
+tuesday_temp <- all_dat[day == "tuesday" & `Destination Port` ==80 & Label == "BENIGN", .SD, .SDcols = -c(cols_to_rm, no_variability, "Label", "day")]
+tuesday_na_fill <- tuesday_temp[, lapply(.SD, function(col){ col[is.na(col)] = mean(col, na.rm = T); return(col)}), keyby = `Destination Port`]
+
+thurs1_temp <- all_dat[day == "thurs1" & `Destination Port` ==80 & Label == "BENIGN", .SD, .SDcols = -c(cols_to_rm, no_variability, "Label", "day")]
+thurs1_na_fill <- thurs1_temp[, lapply(.SD, function(col){ col[is.na(col)] = mean(col, na.rm = T); return(col)}), keyby = `Destination Port`]
+
+thurs2_temp <- all_dat[day == "thurs2" & `Destination Port` ==80 & Label == "BENIGN", .SD, .SDcols = -c(cols_to_rm, no_variability, "Label", "day")]
+thurs2_na_fill <- thurs2_temp[, lapply(.SD, function(col){ col[is.na(col)] = mean(col, na.rm = T); return(col)}), keyby = `Destination Port`]
+
+fri1_temp <- all_dat[day == "fri1" & `Destination Port` ==80 & Label == "BENIGN", .SD, .SDcols = -c(cols_to_rm, no_variability, "Label", "day")]
+fri1_na_fill <- fri1_temp[, lapply(.SD, function(col){ col[is.na(col)] = mean(col, na.rm = T); return(col)}), keyby = `Destination Port`]
+
+
+wed_temp <- all_dat[day == "wednesday" & `Destination Port` == 80, .SD, .SDcols = -c(cols_to_rm, no_variability, "Label", "day")]
+wed_na_fill <- wed_temp[, lapply(.SD, function(col){ col[is.na(col)] = mean(col, na.rm = T); return(col)}), keyby = `Destination Port`]
+
+targ<- data.matrix(wed_na_fill[, lapply(.SD, scale), .SDcols = -"Destination Port"])
+bg1 <- data.matrix(monday_na_fill[, lapply(.SD, scale), .SDcols = -"Destination Port"])
+bg2 <- data.matrix(tuesday_na_fill[, lapply(.SD, scale), .SDcols = -"Destination Port"])
+bg3 <- data.matrix(thurs1_na_fill[, lapply(.SD, scale), .SDcols = -"Destination Port"])
+bg4 <- data.matrix(thurs2_na_fill[, lapply(.SD, scale), .SDcols = -"Destination Port"])
+bg5 <- data.matrix(fri1_na_fill[, lapply(.SD, scale), .SDcols = -"Destination Port"])
+
+targ_cov <- cov(targ)
+bg1_cov <- cov(bg1)
+bg2_cov <- cov(bg2)
+bg3_cov <- cov(bg3)
+bg4_cov <- cov(bg4)
+bg5_cov <- cov(bg5)
+bg6_cov <- cov(rbind(bg1,bg2,bg3,bg4,bg5))
+
+pca_vectors <-  svds(targ, 2, which = "LA")
+cpca_vectors <- dca(targ_cov, bg1_cov, nv = 2)
+dca2_vectors <- dca(targ_cov, list(bg2_cov,bg1_cov), nv = 2)
+dca3_vectors <- dca(targ_cov, list(bg1_cov,bg2_cov,bg4_cov), nv = 2)
+dca5_vectors <- dca(targ_cov, list(bg1_cov,bg2_cov,bg3_cov,bg4_cov,bg5_cov), nv = 2)
+dca_cat_vectors <- dca(targ_cov, list(bg6_cov), nv = 2)
+```
+
+
+```{R}
+wed_pca_plot <- data.table(targ %*% pca_vectors$v, all_dat[day == "wednesday" & `Destination Port` == 80, .SD, .SDcols = c("Label","day")], "Background" = "None")
+wed_cpca_plot <- data.table(targ %*% cpca_vectors$vectors, all_dat[day == "wednesday" & `Destination Port` == 80, .SD, .SDcols = c("Label","day")], "Background" = "Single")
+wed_dca2_plot <- data.table(targ %*% dca2_vectors$vectors, all_dat[day == "wednesday" & `Destination Port` == 80, .SD, .SDcols = c("Label","day")], "Background" = "Double")
+wed_dca3_plot <- data.table(targ %*% dca3_vectors$vectors, all_dat[day == "wednesday" & `Destination Port` == 80, .SD, .SDcols = c("Label","day")], "Background" = "Triple")
+wed_dca4_plot <- data.table(targ %*% dca5_vectors$vectors, all_dat[day == "wednesday" & `Destination Port` == 80, .SD, .SDcols = c("Label","day")], "Background" = "All")
+wed_dca_mix_plot <- data.table(targ %*% dca_cat_vectors$vectors, all_dat[day == "wednesday" & `Destination Port` == 80, .SD, .SDcols = c("Label","day")], "Background" = "Stack")
+
+port80_wed_plot <- rbind(wed_pca_plot, wed_cpca_plot, wed_dca2_plot, wed_dca3_plot, wed_dca4_plot,wed_dca_mix_plot)
+
+port80_wed_plot[, Background := factor(Background,levels = c("None","Single","Double","Triple","All","Stack"))]
+
+ggplot(port80_wed_plot[Background == "None"])+
+  geom_point(aes(x = V1, y=V2, color = Label), alpha = 0.3)+
+  facet_wrap(~Background, scale = "free", nrow = 2)+
+  theme(legend.position = "bottom")+
+  xlim(c(-10,20))+
+  ylim(c(-5, 5))
+```
+
+
+
+```{R}
+ggplot(port80_wed_plot)+
+  geom_point(aes(x = V1, y=V2, color = Label), alpha = 0.3)+
+  facet_wrap(~Background, scale = "free", nrow = 2)+
+  theme(legend.position = "bottom")
+```
+
+
+
+
+```{R}
+dca5_vectors$tau
+lapply(list(bg1_cov,bg2_cov,bg3_cov,bg4_cov,bg5_cov),
+       function(z){crossprod(dca5_vectors$vectors[,1], z %*% dca5_vectors$vectors[,1])})
+```
+
+```{R}
+dca2_vectors$tau
+dca3_vectors$tau
+dca_cat_vectors$tau
+```
