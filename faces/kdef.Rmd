@@ -1,0 +1,147 @@
+---
+title: "kdef"
+author: "Robin Tu"
+date: "4/1/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+libraries <- c("data.table", "MASS", "ggplot2", "splines","gridExtra","RSpectra", "imager", "future.apply")
+
+lapply(libraries, library, character.only = T)
+
+dca_dir <- "functions/"
+lapply(list.files(dca_dir), function(zz) source(paste0(dca_dir,zz)))
+```
+
+```{R}
+kdef <- "KDEF_and_AKDEF/KDEF/"
+female_file <- grep(list.files(kdef), pattern = "^BF", value = T)
+male_file <- grep(list.files(kdef), pattern = "^BM", value = T)
+
+neutral_files <- paste0(kdef, sapply( c(female_file, male_file), function(zz) paste0(zz,"/",zz,"NES.JPG")))
+happy_files <- paste0(kdef, sapply(list.files(kdef), function(zz) paste0(zz,"/",zz,"HAS.JPG")))
+
+neutral_F_files <- paste0(kdef, sapply( female_file, function(zz) paste0(zz,"/",zz,"NES.JPG")))
+neutral_M_files <- paste0(kdef, sapply( male_file, function(zz) paste0(zz,"/",zz,"NES.JPG")))
+
+#single background
+neutral <- future_lapply(neutral_files, load.image)
+neutral_g <- future_lapply(neutral, function(zz) scale(data.table(resize(grayscale(zz), 50, 68))))
+neutral_g_all <- data.matrix(do.call(cbind,neutral_g))
+
+#target
+happy <- future_lapply(happy_files, load.image)
+happy_g <- future_lapply(happy, function(zz) scale(data.table(resize(grayscale(zz), 50, 68))))
+happy_g_all <- data.matrix(do.call(cbind,happy_g))
+
+#multiple background
+neutral_F <- future_lapply(neutral_F_files, load.image)
+neutral_M <- future_lapply(neutral_M_files, load.image)
+
+neutral_Fg <- future_lapply(neutral_F, function(zz) scale(data.table(resize(grayscale(zz), 50, 68))))
+neutral_Mg <- future_lapply(neutral_M, function(zz) scale(data.table(resize(grayscale(zz), 50, 68))))
+
+neutral_Fg_all <- data.matrix(do.call(cbind,neutral_Fg))
+neutral_Mg_all <- data.matrix(do.call(cbind,neutral_Mg))
+
+
+
+idx <- as.data.frame(resize(happy[[1]], 50, 68))[,c(1,2)]
+
+cov_happy <- cov(t(happy_g_all))
+cov_neutral <- cov(t(neutral_g_all))
+cov_male <- cov(t(neutral_Mg_all))
+cov_female <- cov(t(neutral_Fg_all))
+
+
+pca_happy <- svds(happy_g_all, k=10)
+dca_happy_neutral_single <- dca(cov_happy, cov_neutral, nv = 10)
+dca_happy_neutral_gender <- dca(cov_happy, list(cov_male,cov_female), nv = 10)
+dca_neutral_gender <- dca(cov_female, cov_male, nv = 10)
+
+eigenfaces <- pca_happy$u
+dcafaces_single <- dca_happy_neutral_single$vectors
+dcafaces_gender <- dca_happy_neutral_gender$vectors
+dcafaces_neutral_gender <- dca_neutral_gender$vectors
+
+eigenfaces_list <- lapply(1:ncol(eigenfaces), function(zz){
+  cbind(as.data.frame(as.cimg(eigenfaces[,zz], dim = c(50,68,1,1))), zz)
+})
+
+dcafaces_single_list <- lapply(1:ncol(dcafaces_single), function(zz){
+  cbind(as.data.frame(as.cimg(dcafaces_single[,zz], dim = c(50,68,1,1))), zz)
+})
+
+dcafaces_gender_list <- lapply(1:ncol(dcafaces_gender), function(zz){
+  cbind(as.data.frame(as.cimg(dcafaces_gender[,zz], dim = c(50,68,1,1))), zz)
+})
+
+dcafaces_gender_diff_list <- lapply(1:ncol(dcafaces_neutral_gender), function(zz){
+  cbind(as.data.frame(as.cimg(dcafaces_neutral_gender[,zz], dim = c(50,68,1,1))), zz)
+})
+
+eigenfaces_plot <- do.call(rbind,eigenfaces_list)
+dcafaces_single_plot <- do.call(rbind, dcafaces_single_list)
+dcafaces_gender_plot <- do.call(rbind, dcafaces_gender_list)
+dca_neutral_gender_plot <- do.call(rbind, dcafaces_gender_diff_list)
+
+colnames(dca_neutral_gender_plot) <- colnames(dcafaces_gender_plot) <- colnames(dcafaces_single_plot) <- colnames(eigenfaces_plot) <- c("x","y","value","Eigenface")
+
+
+eigenfaces_plot <- data.table(eigenfaces_plot)[, value2 := 2*(value - min(value))/(max(value) - min(value)) - 1, by = Eigenface]
+dcafaces_single_plot <- data.table(dcafaces_single_plot)[, value2 := 2*(value - min(value))/(max(value) - min(value)) - 1, by = Eigenface]
+dcafaces_gender_plot <- data.table(dcafaces_gender_plot)[, value2 := 2*(value - min(value))/(max(value) - min(value)) - 1, by = Eigenface]
+dca_neutral_gender_plot <- data.table(dca_neutral_gender_plot)[, value2 := 2*(value - min(value))/(max(value) - min(value)) - 1, by = Eigenface]
+```
+
+## Eigenfaces of Happy Target
+
+```{R}
+ggplot(eigenfaces_plot, aes(x,y))+
+geom_raster(aes(fill=value2))+
+  facet_wrap(~Eigenface, nrow = 2)+
+scale_x_continuous(expand=c(0,0))+
+  scale_y_continuous(expand=c(0,0),trans=scales::reverse_trans())+
+  scale_fill_gradient(low="white",high="black")
+```
+
+## Happy Target, Neutral Background (Stacked Covariance)
+
+```{R}
+ggplot(dcafaces_single_plot, aes(x,y))+
+geom_raster(aes(fill=value2))+
+  facet_wrap(~Eigenface, nrow = 2)+
+scale_x_continuous(expand=c(0,0))+
+  scale_y_continuous(expand=c(0,0),trans=scales::reverse_trans())+
+   scale_fill_gradient(low="black",high="white")
+```
+
+## Happy Target, Male Neutral and Female Neutral Background
+
+```{R}
+ggplot(dcafaces_gender_plot, aes(x,y))+
+geom_raster(aes(fill=value2))+
+  facet_wrap(~Eigenface, nrow = 2)+
+scale_x_continuous(expand=c(0,0))+
+  scale_y_continuous(expand=c(0,0),trans=scales::reverse_trans())+
+   scale_fill_gradient(low="black",high="white")
+
+```
+
+
+```{R}
+dca_happy_neutral_single$tau
+dca_happy_neutral_gender$tau
+```
+
+## Female Neutral target, Male Neutral Background
+
+```{R}
+ggplot(dca_neutral_gender_plot, aes(x,y))+
+geom_raster(aes(fill=value))+
+  facet_wrap(~Eigenface, nrow = 2)+
+scale_x_continuous(expand=c(0,0))+
+  scale_y_continuous(expand=c(0,0),trans=scales::reverse_trans())+
+   scale_fill_gradient(low="black",high="white")
+```
