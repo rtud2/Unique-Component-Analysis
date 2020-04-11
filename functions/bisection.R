@@ -9,10 +9,10 @@
 
 
 score_calc = function(A, B, tau){
-  eigen_calc <- eigs_sym ( A - tau * B, 1, "LA")
-  v <- matrix(eigen_calc$vectors, ncol = 1)
-  score = as.numeric(1 - crossprod(v, B %*% v)) #derivative of  sum(diag(crossprod(v, (A - tau * B) %*% v))) + tau
-  return(list(score = score, values = eigen_calc$values, tau = tau))
+  eigen_calc <- eigs_sym ( A - tau * B, 1L, "LA")
+  return(list(score = 1 - as(crossprod(eigen_calc$vectors, B %*% eigen_calc$vectors), "numeric"),
+              values = eigen_calc$values,
+              tau = tau))
   }
 
 #' bisection
