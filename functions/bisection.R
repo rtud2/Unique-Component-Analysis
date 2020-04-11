@@ -80,14 +80,15 @@ bisection = function(A, B, limit = c(0,20), maxit = 1E5, nv = 1, tol = 1E-6){
 bisection.multiple = function(A, B, lambda=NULL, nv = 2, max_iter = 1E5, tol = 1E-6, ...){
   
   #initialize starting point if one isn't supplied
-  if(length(lambda) == 0){lambda = sapply(1:length(B), function(zz){bisection(A,B[[zz]])$tau})}
+  if(length(lambda) == 0){
+    lambda = future_sapply(1:length(B), function(zz){bisection(A,B[[zz]])$tau})
+    }
   score = Inf; 
   
     for(i in 1:max_iter){
       old.score <- score
       for (j in 1:length(B)){
-        A_star = A - Reduce("+", Map("*", lambda[-j], B[-j]))
-        bisection_j <- bisection(A_star, B[[j]], ...) 
+        bisection_j <- bisection(A - Reduce("+", Map("*", lambda[-j], B[-j])), B[[j]], ...) 
         lambda[j] = bisection_j$tau
       }
       score <- bisection_j$values + sum(lambda)
@@ -109,8 +110,8 @@ bisection.multiple = function(A, B, lambda=NULL, nv = 2, max_iter = 1E5, tol = 1
 
 
 dca = function(A, B, nv = 2, ...){
-  if(!is.list(B) & !is.matrix(B)){
-    stop("B is not a list of matrices or a matrix")
+  if(!(class(B) %in% c("list","matrix","dgeMatrix","dgCMatrix")) ){
+    stop("B is not a list of matrix, matrices, or Matrix")
   }
   
   if(is.list(B) & length(B) > 1){
