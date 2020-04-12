@@ -24,5 +24,5 @@ the final list of tau (the optimal lagrange multiplier), vector (eigenvector)
  associated with tau, value (eigenvalue), and score (derivative value of the lagrangian)
 }
 \description{
-Use bisection method to find the optimal Lagrangian for solving discriminant PCA. depends on irlba
+Use bisection method to find the optimal Lagrangian for solving unique component analysis (uca)
 }

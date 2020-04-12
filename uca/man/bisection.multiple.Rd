@@ -34,5 +34,5 @@ for each background covariance matrix in B, return list of tau (the optimal lagr
  associated with largest value (eigenvalue)
 }
 \description{
-bisection method but for multiple background datasets. Use bisection method to find the optimal Lagrangian for solving discriminant PCA of each background dataset. depends on irlba
+bisection method but for multiple background datasets. Use bisection method to find the optimal Lagrangian for solving UCA of each background dataset.
 }

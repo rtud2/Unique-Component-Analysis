@@ -22,7 +22,7 @@ score_calc = function(A, B, tau){
 
 #' bisection
 #'
-#' Use bisection method to find the optimal Lagrangian for solving discriminant PCA. depends on irlba
+#' Use bisection method to find the optimal Lagrangian for solving unique component analysis (uca)
 #' 
 #' @param A Target Covariance Matrix
 #' @param B Background Covariance Matrix. 
@@ -70,7 +70,7 @@ bisection = function(A, B, limit = c(0,20), maxit = 1E5, nv = 1, tol = 1E-6){
 
 #' bisection.multiple
 #' 
-#' bisection method but for multiple background datasets. Use bisection method to find the optimal Lagrangian for solving discriminant PCA of each background dataset. depends on irlba
+#' bisection method but for multiple background datasets. Use bisection method to find the optimal Lagrangian for solving UCA of each background dataset.
 #' 
 #' @param A Target Covariance Matrix
 #' @param B list of background covariance(s).
@@ -88,18 +88,18 @@ bisection.multiple = function(A, B, lambda=NULL, nv = 2, max_iter = 1E5, tol = 1
   
   #initialize starting point if one isn't supplied
   if(length(lambda) == 0){
-    lambda = future_sapply(1:length(B), function(zz){bisection(A,B[[zz]])$tau})
+    lambda = future_sapply(seq_along(B), function(zz){bisection(A,B[[zz]])$tau})
     }
   score = Inf; 
   
     for(i in 1:max_iter){
       old.score <- score
-      for (j in 1:length(B)){
+      for (j in seq_along(B)){
         bisection_j <- bisection(A - Reduce("+", Map("*", lambda[-j], B[-j])), B[[j]], ...) 
         lambda[j] = bisection_j$tau
       }
-      score <- bisection_j$values + sum(lambda)
-      if(abs(old.score - score) < tol * abs(old.score)) break;
+      score <- sum(bisection_j$values, lambda)
+      if( abs(old.score - score) < tol * old.score) break;
     }
   dca <- eigs_sym(A - Reduce("+", Map("*", lambda, B)), nv, "LA")
  return(list(values = dca$values, vectors = dca$vectors, tau = lambda))
@@ -114,7 +114,7 @@ bisection.multiple = function(A, B, lambda=NULL, nv = 2, max_iter = 1E5, tol = 1
 #' @param B list of background covariance(s). 
 #' @param nv number of uca components to estimate
 #' @param ... other parameters to pass in to bisection(...) and bisection.multiple(...)
-#' @return values(eigenvalues), vectors (eigenvectors), tau (Lagrange Multiplier) associated with discriminant component analysis
+#' @return values(eigenvalues), vectors (eigenvectors), tau (Lagrange Multiplier) associated with unique component analysis
 #' @importFrom RSpectra eigs_sym
 #' @export
 

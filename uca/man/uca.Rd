@@ -16,7 +16,7 @@ uca(A, B, nv = 2, ...)
 \item{...}{other parameters to pass in to bisection(...) and bisection.multiple(...)}
 }
 \value{
-values(eigenvalues), vectors (eigenvectors), tau (Lagrange Multiplier) associated with discriminant component analysis
+values(eigenvalues), vectors (eigenvectors), tau (Lagrange Multiplier) associated with unique component analysis
 }
 \description{
 Run unique component analysis
