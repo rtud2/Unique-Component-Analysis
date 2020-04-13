@@ -8,8 +8,8 @@ bisection.multiple(
   A,
   B,
   lambda = NULL,
-  nv = 2,
-  max_iter = 1e+05,
+  nv = 2L,
+  max_iter = 100000L,
   tol = 1e-06,
   ...
 )

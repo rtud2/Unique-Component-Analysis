@@ -32,25 +32,21 @@ score_calc = function(A, B, tau){
 #' @param tol tolerance for when to stop the algorithm
 #' @return the final list of tau (the optimal lagrange multiplier), vector (eigenvector)
 #'  associated with tau, value (eigenvalue), and score (derivative value of the lagrangian)
-#' @importFrom future.apply future_lapply
 #' @export
-bisection = function(A, B, limit = c(0,20), maxit = 1E5, nv = 1, tol = 1E-6){
+bisection = function(A, B, limit = c(0,20), maxit = 1E5L, nv = 1, tol = 1E-6){
+  f_val = lapply(limit, function(z){score_calc(A, B, z)})
   
-  f_val = future_lapply(limit, function(z) score_calc(A, B, z))
-  maxit_flag = F;
-  initial <- sapply(f_val, "[[", 1)
-  
-  if(sum(sign(initial)) == 2){
-    warning("initial f(a) and f(b) are positive. Setting lambda to 0 \n")
-    return(f_val[[1]])
+  if(f_val[[1]]$score > 0){
+    warning("Redundant Constraint: Lagrange Multiplier is negative. Setting lambda to 0 \n");
+    return(f_val[[1]]);
   }else{
     
-    for(iter in 1:maxit){
-      limit <- sapply(f_val, "[[", 3)
-      if( max(limit) - min(limit) < tol * min(limit)) break;
-      if(iter == maxit) maxit_flag == T;
+    for(iter in 1L:maxit){
+      limit <- c(f_val[[1]]$tau, f_val[[2]]$tau)
+      if( limit[2] - limit[1] < tol) break;
+      if(iter == maxit) warning("maximum iteration reached: solution may not be optimal \n");
       
-      tau_score = score_calc(A, B, tau = sum(limit)/2)
+      tau_score = score_calc(A, B, sum(limit)/2)
       
       if(tau_score$score < 0){
         f_val[[1]] = tau_score
@@ -59,11 +55,7 @@ bisection = function(A, B, limit = c(0,20), maxit = 1E5, nv = 1, tol = 1E-6){
       }
     }  
     
-    if(maxit_flag == T){
-      warning("maximum iteration reached: solution may not be optimal \n")
-    }
-    min_fval <- which.min(abs(sapply(f_val, "[[", 1)))
-    return(f_val[[min_fval]]) 
+    return(f_val[[ which.min(abs(c(f_val[[1]]$score, f_val[[2]]$score))) ]]) 
   }
 }
 
@@ -84,7 +76,7 @@ bisection = function(A, B, limit = c(0,20), maxit = 1E5, nv = 1, tol = 1E-6){
 #' @importFrom RSpectra eigs_sym
 #' @importFrom future.apply future_sapply
 #' @export
-bisection.multiple = function(A, B, lambda=NULL, nv = 2, max_iter = 1E5, tol = 1E-6, ...){
+bisection.multiple = function(A, B, lambda=NULL, nv = 2L, max_iter = 1E5L, tol = 1E-6, ...){
   
   #initialize starting point if one isn't supplied
   if(length(lambda) == 0){
@@ -92,7 +84,7 @@ bisection.multiple = function(A, B, lambda=NULL, nv = 2, max_iter = 1E5, tol = 1
     }
   score = Inf; 
   
-    for(i in 1:max_iter){
+    for(i in 1L:max_iter){
       old.score <- score
       for (j in seq_along(B)){
         bisection_j <- bisection(A - Reduce("+", Map("*", lambda[-j], B[-j])), B[[j]], ...) 
