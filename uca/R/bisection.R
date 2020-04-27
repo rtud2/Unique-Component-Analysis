@@ -1,6 +1,3 @@
-#' @importFrom Rcpp evalCpp
-#' @useDynLib uca, .registration = TRUE
-NULL
 #' score_calc
 #' 
 #' Calculate the derivative of Lagrangian.
@@ -11,11 +8,11 @@ NULL
 #' @return list of tau (the lagrangian), eigenvector associated with tau, and derivative value of the lagrange multiplier
 #' @importFrom methods as
 #' @importFrom RSpectra eigs_sym
-#' @export
 #' 
 score_calc = function(A, B, tau){
   eigen_calc <- eigs_sym ( A - tau * B, 1L, "LA")
-  return(list(score = 1 - as(eigenSandwich(eigen_calc$vectors, B), "numeric"),
+  return(list(#score = 1 - as(eigenSandwich(eigen_calc$vectors, B), "numeric"),
+  score = 1 - as( crossprod(eigen_calc$vectors, B %*% eigen_calc$vectors), "numeric"),
               values = eigen_calc$values,
               tau = tau))
   }
@@ -32,7 +29,7 @@ score_calc = function(A, B, tau){
 #' @param tol tolerance for when to stop the algorithm
 #' @return the final list of tau (the optimal lagrange multiplier), vector (eigenvector)
 #'  associated with tau, value (eigenvalue), and score (derivative value of the lagrangian)
-#' @export
+
 bisection = function(A, B, limit = c(0,20), maxit = 1E5L, nv = 1, tol = 1E-6){
   f_val = lapply(limit, function(z){score_calc(A, B, z)})
   
@@ -43,7 +40,7 @@ bisection = function(A, B, limit = c(0,20), maxit = 1E5L, nv = 1, tol = 1E-6){
     
     for(iter in 1L:maxit){
       limit <- c(f_val[[1]]$tau, f_val[[2]]$tau)
-      if( limit[2] - limit[1] < tol) break;
+      if( limit[2] - limit[1] < tol * limit[1]) break;
       if(iter == maxit) warning("maximum iteration reached: solution may not be optimal \n");
       
       tau_score = score_calc(A, B, sum(limit)/2)
@@ -75,7 +72,7 @@ bisection = function(A, B, limit = c(0,20), maxit = 1E5L, nv = 1, tol = 1E-6){
 #'  associated with largest value (eigenvalue)
 #' @importFrom RSpectra eigs_sym
 #' @importFrom future.apply future_sapply
-#' @export
+
 bisection.multiple = function(A, B, lambda=NULL, nv = 2L, max_iter = 1E5L, tol = 1E-6, ...){
   
   #initialize starting point if one isn't supplied
@@ -91,7 +88,7 @@ bisection.multiple = function(A, B, lambda=NULL, nv = 2L, max_iter = 1E5L, tol =
         lambda[j] = bisection_j$tau
       }
       score <- sum(bisection_j$values, lambda)
-      if( abs(old.score - score) < tol * old.score) break;
+      if( abs(old.score - score) < tol * abs(old.score)) break;
     }
   dca <- eigs_sym(A - Reduce("+", Map("*", lambda, B)), nv, "LA")
  return(list(values = dca$values, vectors = dca$vectors, tau = lambda))
@@ -105,22 +102,73 @@ bisection.multiple = function(A, B, lambda=NULL, nv = 2L, max_iter = 1E5L, tol =
 #' @param A Target Covariance Matrix
 #' @param B list of background covariance(s). 
 #' @param nv number of uca components to estimate
+#' @param method method used to calculate the uca values and vectors. 
 #' @param ... other parameters to pass in to bisection(...) and bisection.multiple(...)
 #' @return values(eigenvalues), vectors (eigenvectors), tau (Lagrange Multiplier) associated with unique component analysis
 #' @importFrom RSpectra eigs_sym
 #' @export
 
-uca = function(A, B, nv = 2, ...){
+uca = function(A, B, nv = 2,method = "cov", ...){
   if(!(class(B) %in% c("list","matrix","dgeMatrix","dgCMatrix")) ){
     stop("B is not a list of matrix, matrices, or Matrix")
   }
   
-  if(is.list(B) & length(B) > 1){
-    bisection.multiple(A=A, B=B, nv=nv, ... )
+  if(method == "cov"){
+    
+    if(is.list(B) & length(B) > 1){
+      if( sum((nrow(A) != nrow(A)), sapply(B , function(z){nrow(z) != ncol(z)})) > 0 ){
+        stop("at least one input matrix is not square. make sure you've inputted a covariance matrix")
+      }
+      if(sum(sapply(lapply(B,dim), function(dims) all.equal(dims, dim(A)))) < length(B)){
+        stop("at least one background dimension does not match target dimension")
+      }
+      
+      bisection.multiple(A=A, B=B, nv=nv, ... )
+
+      
+    }else{
+      if(is.list(B)) B = B[[1]]
+      if((nrow(A) != nrow(B)) | nrow(A) != ncol(A) | nrow(B) != ncol(B)){
+        stop("either A or B are not square, or don't have the same dimensions")
+      }
+      tmp_res <- bisection(A=A, B=B, nv=nv, ...)
+      res <- eigs_sym(A - tmp_res$tau*B, nv, "LA")
+      return(list(values = res$values, vectors = res$vectors, tau = tmp_res$tau))
+    }  
+    
+  }else if(method == "data"){
+    
+    if(is.list(B) & length(B) > 1){
+      #run multi-background
+      A_divided = A/sqrt(nrow(A) - 1)
+      B_divided <- Map(function(z){z/sqrt(nrow(z) - 1)}, B)
+      
+      tmp_res <- bisection2.multiple(A=A_divided, B=B_divided, ... )
+      
+      left <- cbind(t(A_divided ), do.call(cbind, Map("*", -tmp_res$tau, lapply(B_divided , t))))
+      right <- rbind(A_divided , do.call(rbind, B_divided ))
+      
+      final_res <- broken_svd(left, right, nv)
+      return(list(values = final_res$values, vectors = final_res$vectors, tau = tmp_res$tau))  
+    
+      }else{
+        #run single background
+      if(is.list(B)) B = B[[1]]
+      
+      A_divided = A/sqrt(nrow(A) - 1)
+      B_divided = B/sqrt(nrow(B) - 1)  
+      
+      tmp_res <- bisection2(A=A_divided, B=B_divided, ...)
+      
+      #calculate the svd
+      left <- cbind(t(A_divided), - tmp_res$tau * t(B_divided))
+      right <- rbind(A_divided, B_divided)
+     
+      final_res <- broken_svd(left, right, nv)
+      return(list(values = final_res$values, vectors = final_res$vectors, tau = tmp_res$tau))
+    }  
   }else{
-    if(is.list(B)) B = B[[1]]
-    tmp_res <- bisection(A=A, B=B, nv=nv, ...)
-    res <- eigs_sym(A - tmp_res$tau*B, nv, "LA")
-    return(list(values = res$values, vectors = res$vectors, tau = tmp_res$tau))
+    stop("Method is not 'cov' or 'data'")
   }
+  
 }

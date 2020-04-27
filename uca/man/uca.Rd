@@ -4,7 +4,7 @@
 \alias{uca}
 \title{uca}
 \usage{
-uca(A, B, nv = 2, ...)
+uca(A, B, nv = 2, method = "cov", ...)
 }
 \arguments{
 \item{A}{Target Covariance Matrix}
@@ -12,6 +12,8 @@ uca(A, B, nv = 2, ...)
 \item{B}{list of background covariance(s).}
 
 \item{nv}{number of uca components to estimate}
+
+\item{method}{method used to calculate the uca values and vectors.}
 
 \item{...}{other parameters to pass in to bisection(...) and bisection.multiple(...)}
 }
