@@ -13,3 +13,11 @@ arma_score <- function(A, B) {
     .Call(`_uca_arma_score`, A, B)
 }
 
+broken_svd_cpp <- function(left, right, nv) {
+    .Call(`_uca_broken_svd_cpp`, left, right, nv)
+}
+
+multiple_score_calc_cpp <- function(left, right, right_u, right_d) {
+    .Call(`_uca_multiple_score_calc_cpp`, left, right, right_u, right_d)
+}
+

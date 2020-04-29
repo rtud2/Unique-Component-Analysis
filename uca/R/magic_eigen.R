@@ -2,6 +2,21 @@
 #' @useDynLib uca, .registration = TRUE
 NULL
 
+
+#' centeer
+#' 
+#' Convenient function to center the data, rather than typing `scale' or `sweep`
+#' 
+#' @param X a matrix
+#' @return centered data matrix X
+#' @export
+#' 
+center <- function(X){
+  column_means <- colMeans(X)
+  return(sweep(X, 2, column_means, "-"))
+}
+
+
 #' multiple_score_calc
 #' 
 #' calculate the eigendecomposition via a product of matrices using SVD and QR decomposition. Much faster for large matrices.
@@ -9,46 +24,29 @@ NULL
 #'
 #' @param left a rectangular matrix with p columns
 #' @param right a rectangular matrix with p rows
-#' @param svd_right singular value decomposition of the right matrix
+#' @param svd_right a precalculated svd for the right matrix. saves time
 #' @param tau contrastive parameter
 #' @return list of the largest eigenvalue, associated score, and tau
 #' @importFrom methods as
 
 
+# multiple_score_calc <- function(left, right, tau, B_focus){
+#   
+#   tmp <- broken_svd_cpp(left, right , nv=1)
+#   return(
+#     list(score = as(arma_score(B_focus, tmp$vectors), "numeric"),
+#          values =tmp$values,
+#          tau = tau))
+# }
+
 multiple_score_calc <- function(left, right, svd_right, tau, B_focus){
   
-  qr_left_U <- arma_qr(left %*% svd_right$u)
-  RS_svd <- arma_svd( sweep(qr_left_U$R, 2, svd_right$d, FUN = "*") )
-  u = qr_left_U$Q %*% RS_svd$u
-  eigenvalues <- colSums(u * (left %*% (right %*% u))) #calculates diag(crossprod(u, left) %*% (right %*%u))
-  top_eig_vals <- which.max(eigenvalues)
+ tmp_cpp <- multiple_score_calc_cpp(left, right, svd_right$u, svd_right$d)
   
   return(
-    list(score = as(arma_score(B_focus, matrix(u[,top_eig_vals], ncol = 1)), "numeric"),
-         values = eigenvalues[top_eig_vals],
+    list(score = as(arma_score(B_focus, tmp_cpp$vectors), "numeric"),
+         values = tmp_cpp$values,
          tau = tau))
-}
-
-
-#' broken_svd
-#' 
-#' calculate SVD of a product of matrices by using svd and QR decompositions
-#' 
-#' @param left left side of a product
-#' @param right right side of a product
-#' @param nv number of unique components
-#' @return top nv eigenvalues and associated eigenvectors
-#' 
-broken_svd = function(left, right, nv){
-  svd_right <- arma_svd(right)
-  qr_left_U <- arma_qr(left %*% svd_right$u)
-  RS_svd <- arma_svd( sweep(qr_left_U$R, 2, svd_right$d, FUN = "*") )
-  u = qr_left_U$Q %*% RS_svd$u
-  
-  eigenvalues <- colSums(u * (left %*% (right %*% u))) #calculates diag(crossprod(u, left) %*% (right %*%u))
-  top_eig_vals <- order(eigenvalues, decreasing = T)[1:nv]
-  list(values = eigenvalues[top_eig_vals],
-       vectors = u[,top_eig_vals])
 }
 
 
@@ -65,12 +63,18 @@ broken_svd = function(left, right, nv){
 #' 
 bisection2 = function(A, B, limit = c(0,20), maxit = 1E5L, tol = 1E-6){
   
-  right <- rbind(A , B )
+  right <- rbind(A , B)
   svd_right <- arma_svd(right)
+  t_A = t(A); 
+  t_B = t(B);
   
-  f_val = lapply(limit, function(z){
-    left <- cbind(t(A ), - z * t(B ))
-    multiple_score_calc(left, right, svd_right, z, B )})
+  f_val <- vector(mode = "list", length = 2L)
+  f_val[[1]] <- multiple_score_calc(left = t_A,
+                                    right = A,
+                                    svd_right = arma_svd(A),
+                                    tau = 0,
+                                    B_focus = B)
+  f_val[[2]]$tau = 20
   
   if(f_val[[1]]$score > 0){
     warning("Redundant Constraint: Lagrange Multiplier is negative. Setting lambda to 0 \n");
@@ -82,9 +86,11 @@ bisection2 = function(A, B, limit = c(0,20), maxit = 1E5L, tol = 1E-6){
       if( limit[2] - limit[1] < tol * limit[1]) break;
       if(iter == maxit) warning("maximum iteration reached: solution may not be optimal \n");
       
-      tau = sum(limit)/2
-      left <- cbind(t(A ), - tau * t(B ))
-      tau_score = multiple_score_calc(left, right, svd_right, tau, B )
+      tau_score = multiple_score_calc(left = cbind(t_A, - (0.5*sum(limit)) * t_B),
+                                      right = right,
+                                      svd_right = svd_right,
+                                      tau = (0.5*sum(limit)),
+                                      B_focus = B )
       
       if(tau_score$score < 0){
         f_val[[1]] = tau_score
@@ -111,18 +117,25 @@ bisection2 = function(A, B, limit = c(0,20), maxit = 1E5L, tol = 1E-6){
 #' @param maxit maximum iterations
 #' @param tol tolerance for convergence criteria
 #' @return list of tau, largest eigenvalue, and score
-#' @importFrom future.apply future_sapply
 
 magic_eigen_multiple = function(A, B, lambda, j, limit = c(0,20), maxit = 1E5, tol = 1E-6){
   
   #constants that don't really change if focused on j-th background
-  right <- rbind(A, do.call(rbind, B[-j]), B[[j]])
+  B_j <- B[[j]]
+  t_B_j <- t( B_j )
+  old_right <- rbind(A, do.call(rbind, B[-j]))
+  right <- rbind(old_right, B_j)
+  old_left <- cbind(t(A), do.call(cbind, Map("*", -lambda[-j], lapply(B[-j], t))))
   svd_right <- arma_svd(right)
   
   #checking bounds 
-  f_val <- future_lapply(limit, function(zz) {
-    left <- cbind( t(A), do.call(cbind, Map("*", -lambda[-j], lapply(B[-j], t))), -zz *t(B[[j]]));
-    multiple_score_calc(left, right,svd_right, zz, B[[j]] ) })
+  f_val <- vector(mode = "list", length = 2L)
+  f_val[[1]] <- multiple_score_calc(left = old_left,
+                                    right = old_right,
+                                    svd_right = arma_svd(old_right),
+                                    tau = 0,
+                                    B_focus = B_j)
+  f_val[[2]]$tau = 20
   
   if(f_val[[1]]$score > 0){
     warning("Redundant Constraint: Lagrange Multiplier is negative. Setting lambda to 0 \n");
@@ -133,8 +146,11 @@ magic_eigen_multiple = function(A, B, lambda, j, limit = c(0,20), maxit = 1E5, t
       if( limit[2] - limit[1] < tol * limit[1]) break;
       if(iter == maxit) warning("maximum iteration reached: solution may not be optimal \n");
       
-      left <- cbind( t(A), do.call(cbind, Map("*", -lambda[-j], lapply(B[-j], t))), t(-sum(limit)/2 * B[[j]]))
-      tau_score = multiple_score_calc(left, right, svd_right, sum(limit)/2, B[[j]] )
+      tau_score = multiple_score_calc(left = cbind( old_left, -0.5*sum(limit) * t_B_j),
+                                      right = right,
+                                      svd_right = svd_right,
+                                      tau = 0.5*sum(limit),
+                                      B_focus = B_j )
       
       if(tau_score$score < 0){
        f_val[[1]] <- tau_score
@@ -170,7 +186,7 @@ bisection2.multiple <- function(A, B, lambda=NULL, max_iter=1E5L, tol = 1E-6, ..
   #coordinate descent
   for(i in 1L:max_iter){
     old.score <- score
-    for (j in seq_along(B )){
+    for (j in seq_along(B)){
       #calculate the optimal lagrange multiplier for each background j
       bisection_j <- magic_eigen_multiple(A , B , lambda, j)
       lambda[j] <- bisection_j$tau
@@ -181,7 +197,7 @@ bisection2.multiple <- function(A, B, lambda=NULL, max_iter=1E5L, tol = 1E-6, ..
     }
   return(
     list(score = score,
-       valuess = bisection_j$values,
+       values = bisection_j$values,
        tau = lambda)
     )
 }

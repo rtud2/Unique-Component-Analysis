@@ -11,7 +11,7 @@ multiple_score_calc(left, right, svd_right, tau, B_focus)
 
 \item{right}{a rectangular matrix with p rows}
 
-\item{svd_right}{singular value decomposition of the right matrix}
+\item{svd_right}{a precalculated svd for the right matrix. saves time}
 
 \item{tau}{contrastive parameter}
 }

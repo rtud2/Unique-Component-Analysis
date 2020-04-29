@@ -148,7 +148,7 @@ uca = function(A, B, nv = 2,method = "cov", ...){
       left <- cbind(t(A_divided ), do.call(cbind, Map("*", -tmp_res$tau, lapply(B_divided , t))))
       right <- rbind(A_divided , do.call(rbind, B_divided ))
       
-      final_res <- broken_svd(left, right, nv)
+      final_res <- broken_svd_cpp(left, right, nv)
       return(list(values = final_res$values, vectors = final_res$vectors, tau = tmp_res$tau))  
     
       }else{
@@ -164,7 +164,7 @@ uca = function(A, B, nv = 2,method = "cov", ...){
       left <- cbind(t(A_divided), - tmp_res$tau * t(B_divided))
       right <- rbind(A_divided, B_divided)
      
-      final_res <- broken_svd(left, right, nv)
+      final_res <- broken_svd_cpp(left, right, nv)
       return(list(values = final_res$values, vectors = final_res$vectors, tau = tmp_res$tau))
     }  
   }else{
