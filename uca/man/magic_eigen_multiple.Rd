@@ -7,6 +7,10 @@
 magic_eigen_multiple(
   A,
   B,
+  t_A,
+  t_B,
+  right,
+  svd_right,
   lambda,
   j,
   limit = c(0, 20),
@@ -18,6 +22,14 @@ magic_eigen_multiple(
 \item{A}{a *Centered* n1xp data matrix}
 
 \item{B}{*Centered* a n2xp data matrix}
+
+\item{t_A}{precomputed A transpose}
+
+\item{t_B}{precomputed B transpose}
+
+\item{right}{precomputed right long matrix: rbind(A, B)}
+
+\item{svd_right}{precomputed svd of right matrix}
 
 \item{lambda}{a j dimensional vector with possible lagrange multipliers for each background data matrix}
 

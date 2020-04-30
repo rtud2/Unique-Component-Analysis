@@ -145,8 +145,8 @@ uca = function(A, B, nv = 2,method = "cov", ...){
       
       tmp_res <- bisection2.multiple(A=A_divided, B=B_divided, ... )
       
-      left <- cbind(t(A_divided ), do.call(cbind, Map("*", -tmp_res$tau, lapply(B_divided , t))))
-      right <- rbind(A_divided , do.call(rbind, B_divided ))
+      left <- do.call(cbind, lapply(append(list(A_divided), Map("*", -tmp_res$tau, B_divided)), t))
+      right <-  do.call(rbind, append(list(A_divided), B_divided))
       
       final_res <- broken_svd_cpp(left, right, nv)
       return(list(values = final_res$values, vectors = final_res$vectors, tau = tmp_res$tau))  

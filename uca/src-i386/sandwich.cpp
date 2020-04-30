@@ -62,9 +62,9 @@ SEXP multiple_score_calc_cpp(const arma::mat & left, const arma::mat& right, con
   
   arma::mat rs_u, rs_v; arma::vec rs_d;
   
-  r.each_col() %= right_d; //multiply each column by corresponding element in d. no need to construct a diagonal matrix
-  arma::svd_econ(rs_u,rs_d,rs_v, r);
-  //arma::svd_econ(rs_u,rs_d,rs_v, r * diagmat(right_d));
+  //r.each_col() %= right_d; //multiply each column by corresponding element in d. no need to construct a diagonal matrix
+  //arma::svd_econ(rs_u,rs_d,rs_v, r);
+  arma::svd_econ(rs_u,rs_d,rs_v, r * diagmat(right_d));
   
   const arma::mat & evectors = q * rs_u;
   const arma::vec & evalues = arma::vectorise(arma::sum( evectors % (left*(right*evectors)), 0));

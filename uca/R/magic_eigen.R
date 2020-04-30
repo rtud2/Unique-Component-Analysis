@@ -90,7 +90,7 @@ bisection2 = function(A, B, limit = c(0,20), maxit = 1E5L, tol = 1E-6){
                                       right = right,
                                       svd_right = svd_right,
                                       tau = (0.5*sum(limit)),
-                                      B_focus = B )
+                                      B_focus = B)
       
       if(tau_score$score < 0){
         f_val[[1]] = tau_score
@@ -111,6 +111,10 @@ bisection2 = function(A, B, limit = c(0,20), maxit = 1E5L, tol = 1E-6){
 #' 
 #' @param A a *Centered* n1xp data matrix
 #' @param B *Centered* a n2xp data matrix
+#' @param t_A precomputed A transpose
+#' @param t_B precomputed B transpose
+#' @param right precomputed right long matrix: rbind(A, B)
+#' @param svd_right precomputed svd of right matrix
 #' @param lambda a j dimensional vector with possible lagrange multipliers for each background data matrix
 #' @param j the specific background you're solving for
 #' @param limit bounds for the lagrange multiplier.
@@ -118,15 +122,12 @@ bisection2 = function(A, B, limit = c(0,20), maxit = 1E5L, tol = 1E-6){
 #' @param tol tolerance for convergence criteria
 #' @return list of tau, largest eigenvalue, and score
 
-magic_eigen_multiple = function(A, B, lambda, j, limit = c(0,20), maxit = 1E5, tol = 1E-6){
+magic_eigen_multiple = function(A, B, t_A, t_B, right, svd_right, lambda, j, limit = c(0,20), maxit = 1E5, tol = 1E-6){
   
   #constants that don't really change if focused on j-th background
-  B_j <- B[[j]]
-  t_B_j <- t( B_j )
-  old_right <- rbind(A, do.call(rbind, B[-j]))
-  right <- rbind(old_right, B_j)
-  old_left <- cbind(t(A), do.call(cbind, Map("*", -lambda[-j], lapply(B[-j], t))))
-  svd_right <- arma_svd(right)
+  old_right <- do.call(rbind, append(list(A),  B[-j]))
+  lambda_B <- Map("*", -lambda, t_B)
+  old_left <- do.call(cbind, append(list(t_A), lambda_B[-j]))
   
   #checking bounds 
   f_val <- vector(mode = "list", length = 2L)
@@ -134,7 +135,7 @@ magic_eigen_multiple = function(A, B, lambda, j, limit = c(0,20), maxit = 1E5, t
                                     right = old_right,
                                     svd_right = arma_svd(old_right),
                                     tau = 0,
-                                    B_focus = B_j)
+                                    B_focus = B[[j]])
   f_val[[2]]$tau = 20
   
   if(f_val[[1]]$score > 0){
@@ -146,11 +147,13 @@ magic_eigen_multiple = function(A, B, lambda, j, limit = c(0,20), maxit = 1E5, t
       if( limit[2] - limit[1] < tol * limit[1]) break;
       if(iter == maxit) warning("maximum iteration reached: solution may not be optimal \n");
       
-      tau_score = multiple_score_calc(left = cbind( old_left, -0.5*sum(limit) * t_B_j),
+      lambda_B[[j]] = -0.5*sum(limit) * t_B[[j]]
+      
+      tau_score = multiple_score_calc(left = do.call(cbind, append(list(t_A), lambda_B)),
                                       right = right,
                                       svd_right = svd_right,
                                       tau = 0.5*sum(limit),
-                                      B_focus = B_j )
+                                      B_focus = B[[j]] )
       
       if(tau_score$score < 0){
        f_val[[1]] <- tau_score
@@ -161,6 +164,9 @@ magic_eigen_multiple = function(A, B, lambda, j, limit = c(0,20), maxit = 1E5, t
     return(f_val[[ which.min(abs(c(f_val[[1]]$score, f_val[[2]]$score))) ]]) 
   }
 }
+
+
+
 
 #' bisection2.multiple
 #' 
@@ -181,6 +187,11 @@ bisection2.multiple <- function(A, B, lambda=NULL, max_iter=1E5L, tol = 1E-6, ..
     lambda = sapply(seq_along(B ), function(zz){bisection2(A, B[[zz]])$tau})
   }
   
+  t_A <- t(A)
+  t_B <- lapply(B, t)
+  right <- do.call(rbind, append(list(A), B))
+  svd_right <- arma_svd(right)
+  
   score = Inf; 
   
   #coordinate descent
@@ -188,7 +199,7 @@ bisection2.multiple <- function(A, B, lambda=NULL, max_iter=1E5L, tol = 1E-6, ..
     old.score <- score
     for (j in seq_along(B)){
       #calculate the optimal lagrange multiplier for each background j
-      bisection_j <- magic_eigen_multiple(A , B , lambda, j)
+      bisection_j <- magic_eigen_multiple(A, B, t_A, t_B, right, svd_right, lambda, j)
       lambda[j] <- bisection_j$tau
     }
     score <- sum(bisection_j$values, lambda)
