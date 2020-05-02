@@ -4,7 +4,15 @@
 \alias{bisection2.multiple}
 \title{bisection2.multiple}
 \usage{
-bisection2.multiple(A, B, lambda = NULL, max_iter = 100000L, tol = 1e-06, ...)
+bisection2.multiple(
+  A,
+  B,
+  lambda = NULL,
+  nv = 2L,
+  max_iter = 100000L,
+  tol = 1e-06,
+  ...
+)
 }
 \arguments{
 \item{A}{*Centered* Target Data Matrix. n1 x p dimensions}
@@ -13,9 +21,11 @@ bisection2.multiple(A, B, lambda = NULL, max_iter = 100000L, tol = 1e-06, ...)
 
 \item{lambda}{contrastive parameters if known. used to start algorithm. defaults to NULL}
 
+\item{nv}{number of uca components to calculate}
+
 \item{max_iter}{maximum number of iterations before giving up}
 
-\item{tol}{convergence criteria}
+\item{tol}{convergence criteria for coordinate descent}
 }
 \value{
 list of tau, largest eigenvalue, and score

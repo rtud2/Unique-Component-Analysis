@@ -16,6 +16,31 @@ center <- function(X){
   return(sweep(X, 2, column_means, "-"))
 }
 
+#' broken_svd_R
+#' 
+#' calculate SVD of a product of matrices by using svd and QR decompositions
+#' 
+#' @param left left side of a product
+#' @param right right side of a product
+#' @param nv number of unique components
+#' @return top nv eigenvalues and associated eigenvectors
+#' 
+broken_svd_R = function(left, right, nv){
+  svd_right <- svd(right,nv = 0)
+  qr_left_U <- qr(left %*% svd_right$u)
+  
+  RS_svd <- arma_svd( t(t(qr.R(qr_left_U)) * svd_right$d))
+  u = qr.Q(qr_left_U) %*% RS_svd$u
+  
+  eigenvalues <- colSums(u * (left %*% (right %*% u))) #calculates diag(crossprod(u, left) %*% (right %*%u))
+  top_eig_vals <- order(eigenvalues, decreasing = T)[1:nv]
+  list(values = eigenvalues[top_eig_vals],
+       vectors = u[,top_eig_vals])
+}
+
+
+
+
 
 #' multiple_score_calc
 #' 
@@ -28,16 +53,6 @@ center <- function(X){
 #' @param tau contrastive parameter
 #' @return list of the largest eigenvalue, associated score, and tau
 #' @importFrom methods as
-
-
-# multiple_score_calc <- function(left, right, tau, B_focus){
-#   
-#   tmp <- broken_svd_cpp(left, right , nv=1)
-#   return(
-#     list(score = as(arma_score(B_focus, tmp$vectors), "numeric"),
-#          values =tmp$values,
-#          tau = tau))
-# }
 
 multiple_score_calc <- function(left, right, svd_right, tau, B_focus){
   
@@ -147,7 +162,7 @@ magic_eigen_multiple = function(A, B, t_A, t_B, right, svd_right, lambda, j, lim
       if( limit[2] - limit[1] < tol * limit[1]) break;
       if(iter == maxit) warning("maximum iteration reached: solution may not be optimal \n");
       
-      lambda_B[[j]] = -0.5*sum(limit) * t_B[[j]]
+      lambda_B[[j]] = (-0.5*sum(limit)) * t_B[[j]]
       
       tau_score = multiple_score_calc(left = do.call(cbind, append(list(t_A), lambda_B)),
                                       right = right,
@@ -175,11 +190,12 @@ magic_eigen_multiple = function(A, B, t_A, t_B, right, svd_right, lambda, j, lim
 #' @param A *Centered* Target Data Matrix. n1 x p dimensions
 #' @param B *Centered* List of k Background Data Matrix. n_k x p dimensions
 #' @param lambda contrastive parameters if known. used to start algorithm. defaults to NULL
+#' @param nv number of uca components to calculate
 #' @param max_iter maximum number of iterations before giving up
-#' @param tol convergence criteria
+#' @param tol convergence criteria for coordinate descent
 #' @return list of tau, largest eigenvalue, and score
 
-bisection2.multiple <- function(A, B, lambda=NULL, max_iter=1E5L, tol = 1E-6, ...){
+bisection2.multiple <- function(A, B, lambda=NULL, nv = 2L, max_iter=1E5L, tol = 1E-6, ...){
   
   #initialize starting point if one isn't supplied. greedy start
   if(length(lambda) == 0){
@@ -205,12 +221,12 @@ bisection2.multiple <- function(A, B, lambda=NULL, max_iter=1E5L, tol = 1E-6, ..
     score <- sum(bisection_j$values, lambda)
     if( abs(old.score - score) < tol * abs(old.score)) break;
     #print(paste("iteration", i))
-    }
-  return(
-    list(score = score,
-       values = bisection_j$values,
-       tau = lambda)
-    )
+  }
+  
+  left <- do.call(cbind, append(list(t_A), Map("*", -lambda, t_B)))
+  final_res <- broken_svd_cpp(left, right, nv)
+  
+  return(list(values = final_res$values, vectors = final_res$vectors, tau = lambda))
 }
 
 

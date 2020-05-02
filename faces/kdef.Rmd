@@ -6,12 +6,19 @@ output: html_document
 ---
 
 ```{r setup, include=FALSE}
-libraries <- c("data.table", "MASS", "ggplot2", "splines","gridExtra","RSpectra", "imager", "future.apply")
+install.packages("../uca_0.11.zip", repos = NULL, type="source")
+libraries <- c("data.table", "MASS", "ggplot2", "splines","gridExtra","uca", "imager", "future.apply", "RSpectra", "microbenchmark")
 
 lapply(libraries, library, character.only = T)
+plan(multiprocess)
+```
 
-dca_dir <- "functions/"
-lapply(list.files(dca_dir), function(zz) source(paste0(dca_dir,zz)))
+```{R}
+readImage <- function(listFiles, size_x, size_y){
+ loaded_images <- lapply(listFiles, load.image)
+ grey_scaled <- lapply(loaded_images, function(zz) scale(data.table(resize(grayscale(zz), size_x, size_y))))
+ return(data.matrix(do.call(cbind,grey_scaled)))
+ }
 ```
 
 ```{R}
@@ -21,127 +28,639 @@ male_file <- grep(list.files(kdef), pattern = "^BM", value = T)
 
 neutral_files <- paste0(kdef, sapply( c(female_file, male_file), function(zz) paste0(zz,"/",zz,"NES.JPG")))
 happy_files <- paste0(kdef, sapply(list.files(kdef), function(zz) paste0(zz,"/",zz,"HAS.JPG")))
-
+angry_files <- paste0(kdef, sapply(list.files(kdef), function(zz) paste0(zz,"/",zz,"ANS.JPG")))
+surprise_files <- paste0(kdef, sapply(list.files(kdef), function(zz) paste0(zz,"/",zz,"SUS.JPG")))
+sad_files <- paste0(kdef, sapply(list.files(kdef), function(zz) paste0(zz,"/",zz,"SAS.JPG")))
+disgust_files <- paste0(kdef, sapply(list.files(kdef), function(zz) paste0(zz,"/",zz,"DIS.JPG")))
 neutral_F_files <- paste0(kdef, sapply( female_file, function(zz) paste0(zz,"/",zz,"NES.JPG")))
 neutral_M_files <- paste0(kdef, sapply( male_file, function(zz) paste0(zz,"/",zz,"NES.JPG")))
 
-#single background
-neutral <- future_lapply(neutral_files, load.image)
-neutral_g <- future_lapply(neutral, function(zz) scale(data.table(resize(grayscale(zz), 50, 68))))
-neutral_g_all <- data.matrix(do.call(cbind,neutral_g))
-
-#target
-happy <- future_lapply(happy_files, load.image)
-happy_g <- future_lapply(happy, function(zz) scale(data.table(resize(grayscale(zz), 50, 68))))
-happy_g_all <- data.matrix(do.call(cbind,happy_g))
-
+# convert to columns of images
+neutral %<-% readImage(neutral_files, 50, 68)
+happy %<-% readImage(happy_files, 50, 68)
+angry %<-% readImage(angry_files, 50, 68)
+disgust <- readImage(disgust_files, 50, 68)
+surprise <- readImage(surprise_files, 50, 68)
+sad <- readImage(sad_files , 50, 68)
 #multiple background
-neutral_F <- future_lapply(neutral_F_files, load.image)
-neutral_M <- future_lapply(neutral_M_files, load.image)
+neutral_F <- readImage(neutral_F_files,50, 68)
+neutral_M <- readImage(neutral_M_files,50, 68)
 
-neutral_Fg <- future_lapply(neutral_F, function(zz) scale(data.table(resize(grayscale(zz), 50, 68))))
-neutral_Mg <- future_lapply(neutral_M, function(zz) scale(data.table(resize(grayscale(zz), 50, 68))))
+cov_happy %<-% cov(t(happy))
+cov_neutral %<-% cov(t(neutral))
+cov_angry %<-% cov(t(angry))
+cov_disgust <- cov(t(disgust))
+cov_surprise <- cov(t(surprise))
+cov_sad <- cov(t(sad))
 
-neutral_Fg_all <- data.matrix(do.call(cbind,neutral_Fg))
-neutral_Mg_all <- data.matrix(do.call(cbind,neutral_Mg))
-
-
-
-idx <- as.data.frame(resize(happy[[1]], 50, 68))[,c(1,2)]
-
-cov_happy <- cov(t(happy_g_all))
-cov_neutral <- cov(t(neutral_g_all))
-cov_male <- cov(t(neutral_Mg_all))
-cov_female <- cov(t(neutral_Fg_all))
+cov_male <- cov(t(neutral_M))
+cov_female <- cov(t(neutral_F))
 
 
-pca_happy <- svds(happy_g_all, k=10)
-dca_happy_neutral_single <- dca(cov_happy, cov_neutral, nv = 10)
-dca_happy_neutral_gender <- dca(cov_happy, list(cov_male,cov_female), nv = 10)
-dca_neutral_gender <- dca(cov_female, cov_male, nv = 10)
+cov_stack_angry_neutral <- cov(rbind(t(angry),t(neutral)))
+cov_stack_disgust_neutral <- cov(rbind(t(disgust),t(neutral)))
+```
 
-eigenfaces <- pca_happy$u
-dcafaces_single <- dca_happy_neutral_single$vectors
-dcafaces_gender <- dca_happy_neutral_gender$vectors
-dcafaces_neutral_gender <- dca_neutral_gender$vectors
+```{R}
+t_happy <- center(t(happy))
+t_neutral <- center(t(neutral))
+t_angry  <- center(t(angry))
+happy <- data.table(happy)
+neutral <- data.table(neutral)
+angry <- data.table(angry)
+A = t_happy/sqrt(nrow(t_happy)-1)
+B = list(t_neutral/sqrt(nrow(t_neutral)-1), t_angry/sqrt(nrow(t_angry)-1))
 
-eigenfaces_list <- lapply(1:ncol(eigenfaces), function(zz){
-  cbind(as.data.frame(as.cimg(eigenfaces[,zz], dim = c(50,68,1,1))), zz)
-})
+vals = c(2,2)
 
-dcafaces_single_list <- lapply(1:ncol(dcafaces_single), function(zz){
-  cbind(as.data.frame(as.cimg(dcafaces_single[,zz], dim = c(50,68,1,1))), zz)
-})
+microbenchmark(bisection2(A, B[[1]]), bisection(cov_happy, cov_neutral), times = 1)
+tmp <- bisection(cov_happy, cov_neutral)
+tmp2 <- bisection2(A, B[[1]])
 
-dcafaces_gender_list <- lapply(1:ncol(dcafaces_gender), function(zz){
-  cbind(as.data.frame(as.cimg(dcafaces_gender[,zz], dim = c(50,68,1,1))), zz)
-})
+tmp1_1_time2 %<-% system.time(tmp1_1 <- uca(cov_happy, list(cov_neutral, cov_angry), nv = 2, method = "cov"))
 
-dcafaces_gender_diff_list <- lapply(1:ncol(dcafaces_neutral_gender), function(zz){
-  cbind(as.data.frame(as.cimg(dcafaces_neutral_gender[,zz], dim = c(50,68,1,1))), zz)
-})
+system.time(tmp1_2 <- uca(t_happy, list(t_neutral, t_angry), nv = 2, method = "data"))
 
-eigenfaces_plot <- do.call(rbind,eigenfaces_list)
-dcafaces_single_plot <- do.call(rbind, dcafaces_single_list)
-dcafaces_gender_plot <- do.call(rbind, dcafaces_gender_list)
-dca_neutral_gender_plot <- do.call(rbind, dcafaces_gender_diff_list)
+microbenchmark(data = uca(t_happy, list(t_neutral, t_angry), method = "data"),
+               cov = uca(cov_happy, list(cov_neutral, cov_angry)), times = 1)
 
-colnames(dca_neutral_gender_plot) <- colnames(dcafaces_gender_plot) <- colnames(dcafaces_single_plot) <- colnames(eigenfaces_plot) <- c("x","y","value","Eigenface")
+microbenchmark(happy_double_neutral = uca(t_happy, list(t_neutral), method = "data"), uca(cov_happy, cov_neutral, method = "cov"),times = 2)
 
 
-eigenfaces_plot <- data.table(eigenfaces_plot)[, value2 := 2*(value - min(value))/(max(value) - min(value)) - 1, by = Eigenface]
-dcafaces_single_plot <- data.table(dcafaces_single_plot)[, value2 := 2*(value - min(value))/(max(value) - min(value)) - 1, by = Eigenface]
-dcafaces_gender_plot <- data.table(dcafaces_gender_plot)[, value2 := 2*(value - min(value))/(max(value) - min(value)) - 1, by = Eigenface]
-dca_neutral_gender_plot <- data.table(dca_neutral_gender_plot)[, value2 := 2*(value - min(value))/(max(value) - min(value)) - 1, by = Eigenface]
+left <- do.call(cbind, lapply(append(list(A), B), t))
+right <- do.call(rbind,append(list(A),B))
+
+all.equal(broken_svd_cpp(left, right , 2), broken_svd_R(left, right, 2))
+microbenchmark(t(t(left) * mult_v), sweep(left, 2, mult_v, "*"), cbind(old_left, 2*t(B2)))
+
+mult_v = c(2, 2)
+B = list(t_neutral, t_angry)
+microbenchmark(do.call(cbind, Map("*", -mult_v, lapply(B, t))),
+t(do.call(rbind, Map("*", -mult_v, B))))
+microbenchmark(lapply(B, t))
+```
+
+```{R}
+pca_happy <- eigs_sym(cov_happy, 5, "LA")
+
+cpca_alpha_vals <- c(0.1,1,5,10)
+cpca_alpha_id <- sort(rep(cpca_alpha_vals, 5*50*68))
+
+cpca_happy_neutral <- lapply(cpca_alpha_vals, function(z){cPCA(cov_happy, cov_neutral, alpha = z, nv = 5)})
+cpca_happy_vec_list <- lapply(cpca_happy_neutral, "[[", "vectors")
+
+cpca_happy_surprise <- lapply(cpca_alpha_vals, function(z){cPCA(cov_happy, cov_surprise, alpha = z, nv = 5)})
+cpca_happy_surprise_vec_list <- lapply(cpca_happy_surprise, "[[", "vectors")
+
+cpca_happy_angry <- lapply(cpca_alpha_vals, function(z){cPCA(cov_happy, cov_angry, alpha = z, nv = 5)})
+cpca_happy_angry_vec_list <- lapply(cpca_happy_angry, "[[", "vectors")
+
+
+uca_happy_neutral_single <- uca(cov_happy, cov_neutral, nv = 5)
+uca_happy_neutral_gender <- uca(cov_happy, list(cov_male,cov_female), nv = 5)
+uca_happy_neutral_male <- uca(cov_happy, cov_male, nv = 5)
+uca_happy_sad <- uca(cov_happy, cov_sad, nv = 5)
+uca_happy_surprise <- uca(cov_happy, cov_surprise, nv = 5)
+uca_happy_angry <- uca(cov_happy, cov_angry, nv = 5)
+uca_happy_disgust <- uca(cov_happy, cov_disgust, nv = 5)
+
+eigenfaces_happy <- pca_happy$vectors
+ucafaces_single <- uca_happy_neutral_single$vectors
+ucafaces_gender <- uca_happy_neutral_gender$vectors
+ucafaces_male <- uca_happy_neutral_male$vectors
+```
+
+```{R}
+tmp <- svd(cov_happy - 4.3 * cov_neutral)
+tmp2 <- svds(cov_happy - 4.3 * cov_neutral, k = 5)
+eigs_sym(cov_happy - 4.3 * cov_neutral, k = 5,"LA")$values
+sort(diag(crossprod(tmp$u, (cov_happy - 4.3 * cov_neutral) %*% tmp$u)), decreasing = T)[1:5]
+
+tmp2$d
+tmp$d[1:5]
+
+tmp3 <- magic_eigen(cov_happy, cov_neutral, 4.3, 5)
+```
+
+```{R}
+temp_res <- do.call(rbind, 
+lapply(c(list(eigenfaces_happy, ucafaces_male, ucafaces_gender,ucafaces_single), cpca_happy_vec_list), function(zz){ 
+  z <- zz[,1]
+  c(
+    crossprod(z, cov_happy %*% z),
+    crossprod(z, cov_neutral %*% z),
+    crossprod(z, cov_male %*% z),
+    crossprod(z, cov_female %*% z)
+  )})
+)
+
+rownames(temp_res) <- c("PCA", "UCA_Males", "UCA_Males+Females", "UCA_Stacked", "cPCA_0.1","cPCA_1", "cPCA_5", "cPCA10")
+colnames(temp_res) <- c("Happy", "Neutral", "Male","Female")
+
+temp_res
+```
+
+##
+Turn Eigenvectors to eigenfaces
+```{R}
+toEigenfaces <- function(dat){
+  eigenfaces <- data.table(do.call(rbind,
+                        future_lapply(1:ncol(dat), function(zz){
+  cbind(as.data.frame(as.cimg(dat[,zz], dim = c(50,68,1,1))), zz)
+})))
+  setnames(eigenfaces,c("x","y","value","Eigenface"))
+  eigenfaces[, value2 := 2*(value - min(value))/(max(value) - min(value)), by = Eigenface]
+  return(eigenfaces)
+}
+
+plotEigenfaces = function(eigenfaces, title, nrow){
+  ggplot(eigenfaces, aes(x,y))+
+geom_raster(aes(fill = value))+
+  facet_wrap(~Eigenface, nrow = nrow)+
+scale_x_continuous(expand=c(0,0))+
+  scale_y_continuous(expand=c(0,0),trans=scales::reverse_trans())+
+   scale_fill_gradient(low="black", high="white")+
+  labs(title = title)
+}
+
+plotEigenfaces2 <- function(eigenfaces, title){
+  ggplot(eigenfaces, aes(x,y))+
+geom_raster(aes(fill = value))+
+  facet_grid(alpha~Eigenface)+
+scale_x_continuous(expand=c(0,0))+
+  scale_y_continuous(expand=c(0,0),trans=scales::reverse_trans())+
+   scale_fill_gradient(low="black", high="white")+
+  labs(title = title)
+}
+```
+
+```{R}
+
 ```
 
 ## Eigenfaces of Happy Target
 
 ```{R}
-ggplot(eigenfaces_plot, aes(x,y))+
-geom_raster(aes(fill=value2))+
-  facet_wrap(~Eigenface, nrow = 2)+
-scale_x_continuous(expand=c(0,0))+
-  scale_y_continuous(expand=c(0,0),trans=scales::reverse_trans())+
-  scale_fill_gradient(low="white",high="black")
+eigenfaces_happy_plot <- toEigenfaces(eigenfaces_happy)
+eigenfaces_happy_plot[, alpha := 0]
+cpca_happy_plot <- cbind(do.call(rbind, lapply(cpca_happy_vec_list, toEigenfaces)), cpca_alpha_id)
+colnames(cpca_happy_plot)[6] <- "alpha"
+
+plotEigenfaces2( cpca_happy_plot, "cPCA: Eigenfaces of Happy Target, Neutral Background")
+
 ```
 
-## Happy Target, Neutral Background (Stacked Covariance)
+## Happy Target, Surprise Background cPCA
+```{R}
+cpca_happy_surprise_plot <- cbind(do.call(rbind, lapply(cpca_happy_surprise_vec_list, toEigenfaces)), cpca_alpha_id)
+colnames(cpca_happy_surprise_plot)[6] <- "alpha"
+
+plotEigenfaces2( cpca_happy_surprise_plot, "cPCA: Eigenfaces of Happy Target, Surprise Background")
+
+```
+
+
+
+## Happy Target, Sad Background, Various Background
+```{R}
+
+ucafaces_single_plot <- toEigenfaces(ucafaces_single)[, alpha := "Neutral Background"]
+ucafaces_happy_sad <- toEigenfaces(uca_happy_sad$vectors)[, alpha := "Sad Background"]
+ucafaces_happy_surprise <- toEigenfaces(uca_happy_surprise$vectors)[, alpha := "Surprise Background"]
+ucafaces_happy_angry <- toEigenfaces(uca_happy_angry$vectors)[, alpha := "Angry Background"]
+ucafaces_happy_disgust <- toEigenfaces(uca_happy_disgust$vectors)[, alpha := "Disgust Background"]
+
+plotEigenfaces2(rbind(ucafaces_single_plot, ucafaces_happy_sad, ucafaces_happy_surprise, ucafaces_happy_angry, ucafaces_happy_disgust), "Ucafaces Happy Target, surprise or sad background")
+```
 
 ```{R}
-ggplot(dcafaces_single_plot, aes(x,y))+
-geom_raster(aes(fill=value2))+
-  facet_wrap(~Eigenface, nrow = 2)+
-scale_x_continuous(expand=c(0,0))+
-  scale_y_continuous(expand=c(0,0),trans=scales::reverse_trans())+
-   scale_fill_gradient(low="black",high="white")
+percent <- lapply(seq(0.1, 0.9,by = 0.1), function(zz){ sample(1:140, size = 140*zz)})
+
+stack_surprise_sad_10 <- cov( t(cbind(surprise[,percent[[1]]], sad[, percent[[9]]])) )
+stack_surprise_sad_20 <- cov( t(cbind(surprise[,percent[[2]]], sad[, percent[[8]]])) )
+stack_surprise_sad_30 <- cov( t(cbind(surprise[,percent[[3]]], sad[, percent[[7]]])) )
+stack_surprise_sad_40 <- cov( t(cbind(surprise[,percent[[4]]], sad[, percent[[6]]])) )
+
+happy_surprise_sad_10 <- uca(cov_happy, list(cov(t(surprise[, percent[[1]]])), cov(t(sad[ , percent[[9]]]))), nv = 5)
+happy_surprise_sad_20 <- uca(cov_happy, list(cov(t(surprise[, percent[[2]]])), cov(t(sad[ , percent[[8]]]))), nv = 5)
+happy_surprise_sad_30 <- uca(cov_happy, list(cov(t(surprise[, percent[[3]]])), cov(t(sad[ , percent[[7]]]))), nv = 5)
+happy_surprise_sad_40 <- uca(cov_happy, list(cov(t(surprise[, percent[[4]]])), cov(t(sad[ , percent[[6]]]))), nv = 5)
+
+happy_surprise_sad_stack_10 <- uca(cov_happy, stack_surprise_sad_10, nv = 5)
+happy_surprise_sad_stack_20 <- uca(cov_happy, stack_surprise_sad_20, nv = 5)
+happy_surprise_sad_stack_30 <- uca(cov_happy, stack_surprise_sad_30, nv = 5)
+happy_surprise_sad_stack_40 <- uca(cov_happy, stack_surprise_sad_40, nv = 5)
+
+happy_split_surprise_sad <- do.call(rbind, lapply(list(happy_surprise_sad_10$vectors, happy_surprise_sad_20$vectors, happy_surprise_sad_30$vectors, happy_surprise_sad_40$vectors), toEigenfaces))
+happy_stack_surprise_sad <- do.call(rbind, lapply(list(happy_surprise_sad_stack_10$vectors, happy_surprise_sad_stack_20$vectors, happy_surprise_sad_stack_30$vectors, happy_surprise_sad_stack_40$vectors), toEigenfaces))
+
+happy_split_surprise_sad[, alpha := paste("split", sort(rep(seq(10,40, by = 10), 5*50*68)))]
+happy_stack_surprise_sad[, alpha := paste("stack", sort(rep(seq(10,40, by = 10), 5*50*68)))]
 ```
 
+```{R}
+uca_HA_split_SU_SA_mix <- plotEigenfaces2(happy_split_surprise_sad, "Happy, Split Surprise Sad /n various mixtures")
+uca_HA_stack_SU_SA_mix <- plotEigenfaces2(happy_stack_surprise_sad, "Happy, Stack Surprise Sad /n  various mixtures")
+
+ggsave("uca_HA_split_SU_SA_mix.png",plot = uca_HA_split_SU_SA_mix, width = 10, height = 8, units = "in")
+ggsave("uca_HA_stack_SU_SA_mix.png",plot = uca_HA_split_SU_SA_mix, width = 10, height = 8, units = "in")
+```
+
+```{R}
+stack_angry_disgust_10 <- cov( t(cbind(angry[,percent[[1]]], disgust[, percent[[9]]])) )
+stack_angry_disgust_20 <- cov( t(cbind(angry[,percent[[2]]], disgust[, percent[[8]]])) )
+stack_angry_disgust_30 <- cov( t(cbind(angry[,percent[[3]]], disgust[, percent[[7]]])) )
+stack_angry_disgust_40 <- cov( t(cbind(angry[,percent[[4]]], disgust[, percent[[6]]])) )
+
+happy_angry_disgust_10 <- uca(cov_happy, list(cov(t(angry[, percent[[1]]])), cov(t(disgust[ , percent[[9]]]))), nv = 5)
+happy_angry_disgust_20 <- uca(cov_happy, list(cov(t(angry[, percent[[2]]])), cov(t(disgust[ , percent[[8]]]))), nv = 5)
+happy_angry_disgust_30 <- uca(cov_happy, list(cov(t(angry[, percent[[3]]])), cov(t(disgust[ , percent[[7]]]))), nv = 5)
+happy_angry_disgust_40 <- uca(cov_happy, list(cov(t(angry[, percent[[4]]])), cov(t(disgust[ , percent[[6]]]))), nv = 5)
+
+happy_angry_disgust_stack_10 <- uca(cov_happy, stack_angry_disgust_10, nv = 5)
+happy_angry_disgust_stack_20 <- uca(cov_happy, stack_angry_disgust_20, nv = 5)
+happy_angry_disgust_stack_30 <- uca(cov_happy, stack_angry_disgust_30, nv = 5)
+happy_angry_disgust_stack_40 <- uca(cov_happy, stack_angry_disgust_40, nv = 5)
+
+happy_split_angry_disgust <- do.call(rbind, lapply(list(happy_angry_disgust_10$vectors, happy_angry_disgust_20$vectors, happy_angry_disgust_30$vectors, happy_angry_disgust_40$vectors), toEigenfaces))
+happy_stack_angry_disgust <- do.call(rbind, lapply(list(happy_angry_disgust_stack_10$vectors, happy_angry_disgust_stack_20$vectors, happy_angry_disgust_stack_30$vectors, happy_angry_disgust_stack_40$vectors), toEigenfaces))
+
+happy_split_angry_disgust[, alpha := paste("split", sort(rep(seq(10,40, by = 10), 5*50*68)))]
+happy_stack_angry_disgust[, alpha := paste("stack", sort(rep(seq(10,40, by = 10), 5*50*68)))]
+```
+
+```{R}
+uca_HA_split_AN_DI_mix <- plotEigenfaces2(happy_split_angry_disgust, "Happy, Split Angry sad /n various mixtures")
+uca_HA_stack_AN_DI_mix <- plotEigenfaces2(happy_stack_angry_disgust, "Happy, Stack Angry sad /n  various mixtures")
+
+ggsave("uca_HA_split_AN_DI_mix.png",plot = uca_HA_split_AN_DI_mix, width = 10, height = 8, units = "in")
+ggsave("uca_HA_stack_AN_DI_mix.png",plot = uca_HA_stack_AN_DI_mix, width = 10, height = 8, units = "in")
+
+```
 ## Happy Target, Male Neutral and Female Neutral Background
 
 ```{R}
-ggplot(dcafaces_gender_plot, aes(x,y))+
-geom_raster(aes(fill=value2))+
-  facet_wrap(~Eigenface, nrow = 2)+
-scale_x_continuous(expand=c(0,0))+
-  scale_y_continuous(expand=c(0,0),trans=scales::reverse_trans())+
-   scale_fill_gradient(low="black",high="white")
-
+ucafaces_gender_plot <- toEigenfaces(ucafaces_gender)
+plotEigenfaces(ucafaces_gender_plot,  "uca(happy, list(female,male))", 1)
 ```
 
 
 ```{R}
-dca_happy_neutral_single$tau
-dca_happy_neutral_gender$tau
+uca_happy_neutral_single$values
+uca_happy_neutral_gender$values
 ```
 
 ## Female Neutral target, Male Neutral Background
 
 ```{R}
-ggplot(dca_neutral_gender_plot, aes(x,y))+
-geom_raster(aes(fill=value))+
-  facet_wrap(~Eigenface, nrow = 2)+
-scale_x_continuous(expand=c(0,0))+
-  scale_y_continuous(expand=c(0,0),trans=scales::reverse_trans())+
-   scale_fill_gradient(low="black",high="white")
+uca_neutral_gender_plot <- toEigenfaces(ucafaces_neutral_gender)
+plotEigenfaces(uca_neutral_gender_plot, "Neutral: uca(Female, Male)", 1)
+```
+
+## Eigenfaces of PCA on Stack and Males/Females seperately
+
+```{R}
+pca_neutral_all <- eigs_sym(cov_neutral, k = 10, "LA")
+pca_male_neutral <- svds(neutral_Mg_all, k = 10)
+pca_female_neutral <- svds(neutral_Fg_all, k = 10)
+
+eigenfaces_neutral_all <- pca_neutral_all$vectors
+eigenfaces_neutral_male <- pca_male_neutral$u
+eigenfaces_neutral_female <- pca_female_neutral$u
+
+eigenfaces_neutral_all_plot <- toEigenfaces(eigenfaces_neutral_all)
+eigenfaces_neutral_male_plot <- toEigenfaces(eigenfaces_neutral_male)
+eigenfaces_neutral_female_plot <- toEigenfaces(eigenfaces_neutral_female)
+       
+```
+
+
+```{R}
+ggsave("pca_neutral.png", plotEigenfaces(eigenfaces_neutral_all_plot, "Male & Female Neutral", 2), width = 10, height = 8, units = "in")
+```
+
+Male Neutral
+```{R}
+plotEigenfaces(eigenfaces_neutral_male_plot, "Male Neutral", 1)
+```
+
+Female Neutral
+```{R}
+plotEigenfaces(eigenfaces_neutral_female_plot, "Female Neutral", 1)
+```
+
+```{R}
+pca_angry <- eigs_sym(cov_angry, k = 10, which = "LA")$vectors
+pca_disgust <- eigs_sym(cov_disgust, k = 10, which = "LA")$vectors
+
+cpca_angry_stack_disgust_neutral <- lapply( c(0.1, 1, 5, 10), function(z)cPCA(cov_angry, cov_stack_disgust_neutral,alpha = z, nv = 10))
+cpca_disgust_stack_angry_neutral <- lapply( c(0.1, 1, 5, 10), function(z)cPCA(cov_disgust, cov_stack_angry_neutral,alpha = z, nv = 10))
+cpcafaces_angry_stack <- lapply(cpca_angry_stack_disgust_neutral, "[[","vectors")
+cpcafaces_disgust_stack <- lapply(cpca_disgust_stack_angry_neutral, "[[","vectors")
+
+uca_angry_disgust <- uca(cov_angry, cov_disgust, nv = 10)
+uca_angry_neutral <- uca(cov_angry, cov_neutral, nv = 10)
+uca_angry_disgust_n_neutral <- uca(cov_angry, list(cov_disgust, cov_neutral), nv = 10) # 7.198529, 3.018448 
+uca_angry_stack_disgust_neutral <- uca(cov_angry, cov_stack_disgust_neutral, nv = 10) # 10.32087
+
+uca_disgust_angry <- uca(cov_disgust, cov_angry, nv  = 10)
+uca_disgust_neutral <- uca(cov_disgust, cov_neutral, nv  = 10)
+uca_disgust_angry_n_neutral <- uca(cov_disgust, list(cov_angry, cov_neutral), nv = 10) # 3.156328, 2.379971
+uca_disgust_stack_angry_neutral <- uca(cov_disgust, cov_stack_angry_neutral, nv = 10) #5.636067
+
+
+ucafaces_angry_disgust_n_neutral <- uca_angry_disgust_n_neutral$vectors
+ucafaces_disgust_angry_n_neutral <- uca_disgust_angry_n_neutral$vectors
+ucafaces_angry_stack_disgust_neutral <- uca_angry_stack_disgust_neutral$vectors
+ucafaces_disgust_stack_angry_neutral <- uca_disgust_stack_angry_neutral$vectors
+```
+
+
+```{R}
+cpca_angry_stack_plot <- cbind(do.call(rbind, lapply(cpcafaces_angry_stack, toEigenfaces)), sort(rep(c(0.1,1,5,10), 34000)))
+cpca_disgust_stack_plot <- cbind(do.call(rbind, lapply(cpcafaces_disgust_stack, toEigenfaces)),  sort(rep(c(0.1,1,5,10), 34000)))
+
+setnames(cpca_angry_stack_plot, "V2", "alpha")
+setnames(cpca_disgust_stack_plot, "V2", "alpha")
+
+ggsave("cPCA_AN_Stack_NE_DI.png", plot = plotEigenfaces2(cpca_angry_stack_plot,"cPCA: Angry, Stacked Neutral & Disgust with varying alpha "), width = 10, height = 8, units = "in")
+
+ggsave("cPCA_DI_Stack_NE_AN.png", plot = plotEigenfaces2(cpca_disgust_stack_plot, "cPCA: Disgust, Stacked Neutral & Angry with varying alpha "), width = 10, height = 8, units = "in")
+```
+
+## 
+Var explained table
+Target: Angry
+Background: Neutral + Disgust
+
+```{R}
+temp_res2 <- do.call(rbind, 
+lapply(c(list(pca_angry, uca_angry_disgust$vectors, uca_angry_neutral$vectors, uca_angry_disgust_n_neutral$vectors, uca_angry_stack_disgust_neutral$vectors), cpcafaces_angry_stack), function(zz){ 
+  z <- zz[,1]
+  c(
+    crossprod(z, cov_angry %*% z),
+    crossprod(z, cov_disgust %*% z),
+    crossprod(z, cov_neutral %*% z)
+  )})
+)
+
+rownames(temp_res2) <- c("PCA", "UCA_Disgust", "UCA_Neutral", "UCA_Angry+Neutral","UCA_Stack", "cPCA_0.1","cPCA_1", "cPCA_5", "cPCA_10")
+colnames(temp_res2) <- c("Angry", "Disgust", "Neutral")
+temp_res2
+
+```
+
+## 
+Var explained table
+Target: Disgust
+Background: Neutral + Angry
+
+```{R}
+temp_res3 <- do.call(rbind, 
+lapply(c(list(pca_disgust, uca_disgust_angry$vectors, uca_disgust_neutral$vectors, uca_disgust_angry_n_neutral$vectors, uca_disgust_stack_angry_neutral$vectors), cpcafaces_disgust_stack), function(zz){ 
+  z <- zz[,1]
+  c(
+    crossprod(z, cov_disgust %*% z),
+    crossprod(z, cov_angry %*% z),
+    crossprod(z, cov_neutral %*% z)
+  )})
+)
+
+rownames(temp_res3) <- c("PCA", "UCA_Angry", "UCA_Neutral", "UCA_Angry+Neutral","UCA_Stack", "cPCA_0.1","cPCA_1", "cPCA_5", "cPCA_10")
+colnames(temp_res3) <- c("Disgust", "Angry", "Neutral")
+temp_res3
+
+```
+
+
+##
+Target: Angry
+Background: Neutral + Disgust
+
+```{R}
+#seperate
+ucafaces_angry_disgust_n_neutral_plot <- toEigenfaces(ucafaces_angry_disgust_n_neutral)
+
+#stack
+ucafaces_angry_stack_disgust_neutral_plot <- toEigenfaces(ucafaces_angry_stack_disgust_neutral)
+
+plotEigenfaces(ucafaces_angry_disgust_n_neutral_plot,"Target: Angry \n Background: Neutral + Disgust",1)
+
+plotEigenfaces(ucafaces_angry_stack_disgust_neutral_plot, "Target: Angry \n Background: Stacked (Neutral, Disgust)", 1)
+```
+
+###
+Variance explained
+```{R}
+# variance explained by 1st uca component eigenvectors 
+sapply(list(cov_angry, cov_disgust, cov_neutral), function(zz) crossprod(ucafaces_angry_disgust_n_neutral, zz %*% ucafaces_angry_disgust_n_neutral))[1,]
+
+# variance explained by stacking
+sapply(list(cov_angry, cov_disgust, cov_neutral), function(zz) crossprod(ucafaces_angry_stack_disgust_neutral, zz %*% ucafaces_angry_stack_disgust_neutral))[1,]
+
+# variance explained by 1st pca component eigenvectors
+sapply(list(cov_angry, cov_disgust, cov_neutral), function(zz) crossprod(pca_angry, zz %*% pca_angry))[1,]
+
+```
+
+
+##
+Target: Disgust
+Background: Neutral + Angry
+
+```{R}
+#seperate
+ucafaces_disgust_angry_n_neutral_plot <- toEigenfaces(ucafaces_disgust_angry_n_neutral)
+
+#stack
+ucafaces_disgust_stack_angry_neutral_plot <- toEigenfaces(ucafaces_disgust_stack_angry_neutral)
+
+plotEigenfaces(ucafaces_disgust_angry_n_neutral_plot, "Target: Disgust \n Background: Neutral + Anger", 1)
+plotEigenfaces(ucafaces_disgust_stack_angry_neutral_plot, "Target: Disgust \n Background: Stack (Neutral, Anger)", 1)
+
+```
+
+###
+Variance explained
+```{R}
+# variance explained by 1st uca component eigenvectors 
+sapply(list(cov_disgust, cov_angry, cov_neutral), function(zz) crossprod(ucafaces_disgust_angry_n_neutral, zz %*% ucafaces_disgust_angry_n_neutral))[1,]
+
+# variance explained by stacking
+sapply(list(cov_disgust, cov_angry, cov_neutral), function(zz) crossprod(ucafaces_disgust_stack_angry_neutral, zz %*% ucafaces_disgust_stack_angry_neutral))[1,]
+
+# variance explained by 1st pca component eigenvectors
+sapply(list(cov_disgust, cov_angry, cov_neutral), function(zz) crossprod(pca_disgust, zz %*% pca_disgust))[1,]
+
+```
+
+
+## Eigenfaces of Angry and Disgust
+
+```{R}
+## Angry Eigenfaces
+eigenfaces_pca_angry_plot <- toEigenfaces(pca_angry)
+## Disgust Eigenfaces
+eigenfaces_pca_disgust_plot <-toEigenfaces(pca_disgust)
+
+## angry eigenfaces plot 
+plotEigenfaces(eigenfaces_pca_angry_plot,"Angry Eigenfaces",1)
+
+## Disgust Eigenfaces plot
+plotEigenfaces(eigenfaces_pca_disgust_plot,"Disgusted Eigenfaces", 1)
+```
+
+
+
+## Happy with various backgrounds
+
+Possible solutions would be neutral and angry
+```{R}
+uca_happy_list <- lapply(list(cov_neutral, cov_angry, cov_sad, cov_surprise, cov_disgust), function(zz){uca(cov_happy, zz, nv = 5)})
+uca_happy_various_plot <- do.call(rbind, lapply(lapply(uca_happy_list, "[[", "vectors"), toEigenfaces))
+uca_var_labs <- do.call(c, lapply(c("neutral", "angry", "sad", "surprise", "disgust"), function(z){rep(z, 5*50*68)}))
+uca_happy_various_plot[, alpha := uca_var_labs]
+
+ggsave("uca_happy_single_var.png",plotEigenfaces2(uca_happy_various_plot, "UCA Happy with various Backgrounds"), width = 10, height = 8, units = "in")
+```
+
+## Angry with various backgrounds
+
+```{R}
+uca_angry_list <- lapply(list(cov_neutral, cov_happy, cov_sad, cov_surprise, cov_disgust), function(zz){uca(cov_angry, zz, nv = 5)})
+uca_angry_various_plot <- do.call(rbind, lapply(lapply(uca_angry_list, "[[", "vectors"), toEigenfaces))
+uca_angry_var_labs <- do.call(c, lapply(c("neutral", "happy", "sad", "surprise", "disgust"), function(z){rep(z, 5*50*68)}))
+uca_angry_various_plot[, alpha := uca_angry_var_labs]
+
+ggsave("uca_angry_single_var.png",plotEigenfaces2(uca_angry_various_plot, "UCA Angry with various Backgrounds"), width = 10, height = 8, units = "in")
+```
+
+## Sad with various backgrounds
+
+```{R}
+uca_sad_list <- lapply(list(cov_neutral, cov_happy, cov_angry, cov_surprise, cov_disgust), function(zz){uca(cov_sad, zz, nv = 5)})
+uca_sad_various_plot <- do.call(rbind, lapply(lapply(uca_sad_list, "[[", "vectors"), toEigenfaces))
+uca_sad_var_labs <- do.call(c, lapply(c("neutral", "happy", "angry", "surprise", "disgust"), function(z){rep(z, 5*50*68)}))
+uca_sad_various_plot[, alpha := uca_sad_var_labs]
+
+ggsave("uca_sad_single_var.png",plotEigenfaces2(uca_sad_various_plot, "UCA Sad with various Backgrounds"), width = 10, height = 8, units = "in")
+```
+
+## Surprise with various backgrounds
+
+```{R}
+uca_surprise_list <- lapply(list(cov_neutral, cov_happy, cov_angry, cov_sad, cov_disgust), function(zz){uca(cov_surprise, zz, nv = 5)})
+uca_surprise_various_plot <- do.call(rbind, lapply(lapply(uca_surprise_list, "[[", "vectors"), toEigenfaces))
+uca_surprise_var_labs <- do.call(c, lapply(c("neutral", "happy", "angry", "sad", "disgust"), function(z){rep(z, 5*50*68)}))
+uca_surprise_various_plot[, alpha := uca_surprise_var_labs]
+
+ggsave("uca_surprise_single_var.png",plotEigenfaces2(uca_surprise_various_plot, "UCA Surprise with various Backgrounds"), width = 10, height = 8, units = "in")
+```
+
+## Disgust with various backgrounds
+
+```{R}
+uca_disgust_list <- lapply(list(cov_neutral, cov_happy, cov_angry, cov_sad, cov_surprise), function(zz){uca(cov_disgust, zz, nv = 5)})
+uca_disgust_various_plot <- do.call(rbind, lapply(lapply(uca_disgust_list, "[[", "vectors"), toEigenfaces))
+uca_disgust_var_labs <- do.call(c, lapply(c("neutral", "happy", "angry", "sad", "surprise"), function(z){rep(z, 5*50*68)}))
+uca_disgust_various_plot[, alpha := uca_disgust_var_labs]
+
+ggsave("uca_disgust_single_var.png",plotEigenfaces2(uca_disgust_various_plot, "UCA Disgust with various Backgrounds"), width = 10, height = 8, units = "in")
+```
+
+
+
+```{R}
+stack_surprise_sad <- rbind(t(surprise), t(sad))
+stack_surprise_happy <- rbind(t(surprise), t(happy))
+stack_happy_angry <- rbind(t(happy), t(angry))
+
+cov_stack_surprise_sad <- cov(stack_surprise_sad)
+cov_stack_surprise_happy <- cov(stack_surprise_happy)
+cov_stack_happy_angry <- cov(stack_happy_angry)
+
+uca_angry_split_surprise_sad <- uca(cov_angry, list(cov_surprise, cov_sad), nv = 5)
+uca_angry_stack_surprise_sad <- uca(cov_angry, cov_stack_surprise_sad, nv = 5)
+uca_disgust_split_surprise_happy <- uca(cov_disgust, list(cov_surprise, cov_happy), nv = 5)
+uca_disgust_stack_surprise_happy <- uca(cov_disgust, cov_stack_surprise_happy, nv = 5)
+uca_surprise_split_happy_angry <- uca(cov_surprise, list(cov_happy, cov_angry), nv = 5)
+uca_surprise_stack_happy_angry <- uca(cov_surprise, cov_stack_happy_angry, nv = 5)
+
+
+uca_angry_split_surprise_sad$tau
+uca_disgust_split_surprise_happy$tau
+uca_surprise_split_happy_angry$tau
+```
+
+* Happy vs Surprise & Sad
+* Angry vs. Surprise & Sad
+* Disgust vs. Surprise & Happy
+* Surprise vs Happy & Angry
+
+```{R}
+uca_angry_split_stack_plot <- rbind(toEigenfaces(uca_angry_split_surprise_sad$vectors)[, alpha := "Split"],
+toEigenfaces(uca_angry_stack_surprise_sad$vectors)[, alpha := "Stack"])
+
+uca_disgust_split_stack_plot <- rbind(toEigenfaces(uca_disgust_split_surprise_happy$vectors)[, alpha := "Split"],
+toEigenfaces(uca_disgust_stack_surprise_happy$vectors)[, alpha := "Stack"])
+
+uca_surprise_split_stack_plot <- rbind(toEigenfaces(uca_surprise_split_happy_angry$vectors)[, alpha := "Split"],
+toEigenfaces(uca_surprise_stack_happy_angry$vectors)[, alpha := "Stack"])
+
+ggsave("uca_angry_split_stack_surprise_sad_5050.png", plotEigenfaces2(uca_angry_split_stack_plot, "UCA Angry Split/Stack on Surprise & Sad"), width=10, height = 8, units = "in")
+ggsave("uca_disgust_split_stack_surprise_happy_5050.png",plotEigenfaces2(uca_disgust_split_stack_plot, "UCA Disgust Split/Stack on Surprise & Happy"), width=10, height = 8, units = "in")
+ggsave("uca_surprise_split_stack_happy_angry_5050.png", plotEigenfaces2(uca_surprise_split_stack_plot, "UCA Surprise Split/Stack on Happy & Angry"), width=10, height = 8, units = "in")
+```
+
+
+```{R}
+stack_surprise_sad_10 <- rbind(t(surprise[, percent[[1]] ]), t(sad))
+stack_surprise_happy_10 <- rbind(t(surprise[, percent[[1]] ]), t(happy))
+stack_happy_angry_10 <- rbind(t(happy[, percent[[1]] ]), t(angry))
+
+
+cov_surprise_10 <- cov(t(surprise[, percent[[1]] ]))
+cov_happy_10 <- cov(t(happy[, percent[[1]] ]))
+
+cov_stack_surprise_sad_10 <- cov(stack_surprise_sad_10)
+cov_stack_surprise_happy_10 <- cov(stack_surprise_happy_10)
+cov_stack_happy_angry_10 <- cov(stack_happy_angry_10)
+
+uca_angry_split_surprise_sad_10 <- uca(cov_angry, list(cov_surprise_10, cov_sad), nv = 5)
+uca_angry_stack_surprise_sad_10 <- uca(cov_angry, cov_stack_surprise_sad_10, nv = 5)
+uca_disgust_split_surprise_happy_10 <- uca(cov_disgust, list(cov_surprise_10, cov_happy), nv = 5)
+uca_disgust_stack_surprise_happy_10 <- uca(cov_disgust, cov_stack_surprise_happy_10, nv = 5)
+uca_surprise_split_happy_angry_10 <- uca(cov_surprise, list(cov_happy_10, cov_angry), nv = 5)
+uca_surprise_stack_happy_angry_10 <- uca(cov_surprise, cov_stack_happy_angry_10, nv = 5)
+
+
+uca_angry_split_surprise_sad_10$tau
+uca_disgust_split_surprise_happy_10$tau
+uca_surprise_split_happy_angry_10$tau
+```
+
+```{R}
+uca_angry_split_stack_10_plot <- rbind(toEigenfaces(uca_angry_split_surprise_sad_10$vectors)[, alpha := "Split"],
+toEigenfaces(uca_angry_stack_surprise_sad_10$vectors)[, alpha := "Stack"])
+
+uca_disgust_split_stack_10_plot <- rbind(toEigenfaces(uca_disgust_split_surprise_happy_10$vectors)[, alpha := "Split"],
+toEigenfaces(uca_disgust_stack_surprise_happy_10$vectors)[, alpha := "Stack"])
+
+uca_surprise_split_stack_10_plot <- rbind(toEigenfaces(uca_surprise_split_happy_angry_10$vectors)[, alpha := "Split"],
+toEigenfaces(uca_surprise_stack_happy_angry_10$vectors)[, alpha := "Stack"])
+
+
+ggsave("uca_angry_split_stack_surprise_sad_10.png", plotEigenfaces2(uca_angry_split_stack_10_plot, "UCA Angry Split/Stack on Surprise(10%)& Sad"), width=10, height = 8, units = "in")
+ggsave("uca_disgust_split_stack_surprise_happy_10.png",plotEigenfaces2(uca_disgust_split_stack_10_plot, "UCA Disgust Split/Stack on Surprise (10%) & Happy"), width=10, height = 8, units = "in")
+ggsave("uca_surprise_split_stack_happy_angry_10.png", plotEigenfaces2(uca_surprise_split_stack_10_plot, "UCA Surprise Split/Stack on Happy (10%) & Angry"), width=10, height = 8, units = "in")
+
+
+```
+
+```{R}
+test <- rWishart(1, 7000, Sigma = diag(1, nrow = nrow(cov_happy)))
+tmp_test <- uca(cov_happy, test[,,1])
+tmp_test <- uca(cov_happy, test[,,1])
+
+
 ```

@@ -138,26 +138,17 @@ uca = function(A, B, nv = 2,method = "cov", ...){
     
   }else if(method == "data"){
     
+    A_divided = A/sqrt(nrow(A) - 1)
+    
     if(is.list(B) & length(B) > 1){
       #run multi-background
-      A_divided = A/sqrt(nrow(A) - 1)
       B_divided <- Map(function(z){z/sqrt(nrow(z) - 1)}, B)
+      bisection2.multiple(A=A_divided, B=B_divided, nv = nv, ... )
       
-      tmp_res <- bisection2.multiple(A=A_divided, B=B_divided, ... )
-      
-      left <- do.call(cbind, lapply(append(list(A_divided), Map("*", -tmp_res$tau, B_divided)), t))
-      right <-  do.call(rbind, append(list(A_divided), B_divided))
-      
-      final_res <- broken_svd_cpp(left, right, nv)
-      return(list(values = final_res$values, vectors = final_res$vectors, tau = tmp_res$tau))  
-    
       }else{
         #run single background
       if(is.list(B)) B = B[[1]]
-      
-      A_divided = A/sqrt(nrow(A) - 1)
       B_divided = B/sqrt(nrow(B) - 1)  
-      
       tmp_res <- bisection2(A=A_divided, B=B_divided, ...)
       
       #calculate the svd
