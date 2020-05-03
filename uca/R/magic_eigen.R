@@ -79,12 +79,12 @@ bisection2 = function(A, B, limit = c(0,20), maxit = 1E5L, tol = 1E-6){
       if( limit[2] - limit[1] < tol * limit[1]) break;
       if(iter == maxit) warning("maximum iteration reached: solution may not be optimal \n");
       
-      lambda[j] <- (0.5*sum(limit))
-      tau_score = multiple_score_calc_cpp(left = cbind(t_A, -(lambda[j]*t_B)),
+      lambda <- (0.5*sum(limit))
+      tau_score = multiple_score_calc_cpp(left = cbind(t_A, -(lambda*t_B)),
                                       right = right,
                                       right_u = svd_right$u,
                                       right_d = svd_right$d,
-                                      tau = lambda[j],
+                                      tau = lambda,
                                       B = B)
       
       if(tau_score$score < 0){
