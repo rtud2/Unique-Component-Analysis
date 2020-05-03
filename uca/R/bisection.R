@@ -31,7 +31,10 @@ score_calc = function(A, B, tau){
 #'  associated with tau, value (eigenvalue), and score (derivative value of the lagrangian)
 
 bisection = function(A, B, limit = c(0,20), maxit = 1E5L, nv = 1, tol = 1E-6){
-  f_val = lapply(limit, function(z){score_calc(A, B, z)})
+  
+  f_val <- vector(mode = "list", length = 2L)
+  f_val[[1]] <- score_calc(A, B, 0)
+  f_val[[2]]$tau = 20
   
   if(f_val[[1]]$score > 0){
     warning("Redundant Constraint: Lagrange Multiplier is negative. Setting lambda to 0 \n");
