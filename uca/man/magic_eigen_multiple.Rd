@@ -5,8 +5,7 @@
 \title{magic_eigen_multiple}
 \usage{
 magic_eigen_multiple(
-  A,
-  B,
+  B_focus,
   t_A,
   t_B,
   right,
@@ -19,9 +18,7 @@ magic_eigen_multiple(
 )
 }
 \arguments{
-\item{A}{a *Centered* n1xp data matrix}
-
-\item{B}{*Centered* a n2xp data matrix}
+\item{B_focus}{*Centered* a nxp data matrix of the background we're solving lagrangian for}
 
 \item{t_A}{precomputed A transpose}
 

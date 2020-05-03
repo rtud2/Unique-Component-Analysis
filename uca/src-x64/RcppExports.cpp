@@ -54,8 +54,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // multiple_score_calc_cpp
-SEXP multiple_score_calc_cpp(const arma::mat& left, const arma::mat& right, const arma::mat& right_u, const arma::vec& right_d);
-RcppExport SEXP _uca_multiple_score_calc_cpp(SEXP leftSEXP, SEXP rightSEXP, SEXP right_uSEXP, SEXP right_dSEXP) {
+SEXP multiple_score_calc_cpp(const arma::mat& left, const arma::mat& right, const arma::mat& right_u, const arma::vec& right_d, const arma::mat& B, const double& tau);
+RcppExport SEXP _uca_multiple_score_calc_cpp(SEXP leftSEXP, SEXP rightSEXP, SEXP right_uSEXP, SEXP right_dSEXP, SEXP BSEXP, SEXP tauSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -63,7 +63,9 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const arma::mat& >::type right(rightSEXP);
     Rcpp::traits::input_parameter< const arma::mat& >::type right_u(right_uSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type right_d(right_dSEXP);
-    rcpp_result_gen = Rcpp::wrap(multiple_score_calc_cpp(left, right, right_u, right_d));
+    Rcpp::traits::input_parameter< const arma::mat& >::type B(BSEXP);
+    Rcpp::traits::input_parameter< const double& >::type tau(tauSEXP);
+    rcpp_result_gen = Rcpp::wrap(multiple_score_calc_cpp(left, right, right_u, right_d, B, tau));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -73,7 +75,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_uca_arma_svd", (DL_FUNC) &_uca_arma_svd, 1},
     {"_uca_arma_score", (DL_FUNC) &_uca_arma_score, 2},
     {"_uca_broken_svd_cpp", (DL_FUNC) &_uca_broken_svd_cpp, 3},
-    {"_uca_multiple_score_calc_cpp", (DL_FUNC) &_uca_multiple_score_calc_cpp, 4},
+    {"_uca_multiple_score_calc_cpp", (DL_FUNC) &_uca_multiple_score_calc_cpp, 6},
     {NULL, NULL, 0}
 };
 

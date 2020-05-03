@@ -39,32 +39,6 @@ broken_svd_R = function(left, right, nv){
 }
 
 
-
-
-
-#' multiple_score_calc
-#' 
-#' calculate the eigendecomposition via a product of matrices using SVD and QR decomposition. Much faster for large matrices.
-#'  compute the lambda for the jth background 
-#'
-#' @param left a rectangular matrix with p columns
-#' @param right a rectangular matrix with p rows
-#' @param svd_right a precalculated svd for the right matrix. saves time
-#' @param tau contrastive parameter
-#' @return list of the largest eigenvalue, associated score, and tau
-#' @importFrom methods as
-
-multiple_score_calc <- function(left, right, svd_right, tau, B_focus){
-  
- tmp_cpp <- multiple_score_calc_cpp(left, right, svd_right$u, svd_right$d)
-  
-  return(
-    list(score = as(arma_score(B_focus, tmp_cpp$vectors), "numeric"),
-         values = tmp_cpp$values,
-         tau = tau))
-}
-
-
 #' bisection2
 #' 
 #' compute the UCA for single background using SVD and QR. good for bigger data where loading the covariance matrix is difficult
@@ -75,20 +49,24 @@ multiple_score_calc <- function(left, right, svd_right, tau, B_focus){
 #' @param maxit maximum iterations
 #' @param tol tolerance for convergence criteria
 #' @return list of tau, largest eigenvalue, and score
+#' @importFrom Rfast transpose
 #' 
 bisection2 = function(A, B, limit = c(0,20), maxit = 1E5L, tol = 1E-6){
   
   right <- rbind(A , B)
   svd_right <- arma_svd(right)
-  t_A = t(A); 
-  t_B = t(B);
+  t_A = Rfast::transpose(A); 
+  t_B = Rfast::transpose(B);
+  
+  svd_right_check <- arma_svd(A)
   
   f_val <- vector(mode = "list", length = 2L)
-  f_val[[1]] <- multiple_score_calc(left = t_A,
+  f_val[[1]] <- multiple_score_calc_cpp(left = t_A,
                                     right = A,
-                                    svd_right = arma_svd(A),
+                                    right_u = svd_right_check$u,
+                                    right_d = svd_right_check$d,
                                     tau = 0,
-                                    B_focus = B)
+                                    B = B)
   f_val[[2]]$tau = 20
   
   if(f_val[[1]]$score > 0){
@@ -101,11 +79,13 @@ bisection2 = function(A, B, limit = c(0,20), maxit = 1E5L, tol = 1E-6){
       if( limit[2] - limit[1] < tol * limit[1]) break;
       if(iter == maxit) warning("maximum iteration reached: solution may not be optimal \n");
       
-      tau_score = multiple_score_calc(left = cbind(t_A, - (0.5*sum(limit)) * t_B),
+      lambda[j] <- (0.5*sum(limit))
+      tau_score = multiple_score_calc_cpp(left = cbind(t_A, -(lambda[j]*t_B)),
                                       right = right,
-                                      svd_right = svd_right,
-                                      tau = (0.5*sum(limit)),
-                                      B_focus = B)
+                                      right_u = svd_right$u,
+                                      right_d = svd_right$d,
+                                      tau = lambda[j],
+                                      B = B)
       
       if(tau_score$score < 0){
         f_val[[1]] = tau_score
@@ -124,8 +104,7 @@ bisection2 = function(A, B, limit = c(0,20), maxit = 1E5L, tol = 1E-6){
 #' 
 #' Solve for the optimal lagrange multiplier for the jth background. used only when multiple backgrounds exist.
 #' 
-#' @param A a *Centered* n1xp data matrix
-#' @param B *Centered* a n2xp data matrix
+#' @param B_focus *Centered* a nxp data matrix of the background we're solving lagrangian for
 #' @param t_A precomputed A transpose
 #' @param t_B precomputed B transpose
 #' @param right precomputed right long matrix: rbind(A, B)
@@ -136,21 +115,23 @@ bisection2 = function(A, B, limit = c(0,20), maxit = 1E5L, tol = 1E-6){
 #' @param maxit maximum iterations
 #' @param tol tolerance for convergence criteria
 #' @return list of tau, largest eigenvalue, and score
-
-magic_eigen_multiple = function(A, B, t_A, t_B, right, svd_right, lambda, j, limit = c(0,20), maxit = 1E5, tol = 1E-6){
+#' @importFrom Rfast transpose
+magic_eigen_multiple = function(B_focus, t_A, t_B, right, svd_right, lambda, j, limit = c(0,20), maxit = 1E5, tol = 1E-6){
   
   #constants that don't really change if focused on j-th background
-  old_right <- do.call(rbind, append(list(A),  B[-j]))
+  old_right <- Rfast::transpose(do.call(cbind, c(list(t_A),  t_B[-j]))) #for some reason, faster than rbind due to memory allocation.
   lambda_B <- Map("*", -lambda, t_B)
-  old_left <- do.call(cbind, append(list(t_A), lambda_B[-j]))
+  old_left <- do.call(cbind, c(list(t_A), lambda_B[-j]))
+  svd_right_check <- arma_svd(old_right)
   
   #checking bounds 
   f_val <- vector(mode = "list", length = 2L)
-  f_val[[1]] <- multiple_score_calc(left = old_left,
+  f_val[[1]] <- multiple_score_calc_cpp(left = old_left,
                                     right = old_right,
-                                    svd_right = arma_svd(old_right),
+                                    right_u = svd_right_check$u,
+                                    right_d = svd_right_check$d,
                                     tau = 0,
-                                    B_focus = B[[j]])
+                                    B = B_focus)
   f_val[[2]]$tau = 20
   
   if(f_val[[1]]$score > 0){
@@ -164,11 +145,12 @@ magic_eigen_multiple = function(A, B, t_A, t_B, right, svd_right, lambda, j, lim
       
       lambda_B[[j]] = (-0.5*sum(limit)) * t_B[[j]]
       
-      tau_score = multiple_score_calc(left = do.call(cbind, append(list(t_A), lambda_B)),
+      tau_score = multiple_score_calc_cpp(left = do.call(cbind, c(list(t_A), lambda_B)),
                                       right = right,
-                                      svd_right = svd_right,
+                                      right_u = svd_right$u,
+                                      right_d = svd_right$d,
                                       tau = 0.5*sum(limit),
-                                      B_focus = B[[j]] )
+                                      B = B_focus )
       
       if(tau_score$score < 0){
        f_val[[1]] <- tau_score
@@ -194,18 +176,19 @@ magic_eigen_multiple = function(A, B, t_A, t_B, right, svd_right, lambda, j, lim
 #' @param max_iter maximum number of iterations before giving up
 #' @param tol convergence criteria for coordinate descent
 #' @return list of tau, largest eigenvalue, and score
-
+#' @importFrom Rfast transpose
 bisection2.multiple <- function(A, B, lambda=NULL, nv = 2L, max_iter=1E5L, tol = 1E-6, ...){
   
   #initialize starting point if one isn't supplied. greedy start
   if(length(lambda) == 0){
     #we use A and B here instead of divided b/c they divide in bisection2 function
-    lambda = sapply(seq_along(B ), function(zz){bisection2(A, B[[zz]])$tau})
+    # do not initialize the first one since it just gets overwritten in step 1 of coordinate descent.
+    lambda = c(0, sapply(seq_along(B)[-1], function(zz){bisection2(A, B[[zz]])$tau}))
   }
   
-  t_A <- t(A)
-  t_B <- lapply(B, t)
-  right <- do.call(rbind, append(list(A), B))
+  t_A <- Rfast::transpose(A)
+  t_B <- lapply(B, Rfast::transpose)
+  right <- t(do.call(cbind, c(list(t_A), t_B)))
   svd_right <- arma_svd(right)
   
   score = Inf; 
@@ -215,7 +198,7 @@ bisection2.multiple <- function(A, B, lambda=NULL, nv = 2L, max_iter=1E5L, tol =
     old.score <- score
     for (j in seq_along(B)){
       #calculate the optimal lagrange multiplier for each background j
-      bisection_j <- magic_eigen_multiple(A, B, t_A, t_B, right, svd_right, lambda, j)
+      bisection_j <- magic_eigen_multiple(B[[j]], t_A, t_B, right, svd_right, lambda, j)
       lambda[j] <- bisection_j$tau
     }
     score <- sum(bisection_j$values, lambda)
@@ -223,7 +206,7 @@ bisection2.multiple <- function(A, B, lambda=NULL, nv = 2L, max_iter=1E5L, tol =
     #print(paste("iteration", i))
   }
   
-  left <- do.call(cbind, append(list(t_A), Map("*", -lambda, t_B)))
+  left <- do.call(cbind, c(list(t_A), Map("*", -lambda, t_B)))
   final_res <- broken_svd_cpp(left, right, nv)
   
   return(list(values = final_res$values, vectors = final_res$vectors, tau = lambda))

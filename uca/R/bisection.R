@@ -71,13 +71,12 @@ bisection = function(A, B, limit = c(0,20), maxit = 1E5L, nv = 1, tol = 1E-6){
 #' @return for each background covariance matrix in B, return list of tau (the optimal lagrange multiplier), vectors(eigenvector)
 #'  associated with largest value (eigenvalue)
 #' @importFrom RSpectra eigs_sym
-#' @importFrom future.apply future_sapply
 
 bisection.multiple = function(A, B, lambda=NULL, nv = 2L, max_iter = 1E5L, tol = 1E-6, ...){
   
   #initialize starting point if one isn't supplied
   if(length(lambda) == 0){
-    lambda = future_sapply(seq_along(B), function(zz){bisection(A,B[[zz]])$tau})
+    lambda = c(0, sapply(seq_along(B)[-1], function(zz){bisection(A,B[[zz]])$tau}))
     }
   score = Inf; 
   
@@ -106,6 +105,7 @@ bisection.multiple = function(A, B, lambda=NULL, nv = 2L, max_iter = 1E5L, tol =
 #' @param ... other parameters to pass in to bisection(...) and bisection.multiple(...)
 #' @return values(eigenvalues), vectors (eigenvectors), tau (Lagrange Multiplier) associated with unique component analysis
 #' @importFrom RSpectra eigs_sym
+#' @importFrom Rfast transpose
 #' @export
 
 uca = function(A, B, nv = 2,method = "cov", ...){
@@ -152,7 +152,7 @@ uca = function(A, B, nv = 2,method = "cov", ...){
       tmp_res <- bisection2(A=A_divided, B=B_divided, ...)
       
       #calculate the svd
-      left <- cbind(t(A_divided), - tmp_res$tau * t(B_divided))
+      left <- cbind(Rfast::transpose(A_divided), - tmp_res$tau * Rfast::transpose(B_divided))
       right <- rbind(A_divided, B_divided)
      
       final_res <- broken_svd_cpp(left, right, nv)
