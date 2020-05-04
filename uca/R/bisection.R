@@ -145,7 +145,7 @@ uca = function(A, B, nv = 2, method = "data", center = TRUE, ...){
   }else if(method == "data"){
     
     if(center == TRUE){
-      A_divided = center_f(A_divided)/sqrt(nrow(A) - 1)  
+      A_divided = center_f(A)/sqrt(nrow(A) - 1)  
     }else{
       A_divided = A/sqrt(nrow(A) - 1)
     }
