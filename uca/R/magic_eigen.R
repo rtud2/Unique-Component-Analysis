@@ -52,7 +52,6 @@ broken_svd_R = function(left, right, nv){
 #' @importFrom Rfast transpose
 #' 
 bisection2 = function(A, B, limit = c(0,20), maxit = 1E5L, tol = 1E-6){
-  
   right <- rbind(A , B)
   svd_right <- arma_svd(right)
   t_A = Rfast::transpose(A); 
@@ -67,7 +66,7 @@ bisection2 = function(A, B, limit = c(0,20), maxit = 1E5L, tol = 1E-6){
                                     right_d = svd_right_check$d,
                                     tau = 0,
                                     B = B)
-  f_val[[2]]$tau = limit[2]
+  og_upper_lim <- f_val[[2]]$tau = limit[2]
   
   if(f_val[[1]]$score > 0){
     warning("Redundant Constraint: Lagrange Multiplier is negative. Setting lambda to 0 \n");
@@ -93,7 +92,8 @@ bisection2 = function(A, B, limit = c(0,20), maxit = 1E5L, tol = 1E-6){
         f_val[[2]] = tau_score
       }
     }  
-    if(round(tau_score$tau) == limit[2]){
+
+    if(round(tau_score$tau) == og_upper_lim){
       warning("Lagrange Multiplier is near upperbound. Consider increasing the upperbound.(default is 20)")
     }
     return(f_val[[ which.min(abs(c(f_val[[1]]$score, f_val[[2]]$score))) ]]) 
@@ -125,7 +125,7 @@ magic_eigen_multiple = function(B_focus, t_A, t_B, right, svd_right, lambda, j, 
   lambda_B <- Map("*", -lambda, t_B)
   old_left <- do.call(cbind, c(list(t_A), lambda_B[-j]))
   svd_right_check <- arma_svd(old_right)
-  
+  og_upper_lim <- limit[2]
   #checking bounds 
   f_val <- vector(mode = "list", length = 2L)
   f_val[[1]] <- multiple_score_calc_cpp(left = old_left,
@@ -134,7 +134,7 @@ magic_eigen_multiple = function(B_focus, t_A, t_B, right, svd_right, lambda, j, 
                                     right_d = svd_right_check$d,
                                     tau = 0,
                                     B = B_focus)
-  f_val[[2]]$tau = limit[2]
+  og_upper_lim <- f_val[[2]]$tau = limit[2]
   
   if(f_val[[1]]$score > 0){
     warning("Redundant Constraint: Lagrange Multiplier is negative. Setting lambda to 0 \n");
@@ -160,7 +160,7 @@ magic_eigen_multiple = function(B_focus, t_A, t_B, right, svd_right, lambda, j, 
        f_val[[2]] <- tau_score
       }
     }
-    if(round(tau_score$tau) == limit[2]){
+    if(round(tau_score$tau) == og_upper_lim){
       warning("Lagrange Multiplier is near upperbound. Consider increasing the upperbound.(default is 20)")
     }
     return(f_val[[ which.min(abs(c(f_val[[1]]$score, f_val[[2]]$score))) ]]) 

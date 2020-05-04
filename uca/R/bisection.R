@@ -34,8 +34,8 @@ bisection = function(A, B, limit = c(0,20), maxit = 1E5L, nv = 1, tol = 1E-6){
   
   f_val <- vector(mode = "list", length = 2L)
   f_val[[1]] <- score_calc(A, B, 0)
-  f_val[[2]]$tau = limit[2]
-  
+  og_upper_lim <- f_val[[2]]$tau = limit[2]
+
   if(f_val[[1]]$score > 0){
     warning("Redundant Constraint: Lagrange Multiplier is negative. Setting lambda to 0 \n");
     return(f_val[[1]]);
@@ -54,7 +54,7 @@ bisection = function(A, B, limit = c(0,20), maxit = 1E5L, nv = 1, tol = 1E-6){
         f_val[[2]] = tau_score
       }
     }  
-    if(round(tau_score$tau) == limit[2]){
+    if(round(tau_score$tau) == og_upper_lim){
       warning("Lagrange Multiplier is near upperbound. Consider increasing the upperbound.(default is 20)")
     }
     return(f_val[[ which.min(abs(c(f_val[[1]]$score, f_val[[2]]$score))) ]]) 
