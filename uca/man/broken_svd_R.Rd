@@ -2,7 +2,7 @@
 % Please edit documentation in R/magic_eigen.R
 \name{broken_svd_R}
 \alias{broken_svd_R}
-\title{broken_svd_R}
+\title{broken_PCA}
 \usage{
 broken_svd_R(left, right, nv)
 }

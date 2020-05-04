@@ -4,16 +4,18 @@
 \alias{uca}
 \title{uca}
 \usage{
-uca(A, B, nv = 2, method = "cov", ...)
+uca(A, B, nv = 2, method = "data", center = TRUE, ...)
 }
 \arguments{
-\item{A}{Target Covariance Matrix}
+\item{A}{Target Data or Covariance Matrix}
 
-\item{B}{list of background covariance(s).}
+\item{B}{list of background data or covariance matrices.}
 
 \item{nv}{number of uca components to estimate}
 
 \item{method}{method used to calculate the uca values and vectors.}
+
+\item{center}{logical: default TRUE. If False, data matrix A and B will not be centered}
 
 \item{...}{other parameters to pass in to bisection(...) and bisection.multiple(...)}
 }

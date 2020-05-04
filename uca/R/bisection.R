@@ -34,7 +34,7 @@ bisection = function(A, B, limit = c(0,20), maxit = 1E5L, nv = 1, tol = 1E-6){
   
   f_val <- vector(mode = "list", length = 2L)
   f_val[[1]] <- score_calc(A, B, 0)
-  f_val[[2]]$tau = 20
+  f_val[[2]]$tau = limit[2]
   
   if(f_val[[1]]$score > 0){
     warning("Redundant Constraint: Lagrange Multiplier is negative. Setting lambda to 0 \n");
@@ -54,7 +54,9 @@ bisection = function(A, B, limit = c(0,20), maxit = 1E5L, nv = 1, tol = 1E-6){
         f_val[[2]] = tau_score
       }
     }  
-    
+    if(round(tau_score$tau) == limit[2]){
+      warning("Lagrange Multiplier is near upperbound. Consider increasing the upperbound.(default is 20)")
+    }
     return(f_val[[ which.min(abs(c(f_val[[1]]$score, f_val[[2]]$score))) ]]) 
   }
 }
@@ -101,19 +103,20 @@ bisection.multiple = function(A, B, lambda=NULL, nv = 2L, max_iter = 1E5L, tol =
 #'
 #' Run unique component analysis
 #' 
-#' @param A Target Covariance Matrix
-#' @param B list of background covariance(s). 
+#' @param A Target Data or Covariance Matrix
+#' @param B list of background data or covariance matrices. 
 #' @param nv number of uca components to estimate
 #' @param method method used to calculate the uca values and vectors. 
+#' @param center logical: default TRUE. If False, data matrix A and B will not be centered
 #' @param ... other parameters to pass in to bisection(...) and bisection.multiple(...)
 #' @return values(eigenvalues), vectors (eigenvectors), tau (Lagrange Multiplier) associated with unique component analysis
 #' @importFrom RSpectra eigs_sym
 #' @importFrom Rfast transpose
 #' @export
 
-uca = function(A, B, nv = 2,method = "cov", ...){
-  if(!(class(B) %in% c("list","matrix","dgeMatrix","dgCMatrix")) ){
-    stop("B is not a list of matrix, matrices, or Matrix")
+uca = function(A, B, nv = 2, method = "data", center = TRUE, ...){
+  if(!(class(B) %in% c("list","matrix")) ){
+    stop("B is not a list of matrix, matrices")
   }
   
   if(method == "cov"){
@@ -141,17 +144,31 @@ uca = function(A, B, nv = 2,method = "cov", ...){
     
   }else if(method == "data"){
     
-    A_divided = A/sqrt(nrow(A) - 1)
+    if(center == TRUE){
+      A_divided = center_f(A_divided)/sqrt(nrow(A) - 1)  
+    }else{
+      A_divided = A/sqrt(nrow(A) - 1)
+    }
     
     if(is.list(B) & length(B) > 1){
       #run multi-background
-      B_divided <- Map(function(z){z/sqrt(nrow(z) - 1)}, B)
+      if(center == TRUE){
+        B_divided <- Map(function(z){center_f(z)/sqrt(nrow(z) - 1)}, B)
+      }else{
+        B_divided <- Map(function(z){z/sqrt(nrow(z) - 1)}, B)  
+      }
+      
       bisection2.multiple(A=A_divided, B=B_divided, nv = nv, ... )
       
       }else{
         #run single background
       if(is.list(B)) B = B[[1]]
-      B_divided = B/sqrt(nrow(B) - 1)  
+      if(center ==TRUE){
+        B_divided = center_f(B)/sqrt(nrow(B) - 1)
+      }else{
+        B_divided = B/sqrt(nrow(B) - 1)    
+      }
+      
       tmp_res <- bisection2(A=A_divided, B=B_divided, ...)
       
       #calculate the svd
