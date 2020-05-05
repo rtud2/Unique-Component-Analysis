@@ -15,9 +15,9 @@ bisection2.multiple(
 )
 }
 \arguments{
-\item{A}{*Centered* Target Data Matrix. n1 x p dimensions}
+\item{A}{Target Data Matrix. n1 x p dimensions}
 
-\item{B}{*Centered* List of k Background Data Matrix. n_k x p dimensions}
+\item{B}{List of k Background Data Matrix. n_k x p dimensions}
 
 \item{lambda}{contrastive parameters if known. used to start algorithm. defaults to NULL}
 

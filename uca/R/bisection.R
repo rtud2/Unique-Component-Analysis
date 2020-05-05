@@ -34,7 +34,7 @@ bisection = function(A, B, limit = c(0,20), maxit = 1E5L, nv = 1, tol = 1E-6){
   
   f_val <- vector(mode = "list", length = 2L)
   f_val[[1]] <- score_calc(A, B, 0)
-  og_upper_lim <- f_val[[2]]$tau = limit[2]
+  og_upper_lim <- f_val[[2]]$tau <- limit[2]
 
   if(f_val[[1]]$score > 0){
     warning("Redundant Constraint: Lagrange Multiplier is negative. Setting lambda to 0 \n");
@@ -107,14 +107,14 @@ bisection.multiple = function(A, B, lambda=NULL, nv = 2L, max_iter = 1E5L, tol =
 #' @param B list of background data or covariance matrices. 
 #' @param nv number of uca components to estimate
 #' @param method method used to calculate the uca values and vectors. 
-#' @param center logical: default TRUE. If False, data matrix A and B will not be centered
+#' @param center logical: default False. If False, data matrix A and B will not be centered
 #' @param ... other parameters to pass in to bisection(...) and bisection.multiple(...)
 #' @return values(eigenvalues), vectors (eigenvectors), tau (Lagrange Multiplier) associated with unique component analysis
 #' @importFrom RSpectra eigs_sym
 #' @importFrom Rfast transpose
 #' @export
 
-uca = function(A, B, nv = 2, method = "data", center = TRUE, ...){
+uca = function(A, B, nv = 2, method = "data", center = F, ...){
   if(!(class(B) %in% c("list","matrix")) ){
     stop("B is not a list of matrix, matrices")
   }

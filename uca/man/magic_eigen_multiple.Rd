@@ -18,7 +18,7 @@ magic_eigen_multiple(
 )
 }
 \arguments{
-\item{B_focus}{*Centered* a nxp data matrix of the background we're solving lagrangian for}
+\item{B_focus}{a nxp data matrix of the background we're solving lagrangian for}
 
 \item{t_A}{precomputed A transpose}
 

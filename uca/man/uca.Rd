@@ -4,7 +4,7 @@
 \alias{uca}
 \title{uca}
 \usage{
-uca(A, B, nv = 2, method = "data", center = TRUE, ...)
+uca(A, B, nv = 2, method = "data", center = F, ...)
 }
 \arguments{
 \item{A}{Target Data or Covariance Matrix}
@@ -15,7 +15,7 @@ uca(A, B, nv = 2, method = "data", center = TRUE, ...)
 
 \item{method}{method used to calculate the uca values and vectors.}
 
-\item{center}{logical: default TRUE. If False, data matrix A and B will not be centered}
+\item{center}{logical: default False. If False, data matrix A and B will not be centered}
 
 \item{...}{other parameters to pass in to bisection(...) and bisection.multiple(...)}
 }

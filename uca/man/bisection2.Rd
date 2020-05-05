@@ -7,9 +7,9 @@
 bisection2(A, B, limit = c(0, 20), maxit = 100000L, tol = 1e-06)
 }
 \arguments{
-\item{A}{a *Centered* n1xp data matrix}
+\item{A}{a n1xp data matrix}
 
-\item{B}{a *Centered* n2xp data matrix}
+\item{B}{a n2xp data matrix}
 
 \item{limit}{bounds for the lagrange multiplier.}
 

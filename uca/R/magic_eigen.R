@@ -43,8 +43,8 @@ broken_svd_R = function(left, right, nv){
 #' 
 #' compute the UCA for single background using SVD and QR. good for bigger data where loading the covariance matrix is difficult
 #' 
-#' @param A a *Centered* n1xp data matrix
-#' @param B a *Centered* n2xp data matrix
+#' @param A a n1xp data matrix
+#' @param B a n2xp data matrix
 #' @param limit bounds for the lagrange multiplier.
 #' @param maxit maximum iterations
 #' @param tol tolerance for convergence criteria
@@ -66,7 +66,7 @@ bisection2 = function(A, B, limit = c(0,20), maxit = 1E5L, tol = 1E-6){
                                     right_d = svd_right_check$d,
                                     tau = 0,
                                     B = B)
-  og_upper_lim <- f_val[[2]]$tau = limit[2]
+  og_upper_lim <- f_val[[2]]$tau <- limit[2]
   
   if(f_val[[1]]$score > 0){
     warning("Redundant Constraint: Lagrange Multiplier is negative. Setting lambda to 0 \n");
@@ -106,7 +106,7 @@ bisection2 = function(A, B, limit = c(0,20), maxit = 1E5L, tol = 1E-6){
 #' 
 #' Solve for the optimal lagrange multiplier for the jth background. used only when multiple backgrounds exist.
 #' 
-#' @param B_focus *Centered* a nxp data matrix of the background we're solving lagrangian for
+#' @param B_focus a nxp data matrix of the background we're solving lagrangian for
 #' @param t_A precomputed A transpose
 #' @param t_B precomputed B transpose
 #' @param right precomputed right long matrix: rbind(A, B)
@@ -125,8 +125,8 @@ magic_eigen_multiple = function(B_focus, t_A, t_B, right, svd_right, lambda, j, 
   lambda_B <- Map("*", -lambda, t_B)
   old_left <- do.call(cbind, c(list(t_A), lambda_B[-j]))
   svd_right_check <- arma_svd(old_right)
-  og_upper_lim <- limit[2]
-  #checking bounds 
+
+    #checking bounds 
   f_val <- vector(mode = "list", length = 2L)
   f_val[[1]] <- multiple_score_calc_cpp(left = old_left,
                                     right = old_right,
@@ -134,7 +134,7 @@ magic_eigen_multiple = function(B_focus, t_A, t_B, right, svd_right, lambda, j, 
                                     right_d = svd_right_check$d,
                                     tau = 0,
                                     B = B_focus)
-  og_upper_lim <- f_val[[2]]$tau = limit[2]
+  og_upper_lim <- f_val[[2]]$tau <- limit[2]
   
   if(f_val[[1]]$score > 0){
     warning("Redundant Constraint: Lagrange Multiplier is negative. Setting lambda to 0 \n");
@@ -174,8 +174,8 @@ magic_eigen_multiple = function(B_focus, t_A, t_B, right, svd_right, lambda, j, 
 #' 
 #' Solving for the unique components using SVD and QR in the instance of multiple backgrounds.
 #' 
-#' @param A *Centered* Target Data Matrix. n1 x p dimensions
-#' @param B *Centered* List of k Background Data Matrix. n_k x p dimensions
+#' @param A  Target Data Matrix. n1 x p dimensions
+#' @param B  List of k Background Data Matrix. n_k x p dimensions
 #' @param lambda contrastive parameters if known. used to start algorithm. defaults to NULL
 #' @param nv number of uca components to calculate
 #' @param max_iter maximum number of iterations before giving up
