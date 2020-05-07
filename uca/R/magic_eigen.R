@@ -68,7 +68,7 @@ bisection2 = function(A, B, limit = c(0,20), maxit = 1E5L, tol = 1E-6){
                                     B = B)
   og_upper_lim <- f_val[[2]]$tau <- limit[2]
   
-  if(f_val[[1]]$score > 0){
+  if(f_val[[1]]$score >= 0){
     warning("Redundant Constraint: Lagrange Multiplier is negative. Setting lambda to 0 \n");
     return(f_val[[1]]);
   }else{
@@ -136,7 +136,7 @@ magic_eigen_multiple = function(B_focus, t_A, t_B, right, svd_right, lambda, j, 
                                     B = B_focus)
   og_upper_lim <- f_val[[2]]$tau <- limit[2]
   
-  if(f_val[[1]]$score > 0){
+  if(f_val[[1]]$score >= 0){
     warning("Redundant Constraint: Lagrange Multiplier is negative. Setting lambda to 0 \n");
     return(f_val[[1]]);
   }else{

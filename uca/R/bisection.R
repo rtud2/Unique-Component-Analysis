@@ -36,7 +36,7 @@ bisection = function(A, B, limit = c(0,20), maxit = 1E5L, nv = 1, tol = 1E-6){
   f_val[[1]] <- score_calc(A, B, 0)
   og_upper_lim <- f_val[[2]]$tau <- limit[2]
 
-  if(f_val[[1]]$score > 0){
+  if(f_val[[1]]$score >= 0){
     warning("Redundant Constraint: Lagrange Multiplier is negative. Setting lambda to 0 \n");
     return(f_val[[1]]);
   }else{
