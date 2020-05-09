@@ -45,13 +45,13 @@ broken_svd_R = function(left, right, nv){
 #' 
 #' @param A a n1xp data matrix
 #' @param B a n2xp data matrix
-#' @param limit bounds for the lagrange multiplier.
+#' @param limit upperbound for the lagrange multiplier.
 #' @param maxit maximum iterations
 #' @param tol tolerance for convergence criteria
 #' @return list of tau, largest eigenvalue, and score
 #' @importFrom Rfast transpose
 #' 
-bisection2 = function(A, B, limit = c(0,20), maxit = 1E5L, tol = 1E-6){
+bisection2 = function(A, B, limit = 20L, maxit = 1E5L, tol = 1E-6){
   right <- rbind(A , B)
   svd_right <- arma_svd(right)
   t_A = Rfast::transpose(A); 
@@ -66,7 +66,7 @@ bisection2 = function(A, B, limit = c(0,20), maxit = 1E5L, tol = 1E-6){
                                     right_d = svd_right_check$d,
                                     tau = 0,
                                     B = B)
-  og_upper_lim <- f_val[[2]]$tau <- limit[2]
+  og_upper_lim <- f_val[[2]]$tau <- limit
   
   if(f_val[[1]]$score >= 0){
     warning("Redundant Constraint: Lagrange Multiplier is negative. Setting lambda to 0 \n");
@@ -94,7 +94,7 @@ bisection2 = function(A, B, limit = c(0,20), maxit = 1E5L, tol = 1E-6){
     }  
 
     if(round(tau_score$tau) == og_upper_lim){
-      warning("Lagrange Multiplier is near upperbound. Consider increasing the upperbound.(default is 20)")
+      warning("Lagrange Multiplier is near upperbound. Consider increasing the upperbound.(default is 20)  \n")
     }
     return(f_val[[ which.min(abs(c(f_val[[1]]$score, f_val[[2]]$score))) ]]) 
   }
@@ -113,12 +113,12 @@ bisection2 = function(A, B, limit = c(0,20), maxit = 1E5L, tol = 1E-6){
 #' @param svd_right precomputed svd of right matrix
 #' @param lambda a j dimensional vector with possible lagrange multipliers for each background data matrix
 #' @param j the specific background you're solving for
-#' @param limit bounds for the lagrange multiplier.
+#' @param limit upperbound for the lagrange multiplier.
 #' @param maxit maximum iterations
 #' @param tol tolerance for convergence criteria
 #' @return list of tau, largest eigenvalue, and score
 #' @importFrom Rfast transpose
-magic_eigen_multiple = function(B_focus, t_A, t_B, right, svd_right, lambda, j, limit = c(0,20), maxit = 1E5, tol = 1E-6){
+magic_eigen_multiple = function(B_focus, t_A, t_B, right, svd_right, lambda, j, limit = 20L, maxit = 1E5, tol = 1E-6){
   
   #constants that don't really change if focused on j-th background
   old_right <- Rfast::transpose(do.call(cbind, c(list(t_A),  t_B[-j]))) #for some reason, faster than rbind due to memory allocation.
@@ -134,7 +134,7 @@ magic_eigen_multiple = function(B_focus, t_A, t_B, right, svd_right, lambda, j, 
                                     right_d = svd_right_check$d,
                                     tau = 0,
                                     B = B_focus)
-  og_upper_lim <- f_val[[2]]$tau <- limit[2]
+  og_upper_lim <- f_val[[2]]$tau <- limit
   
   if(f_val[[1]]$score >= 0){
     warning("Redundant Constraint: Lagrange Multiplier is negative. Setting lambda to 0 \n");
@@ -161,7 +161,7 @@ magic_eigen_multiple = function(B_focus, t_A, t_B, right, svd_right, lambda, j, 
       }
     }
     if(round(tau_score$tau) == og_upper_lim){
-      warning("Lagrange Multiplier is near upperbound. Consider increasing the upperbound.(default is 20)")
+      warning("Lagrange Multiplier is near upperbound. Consider increasing the upperbound.(default is 20) \n")
     }
     return(f_val[[ which.min(abs(c(f_val[[1]]$score, f_val[[2]]$score))) ]]) 
   }
@@ -188,7 +188,7 @@ bisection2.multiple <- function(A, B, lambda=NULL, nv = 2L, max_iter=1E5L, tol =
   if(length(lambda) == 0){
     #we use A and B here instead of divided b/c they divide in bisection2 function
     # do not initialize the first one since it just gets overwritten in step 1 of coordinate descent.
-    lambda = c(0, sapply(seq_along(B)[-1], function(zz){bisection2(A, B[[zz]])$tau}))
+    lambda = c(0, sapply(seq_along(B)[-1], function(zz){bisection2(A, B[[zz]], ...)$tau}))
   }
   
   t_A <- Rfast::transpose(A)
@@ -203,7 +203,7 @@ bisection2.multiple <- function(A, B, lambda=NULL, nv = 2L, max_iter=1E5L, tol =
     old.score <- score
     for (j in seq_along(B)){
       #calculate the optimal lagrange multiplier for each background j
-      bisection_j <- magic_eigen_multiple(B[[j]], t_A, t_B, right, svd_right, lambda, j)
+      bisection_j <- magic_eigen_multiple(B[[j]], t_A, t_B, right, svd_right, lambda, j, ...)
       lambda[j] <- bisection_j$tau
     }
     score <- sum(bisection_j$values, lambda)

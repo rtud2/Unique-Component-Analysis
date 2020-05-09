@@ -4,14 +4,14 @@
 \alias{bisection}
 \title{bisection}
 \usage{
-bisection(A, B, limit = c(0, 20), maxit = 100000L, nv = 1, tol = 1e-06)
+bisection(A, B, limit = 20, maxit = 100000L, nv = 1, tol = 1e-06)
 }
 \arguments{
 \item{A}{Target Covariance Matrix}
 
 \item{B}{Background Covariance Matrix.}
 
-\item{limit}{a vector of c(lower, upper) bounds}
+\item{limit}{upperbound of lagrange multiplier}
 
 \item{maxit}{maxium number of iterations for the algorithm to run}
 

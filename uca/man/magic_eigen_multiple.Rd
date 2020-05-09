@@ -12,7 +12,7 @@ magic_eigen_multiple(
   svd_right,
   lambda,
   j,
-  limit = c(0, 20),
+  limit = 20L,
   maxit = 1e+05,
   tol = 1e-06
 )
@@ -32,7 +32,7 @@ magic_eigen_multiple(
 
 \item{j}{the specific background you're solving for}
 
-\item{limit}{bounds for the lagrange multiplier.}
+\item{limit}{upperbound for the lagrange multiplier.}
 
 \item{maxit}{maximum iterations}
 

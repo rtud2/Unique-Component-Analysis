@@ -1,8 +1,8 @@
 Package: uca
 Type: Package
 Title: Unique Component Analysis
-Version: 0.11
-Date: 2020-04-26
+Version: 0.12
+Date: 2020-05-09
 Author: Robin Tu
 Maintainer: Robin Tu <robintu2@illinois.edu>
 Description: Unique Component Analysis (UCA) looks for directions which maximize the covariance in a target dataset subject to minimizing the covariance in one or more background data set. This package allows you to work with either the original data matrix or the covariance matrix
