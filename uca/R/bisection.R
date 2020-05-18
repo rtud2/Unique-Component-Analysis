@@ -108,13 +108,14 @@ bisection.multiple = function(A, B, lambda=NULL, nv = 2L, max_iter = 1E5L, tol =
 #' @param nv number of uca components to estimate
 #' @param method method used to calculate the uca values and vectors. 
 #' @param center logical: default False. If False, data matrix A and B will not be centered
+#' @param scale logical: default False. If True, will center and scale, regardless of what center variable is set to
 #' @param ... other parameters to pass in to bisection(...) and bisection.multiple(...)
 #' @return values(eigenvalues), vectors (eigenvectors), tau (Lagrange Multiplier) associated with unique component analysis
 #' @importFrom RSpectra eigs_sym
 #' @importFrom Rfast transpose
 #' @export
 
-uca = function(A, B, nv = 2, method = "data", center = F, ...){
+uca = function(A, B, nv = 2, method = "data", center = F, scale = T, ...){
   if(!(class(B) %in% c("list","matrix")) ){
     stop("B is not a list of matrix, matrices")
   }
@@ -144,15 +145,19 @@ uca = function(A, B, nv = 2, method = "data", center = F, ...){
     
   }else if(method == "data"){
     
-    if(center == TRUE){
-      A_divided = center_f(A)/sqrt(nrow(A) - 1)  
+    if(scale == TRUE){
+      A_divided = scale(A)/sqrt(nrow(A) - 1)
+    }else if(center == TRUE){
+      A_divided = center_f(A)/sqrt(nrow(A) - 1)
     }else{
-      A_divided = A/sqrt(nrow(A) - 1)
+      A_divided = A/sqrt(nrow(A) - 1)      
     }
-    
+
     if(is.list(B) & length(B) > 1){
       #run multi-background
-      if(center == TRUE){
+      if(scale == TRUE){
+        B_divided <- Map(function(z){scale(z)/sqrt(nrow(z) - 1)}, B)
+      }else if(center == TRUE){
         B_divided <- Map(function(z){center_f(z)/sqrt(nrow(z) - 1)}, B)
       }else{
         B_divided <- Map(function(z){z/sqrt(nrow(z) - 1)}, B)  
@@ -163,7 +168,9 @@ uca = function(A, B, nv = 2, method = "data", center = F, ...){
       }else{
         #run single background
       if(is.list(B)) B = B[[1]]
-      if(center ==TRUE){
+      if(scale == TRUE){
+        B_divided = scale(B)/sqrt(nrow(B) - 1)
+      }else if(center == TRUE){
         B_divided = center_f(B)/sqrt(nrow(B) - 1)
       }else{
         B_divided = B/sqrt(nrow(B) - 1)    

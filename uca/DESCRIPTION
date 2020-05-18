@@ -7,6 +7,6 @@ Author: Robin Tu
 Maintainer: Robin Tu <robintu2@illinois.edu>
 Description: Unique Component Analysis (UCA) looks for directions which maximize the covariance in a target dataset subject to minimizing the covariance in one or more background data set. This package allows you to work with either the original data matrix or the covariance matrix
 License: GPL (>= 2)
-Imports: Rcpp, RcppArmadillo, RSpectra, future.apply, methods
+Imports: Rcpp, RcppArmadillo, RSpectra, methods
 LinkingTo: Rcpp, RcppArmadillo
 RoxygenNote: 7.1.0
