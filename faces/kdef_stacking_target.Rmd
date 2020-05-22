@@ -7,8 +7,8 @@ output: html_document
 
 ```{r setup, include=FALSE}
 rm(list = ls())
-Sys.setenv(MKL_DEBUG_CPU_TYPE=5) #intel MKL settings. latter to hack amd processors
-install.packages("../uca_0.11.zip", repos = NULL, type="source")
+#Sys.setenv(MKL_DEBUG_CPU_TYPE=5, MKL_VERBOSE=1) #intel MKL settings. latter to hack amd processors
+install.packages("../uca_0.12.zip", repos = NULL, type="source")
 libraries <- c("data.table", "MASS", "ggplot2", "splines","gridExtra", "uca", "imager", "future", "RSpectra", "microbenchmark")
 
 lapply(libraries, library, character.only = T)
@@ -21,15 +21,15 @@ plan(multiprocess)
 # read images into R
 readImage <- function(listFiles, size_x, size_y){
  loaded_images <- lapply(listFiles, load.image)
- grey_scaled <- lapply(loaded_images, function(zz) scale(data.table(resize(grayscale(zz), size_x, size_y))))
+ grey_scaled <- lapply(loaded_images, function(zz) scale(as.data.frame(resize(grayscale(zz), size_x, size_y))[,3]))
  return(data.matrix(do.call(cbind,grey_scaled)))
- }
+}
 
 # Turn Eigenvectors to eigenfaces
-toEigenfaces <- function(dat){
+toEigenfaces <- function(dat, size_x = 58, size_y = 68){
   eigenfaces <- data.table(do.call(rbind,
                         lapply(1:ncol(dat), function(zz){
-  cbind(as.data.frame(as.cimg(dat[,zz], dim = c(50,68,1,1))), zz)
+  cbind(as.data.frame(as.cimg(dat[,zz], dim = c(size_x, size_y,1,1))), zz)
 })))
   setnames(eigenfaces,c("x","y","value","Eigenface"))
   eigenfaces[, value2 := 2*(value - min(value))/(max(value) - min(value)), by = Eigenface]
@@ -56,58 +56,69 @@ scale_x_continuous(expand=c(0,0))+
   labs(title = title)
 }
 
-image_diff <- function(x, ref){
-  sign(ref) * (abs(x) - abs(ref))
+readImageRotate <- function(listFiles, rotation, size_x, size_y){
+ loaded_images <- lapply(listFiles, load.image)
+ grey_scaled <- lapply(seq_along(loaded_images), function(zz) scale(as.data.frame(resize(grayscale(imrotate(loaded_images[[zz]], rotation[[zz]])), size_x, size_y))[,3]))
+ return(data.matrix(do.call(cbind,grey_scaled)))
 }
-```
+
+# make faces positively correlated with reference data
+pos_corr <- function(dat, ref_dat){
+  sapply(1:ncol(dat), function(zz){
+    current_sign <- sign(cor(dat[,zz], ref_dat[,zz]))
+    if(current_sign == -1){
+      return(-dat[,zz])
+    }else{
+      return(dat[,zz])
+    }
+    })
+}
 
 
-```{R}
 kdef <- "KDEF_and_AKDEF/KDEF/"
-female_file <- grep(list.files(kdef), pattern = "^BF", value = T)
-male_file <- grep(list.files(kdef), pattern = "^BM", value = T)
-
-neutral_files <- paste0(kdef, sapply( c(female_file, male_file), function(zz) paste0(zz,"/",zz,"NES.JPG")))
-happy_files <- paste0(kdef, sapply(list.files(kdef), function(zz) paste0(zz,"/",zz,"HAS.JPG")))
-angry_files <- paste0(kdef, sapply(list.files(kdef), function(zz) paste0(zz,"/",zz,"ANS.JPG")))
-surprise_files <- paste0(kdef, sapply(list.files(kdef), function(zz) paste0(zz,"/",zz,"SUS.JPG")))
-sad_files <- paste0(kdef, sapply(list.files(kdef), function(zz) paste0(zz,"/",zz,"SAS.JPG")))
-disgust_files <- paste0(kdef, sapply(list.files(kdef), function(zz) paste0(zz,"/",zz,"DIS.JPG")))
-neutral_F_files <- paste0(kdef, sapply( female_file, function(zz) paste0(zz,"/",zz,"NES.JPG")))
-neutral_M_files <- paste0(kdef, sapply( male_file, function(zz) paste0(zz,"/",zz,"NES.JPG")))
-
-# convert to columns of images
-neutral %<-% readImage(neutral_files, 50, 68)
-happy %<-% readImage(happy_files, 50, 68)
-angry %<-% readImage(angry_files, 50, 68)
-disgust %<-% readImage(disgust_files, 50, 68)
-surprise %<-% readImage(surprise_files, 50, 68)
-sad %<-% readImage(sad_files , 50, 68)
 ```
 
+# Happy faces
 
 ```{R}
 happy_straight_files <- paste0(kdef, sapply(list.files(kdef), function(zz) paste0(zz,"/",zz,"HAS.JPG")))
 happy_left_files <- paste0(kdef, sapply(list.files(kdef), function(zz) paste0(zz,"/",zz,"HAHL.JPG")))
 happy_right_files <- paste0(kdef, sapply(list.files(kdef), function(zz) paste0(zz,"/",zz,"HAHR.JPG")))
-happy_straight %<-% readImage(happy_straight_files, 50, 68)
-happy_left %<-% readImage(happy_left_files, 50, 68)
-happy_right %<-% readImage(happy_right_files, 50, 68)
 
-t_HS %<-% center_f(t(happy_straight))
-t_HL %<-% center_f(t(happy_left))
-t_HR %<-% center_f(t(happy_right))
+happy_straight %<-% readImage(happy_straight_files, 25, 34)
+happy_left %<-% readImage(happy_left_files, 25, 34)
+happy_right %<-% readImage(happy_right_files, 25, 34)
+
+t_HS %<-% Rfast::transpose(happy_straight)
+t_HL %<-% Rfast::transpose(happy_left)
+t_HR %<-% Rfast::transpose(happy_right)
 
 t_stack_HLR %<-% rbind(t_HL, t_HR)
 t_stack_HCLR %<-% rbind(t_HS, t_HL, t_HR)
 
-cov_happy_straight %<-% cov(t_HS)
-cov_happy_left %<-% cov(t_HL)
-cov_happy_right %<-% cov(t_HR)
-cov_happy_stack_HLR %<-% cov(t_stack_HLR)
-cov_happy_stack_HCLR %<-% cov(t_stack_HCLR)
+# cov_happy_straight %<-% cov(t_HS)
+# cov_happy_left %<-% cov(t_HL)
+# cov_happy_right %<-% cov(t_HR)
+# cov_happy_stack_HLR %<-% cov(t_stack_HLR)
+# cov_happy_stack_HCLR %<-% cov(t_stack_HCLR)
 ```
 
+#Neutral Faces
+
+```{R}
+neutral_straight_files <- paste0(kdef, sapply(list.files(kdef), function(zz) paste0(zz,"/",zz,"NES.JPG")))
+neutral_left_files <- paste0(kdef, sapply(list.files(kdef), function(zz) paste0(zz,"/",zz,"NEHL.JPG")))
+neutral_right_files <- paste0(kdef, sapply(list.files(kdef), function(zz) paste0(zz,"/",zz,"NEHR.JPG")))
+
+neutral_straight %<-% readImage(neutral_straight_files, 25, 34)
+neutral_left %<-% readImage(neutral_left_files, 25, 34)
+neutral_right %<-% readImage(neutral_right_files, 25, 34)
+
+t_NS <- Rfast::transpose(neutral_straight)
+t_NL <- Rfast::transpose(neutral_left)
+t_NR <- Rfast::transpose(neutral_right)
+
+```
 
 # check indeed all have mean zero after centering
 
@@ -274,22 +285,23 @@ ggsave("HCLR_stack_1x_Noise.png",plotEigenfaces2(do.call(rbind, list(pca_HLRN_pl
 Lots of noise
 
 ```{R}
-H_noise2 <- matrix(rnorm(5*prod(dim(t_HS))),ncol = ncol(t_HS)) 
-t_HR_sub <- t_HR[sample(1:nrow(t_HR), size = 35),]
-t_HL_sub <- t_HL[sample(1:nrow(t_HL), size = 35),]
-stack_HLRN <- rbind(H_noise2, t_HR_sub,t_HL_sub)
+H_noise2 <- matrix(rnorm(25*prod(dim(t_HS))),ncol = ncol(t_HS)) 
+ut_HR_sub <- ut_HR[sample(1:nrow(ut_HR), size = 20),]
+ut_HL_sub <- ut_HL[sample(1:nrow(ut_HL), size = 20),]
+u_stack_HLRN <- rbind(H_noise2, ut_HR_sub, ut_HL_sub)
+ut_stack_HCLR %<-% rbind(t(happy_straight), t(happy_left), t(happy_right))
 
-pca_stack_CLR <- broken_svd_cpp(Rfast::transpose(t_stack_HCLR), t_stack_HCLR, 5)$vectors
+pca_stack_CLR <- svds(ut_stack_HCLR, k = 5, which = "LA")$v
 pca_stack_CLR_plot <- toEigenfaces(pca_stack_CLR)[,alpha := "PCA CLR Stack"]
-pca_HLRN <- broken_svd_cpp(Rfast::transpose(stack_HLRN), stack_HLRN, 5)$vectors #what happens when you add noise...
+pca_HLRN <- svds(center_f(u_stack_HLRN),k = 5, which = "LA")$v #what happens when you add noise...
+pca_HLRN_plot <- toEigenfaces(pca_HLRN)[,alpha := "PCA LRN Stack"]
 
-uca_HCLR_stack_LRN <- uca(t_stack_HCLR, stack_HLRN, nv = 5, method = "data", limit = c(0, 1000))
-uca_HCLR_split_LR_N <- uca(t_stack_HCLR, list(H_noise2, t_stack_HLR), nv = 5, method = "data")
-uca_HCLR_split_L_R_N <- uca(t_stack_HCLR, list(H_noise2, t_HR_sub,t_HL_sub), nv = 5, method = "data")
+uca_HCLR_stack_LRN <- uca(ut_stack_HCLR, u_stack_HLRN, nv = 5, method = "data", limit = 1000, center = T)
+uca_HCLR_split_LR_N <- uca(ut_stack_HCLR, list(H_noise2, ut_stack_HLR), nv = 5, method = "data", center = T)
+uca_HCLR_split_L_R_N <- uca(ut_stack_HCLR, list(H_noise2, ut_HR_sub,ut_HL_sub), nv = 5, method = "data", limit = 1000, center = T)
 LRN_L_R_N_diff <- image_diff(uca_HCLR_stack_LRN$vectors, uca_HCLR_split_L_R_N$vectors)
 LR_N_L_R_N_diff <- image_diff(uca_HCLR_split_LR_N$vectors, uca_HCLR_split_L_R_N$vectors)
 
-pca_HLRN_plot <- toEigenfaces(pca_HLRN)[,alpha := "PCA LRN Stack"]
 uca_HCLR_stack_LRN_plot <- toEigenfaces(uca_HCLR_stack_LRN$vectors)[, alpha := "UCA LRN Stack"]
 uca_HCLR_split_LR_N_plot <- toEigenfaces(uca_HCLR_stack_LRN$vectors)[, alpha := "UCA LR_N Split"]
 uca_HCLR_split_L_R_N_plot <- toEigenfaces(uca_HCLR_stack_LRN$vectors)[, alpha := "UCA L_R_N Split"]
@@ -298,20 +310,185 @@ LRN_L_R_N_diff_plot <- toEigenfaces(LRN_L_R_N_diff)[,alpha:= "vDiff(LRN - L_R_N)
 LR_N_L_R_N_diff_plot <- toEigenfaces(LR_N_L_R_N_diff)[, alpha := "vDiff(LR_N - L_R_N)"]
 
 
-
-plotEigenfaces2(rbind(pca_stack_CLR_plot,uca_HCLR_stack_LRN_plot, uca_HCLR_split_L_R_N_plot), "tmp")
-
-ggsave("results/HCLR_stack_5x_Noise_35L35R.png",plotEigenfaces2(do.call(rbind, list(pca_stack_CLR_plot, pca_HLRN_plot,uca_HCLR_stack_LRN_plot,uca_HCLR_split_LR_N_plot,uca_HCLR_split_L_R_N_plot,LRN_L_R_N_diff_plot, LR_N_L_R_N_diff_plot)), "Target: Happy CLR stack, Background: L/R/Noise Combinations. 5x noise"),
+ggsave("results/HCLR_stack_25x_Noise_20L20R.png",plotEigenfaces2(do.call(rbind, list(pca_stack_CLR_plot, pca_HLRN_plot,uca_HCLR_stack_LRN_plot,uca_HCLR_split_LR_N_plot,uca_HCLR_split_L_R_N_plot,LRN_L_R_N_diff_plot, LR_N_L_R_N_diff_plot)), "Target: Happy CLR stack, Background: L/R/Noise Combinations. 25x noise"),
        width = 10, height = 11, units = "in")
 ```
 
 
 ```{R}
-HCLR_HRS_split <- uca(t_stack_HCLR, list(t_HR, t_HS[1:5,]), nv = 5, method = "data")
-HCLR_HRS_stack <- uca(t_stack_HCLR, rbind(t_HR, t_HS[1:5,]), nv = 5, method = "data")
-
-HCLR_HRS_split_plot <- toEigenfaces(HCLR_HRS_split$vectors)[, alpha := "split"]
-HCLR_HRS_stack_plot <- toEigenfaces(HCLR_HRS_stack$vectors)[, alpha := "stack"]
-
-plotEigenfaces2(rbind(HCLR_HRS_split_plot, HCLR_HRS_stack_plot), "tmp")
+uca_HCLR_split_L_R_N$tau
 ```
+
+* Target: L/R happy
+* Background: Left+Right Neutral Noise
+* Right Noise: Right faces with random 90 degree rotations
+
+Hope to recover right faces better in splitting than stacking
+
+```{R}
+rotate <- sample(c(1:3)*90, size = length(neutral_right_files), replace = T)
+neutral_right_rotate <- readImageRotate(neutral_right_files, rotate, 25, 34)
+
+right_noise <- Rfast::transpose(neutral_right_rotate)
+stack_l_rn <- rbind(t_HL[1:20, ], right_noise)
+
+svd_t_stack_HLR <- svds(scale(t_stack_HLR), k = 5, which = "LA")
+svd_lrn <- svds(scale(stack_l_rn), k = 5, which = "LA")
+uca_stack_lr_lrn <- uca(t_stack_HLR, stack_l_rn, nv = 5, scale = T, limit = 50)
+uca_split_lr_l_rn <- uca(t_stack_HLR, list(t_HL[1:20,], right_noise), nv = 5, scale = T, limit = 100)
+
+pos_uca_stack_lr_lrn <- pos_corr(uca_stack_lr_lrn$vectors, uca_split_lr_l_rn$vectors)
+diff_uca_stack_lr_lrn <- pos_uca_stack_lr_lrn - uca_split_lr_l_rn$vectors
+
+LR_rotate_plot <- plotEigenfaces2(rbind(
+toEigenfaces(svd_t_stack_HLR$v)[, alpha := "PCA Target"],
+toEigenfaces(svd_lrn$v)[, alpha := "PCA LRN"],
+toEigenfaces(pos_uca_stack_lr_lrn)[, alpha:= "Stack"],
+toEigenfaces(uca_split_lr_l_rn$vectors)[, alpha := "Split"],
+toEigenfaces(diff_uca_stack_lr_lrn)[, alpha := "diff"]), "Target: Happy L/R.  Bg: Neutral L/R.Rotate")
+
+ggsave("results/Happy_LR_Neutral_L_RRotate_20L70R.png",LR_rotate_plot, width = 10, height = 11, units = "in")
+
+```
+
+
+* Target: L/R
+* Background: Left+Noise
+* Noise: Uniform(0,1)
+
+```{R}
+unif_noise_01 <- matrix(runif(n = 1*prod(dim(t_NL))), ncol = ncol(t_NL))
+stack_unif01_l <- rbind(unif_noise_01, t_NL[1:20,])
+
+
+uca_stack_lr_lunif01 <- uca(t_stack_HLR, stack_unif01_l, nv = 5, scale = T, limit = 100)
+uca_split_lr_l_unif01 <- uca(t_stack_HLR, list(unif_noise_01, t_NL[1:20,]), nv = 5, scale = T, limit = 100)
+pos_stack_lr_lunif01 <- pos_corr(uca_stack_lr_lunif01$vectors, uca_split_lr_l_unif01$vectors)
+diff_stack_lr_lunif01 <- pos_stack_lr_lunif01 - uca_split_lr_l_unif01$vectors
+
+LR_unif_01_plot <- plotEigenfaces2(
+rbind(
+toEigenfaces(svd_t_stack_HLR$v)[, alpha := "PCA Target"],
+toEigenfaces(svds(scale(stack_unif01_l), k = 5, which ="LA" )$v)[, alpha:= "PCA Stack"],
+toEigenfaces(pos_stack_lr_lunif01)[, alpha := "Stack 0-1"],
+toEigenfaces(uca_split_lr_l_unif01$vectors)[, alpha := "Split 0-1"],
+toEigenfaces(diff_stack_lr_lunif01)[, alpha := "Diff"]), title = "Target: Happy L/R. Bg: Neutral L and Uniform 0-1 Noise")
+
+ggsave("results/LR_20L_1x_unif01.png", LR_unif_01_plot,  width = 10, height = 11, units = "in")
+
+
+```
+
+* Noise: Uniform(-10, 10)
+
+
+```{R}
+unif_noise_1010 <- matrix(runif(n = 10*prod(dim(t_NL)), min = -10, max = 10), ncol = ncol(t_NL))
+stack_unif1010_l <- rbind(unif_noise_1010, t_NL[1:20,])
+
+uca_stack_lr_lunif1010 <- uca(t_stack_HLR, stack_unif1010_l, nv = 5, scale = T, limit = 100)
+uca_split_lr_l_unif1010 <- uca(t_stack_HLR, list(unif_noise_1010, t_NL[1:20,]), nv = 5, scale = T, limit = 100)
+pos_stack_lr_lunif1010 <- pos_corr(uca_stack_lr_lunif1010$vectors, uca_split_lr_l_unif1010$vectors)
+diff_stack_lr_lunif1010 <- pos_stack_lr_lunif1010 - uca_split_lr_l_unif1010$vectors
+
+LR_unif_01_plot <- plotEigenfaces2(
+rbind(
+toEigenfaces(svd_t_stack_HLR$v)[, alpha := "PCA Target"],
+toEigenfaces(svds(scale(stack_unif1010_l), k = 5, which ="LA" )$v)[, alpha:= "PCA Stack"],
+toEigenfaces(pos_stack_lr_lunif1010)[, alpha := "Stack 0-1"],
+toEigenfaces(uca_split_lr_l_unif1010$vectors)[, alpha := "Split 0-1"],
+toEigenfaces(diff_stack_lr_lunif1010)[, alpha := "Diff"]), title = "Target: Happy L/R. Bg: Left with Uniform(-10,10) Noise")
+
+ggsave("results/LR_20L_10x_unif1010.png", LR_unif_01_plot,  width = 10, height = 11, units = "in")
+
+```
+
+* background: various left faces
+
+```{R}
+afraid_left_files <- paste0(kdef, sapply(list.files(kdef), function(zz) paste0(zz,"/",zz,"AFHL.JPG")))
+angry_left_files <- paste0(kdef, sapply(list.files(kdef), function(zz) paste0(zz,"/",zz,"ANHL.JPG")))
+disgust_left_files <- paste0(kdef, sapply(list.files(kdef), function(zz) paste0(zz,"/",zz,"DIHL.JPG")))
+sad_left_files <- paste0(kdef, sapply(list.files(kdef), function(zz) paste0(zz,"/",zz,"SAHL.JPG")))
+
+afraid_left %<-% readImage(afraid_left_files, 50, 68)
+angry_left %<-% readImage(angry_left_files, 50, 68)
+disgust_left %<-% readImage(disgust_left_files, 50, 68)
+sad_left %<-% readImage(sad_left_files, 50, 68)
+
+t_AFL <- Rfast::transpose(afraid_left)
+t_ANL <- Rfast::transpose(angry_left)
+t_DIS <- Rfast::transpose(disgust_left)
+t_SAD <- Rfast::transpose(sad_left)
+
+stack_left <- rbind(t_NL, t_AFL, t_DIS, t_SAD)
+
+svd_t_stack_HLR <- svds(scale(t_stack_HLR), k = 5, which = "LA")
+pca_stack_left <- svds(scale(stack_left), k = 5, which = "LA")
+uca_HLR_stack_all_left <- uca(t_stack_HLR, stack_left,nv = 5, method = "data", scale = T, limit = 100)
+uca_HLR_split_all_left <- uca(t_stack_HLR, list(t_NL, t_AFL, t_DIS, t_SAD),nv = 5, method = "data", scale = T, limit = 100)
+pos_HLR_stack_all_left <- pos_corr(uca_HLR_stack_all_left$vectors, uca_HLR_split_all_left$vectors)
+diff_stack_split_all_left <- pos_HLR_stack_all_left - uca_HLR_split_all_left$vectors
+
+all_left_plot_dat <- rbind(
+toEigenfaces(svd_t_stack_HLR$v)[, alpha := "PCA Target"],
+toEigenfaces(pca_stack_left$v)[, alpha := "PCA Bg Stack"],
+toEigenfaces(pos_HLR_stack_all_left)[, alpha := "UCA Stack"],
+toEigenfaces(uca_HLR_split_all_left$vectors)[, alpha := "UCA Split"],
+toEigenfaces(diff_stack_split_all_left)[, alpha := "Stack - Split"])
+
+
+ggsave("happy_lr_all_emotions_left.png", plotEigenfaces2(all_left_plot_dat, "Target: Happy Left/Right. Background: Split/Stack all Left other Emotions"), width = 11, height = 10, units = "in")
+
+```
+
+* Generate $X_1 \sim MVN(0, \Sigma_1)$
+* for some $c$, generate $X_2 := MVN(0, cI - \Sigma_2) $
+
+
+# experiments:
+
+```{R, fig.height=3.4, fig.width = 12}
+pca_HLR <- svds(scale(t_stack_HLR), k = 5)$v
+plotEigenfaces(toEigenfaces(pca_HLR,25, 34), "", 1)
+```
+
+```{R, fig.height=3.4, fig.width = 12}
+left_only <- uca(t_stack_HLR, t_NL, nv = 5, method = "data", scale = T, limit = 100)
+plotEigenfaces(toEigenfaces(left_only$vectors, 25, 34), "", 1)
+```
+
+```{R, fig.height=3.4, fig.width = 12}
+happy_left_only <- uca(t_stack_HLR, t_HL, nv = 5, method = "data", scale = T, limit = 100)
+plotEigenfaces(toEigenfaces(-happy_left_only$vectors, 25, 34), "", 1)
+
+```
+
+
+```{R, fig.height=3.4, fig.width = 12}
+dim(t_HL)
+bg_HL <- t_HL + matrix(runif(prod(dim(t_HL)), -.05, .05), ncol = ncol(t_HL))
+temp <- uca(t_HL, bg_HL, nv = 5, scale = T, limit = 100)
+
+plotEigenfaces(toEigenfaces(-temp$vectors, 25, 34), "", 1)
+```
+
+```{R, fig.height=6.8, fig.width = 12}
+bg_HL <- t_HL + matrix(runif(prod(dim(t_HL)), -.05, .05), ncol = ncol(t_HL))
+bg_HL <- bg_HL[1:35,]
+bg2 <- matrix(runif(40*nrow(t_HL)*ncol(t_HL), -1, 1), ncol = ncol(t_HL))
+
+temp_split <- uca(t_HL, list(bg_HL, bg2), nv = 5, scale = T, limit = 60)
+temp_stack <- uca(t_HL, rbind(bg_HL, bg2), nv = 5, scale = T, limit = 100)
+temp_stack2 <- uca(t_HL, bg2, nv = 5, scale = T, limit = 100)
+
+temp_stack$tau
+temp_dat <- rbind(toEigenfaces(temp_split$vectors,25, 34)[, alpha := "split"],
+                  toEigenfaces(temp_stack$vectors, 25,34)[, alpha:="stack"],
+                  toEigenfaces(temp_stack2$vectors, 25,34)[, alpha:="bg2 only"])
+
+plotEigenfaces2(temp_dat, title = "")
+```
+
+
+
