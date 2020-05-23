@@ -145,6 +145,17 @@ uca = function(A, B, nv = 2, method = "data", center = F, scale = T, ...){
     
   }else if(method == "data"){
     
+    # double checking dimensions
+    nrows <- sapply(list(A,B), nrow)
+  
+    if(ncol(A) != ncol(B)){ #check the same number of variables
+      stop("ncol(A) != ncol(B)")
+    }
+    if(sum(nrows > ncol(A)) > 0 ){ #if number of rows > columns, change method to cov 
+      warning("Changing to method = 'cov' will possibly yield faster results.\n")
+    }
+    
+    # scale data: single background
     if(scale == TRUE){
       A_divided = scale(A)/sqrt(nrow(A) - 1)
     }else if(center == TRUE){
@@ -152,7 +163,7 @@ uca = function(A, B, nv = 2, method = "data", center = F, scale = T, ...){
     }else{
       A_divided = A/sqrt(nrow(A) - 1)      
     }
-
+    # scale data: Multiple backgrounds
     if(is.list(B) & length(B) > 1){
       #run multi-background
       if(scale == TRUE){
