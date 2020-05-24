@@ -145,15 +145,25 @@ uca = function(A, B, nv = 2, method = "data", center = F, scale = T, ...){
     
   }else if(method == "data"){
     
-    # double checking dimensions
-    nrows <- sapply(list(A,B), nrow)
-  
-    if(ncol(A) != ncol(B)){ #check the same number of variables
-      stop("ncol(A) != ncol(B)")
+    if(is.list(B)){
+      if(mean(sapply(B, ncol) == ncol(A)) < 1){
+        stop("ncol(A) != ncol(B) in at least one element of list B")
+      }
+      if( sum(sapply(B, nrow) > ncol(A)) > 0){
+        warning("Changing to method = 'cov' will possibly yield faster results.\n")
+      }
+    }else{
+      # double checking dimensions
+      nrows <- sapply(list(A,B), nrow)
+      
+      if(ncol(A) != ncol(B)){ #check the same number of variables
+        stop("ncol(A) != ncol(B)")
+      }
+      if(sum(nrows > ncol(A)) > 0 ){ #if number of rows > columns, change method to cov 
+        warning("Changing to method = 'cov' will possibly yield faster results.\n")
+      }  
     }
-    if(sum(nrows > ncol(A)) > 0 ){ #if number of rows > columns, change method to cov 
-      warning("Changing to method = 'cov' will possibly yield faster results.\n")
-    }
+    
     
     # scale data: single background
     if(scale == TRUE){
