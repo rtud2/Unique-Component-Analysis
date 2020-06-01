@@ -1,0 +1,98 @@
+---
+title: "construction"
+author: "Robin Tu"
+date: "5/23/2020"
+output: html_document
+---
+```{R, message=FALSE, warning=FALSE, results="hide"}
+rm(list = ls())
+Sys.setenv(MKL_DEBUG_CPU_TYPE=5)#, MKL_VERBOSE=1) #intel MKL settings. latter to hack amd processors
+install.packages("../uca_0.12.zip", repos = NULL, type="source")
+libraries <- c("data.table", "MASS", "ggplot2", "splines","gridExtra", "uca", "imager", "future", "RSpectra", "microbenchmark", "Rfast")
+
+lapply(libraries, library, character.only = T)
+plan(multiprocess)
+
+## Helper functions 
+source("../functions/helper_functions.R")
+```
+
+
+
+```{R, fig.height=3.4, fig.width = 12}
+kdef <- "../faces/KDEF_and_AKDEF/KDEF/"
+kdef_A <- "../faces/KDEF_and_AKDEF/A_kdef_files/"
+happy_straight_files <- paste0(kdef, sapply(list.files(kdef), function(zz) paste0(zz,"/",zz,"HAS.JPG")))
+neutral_straight_files <- paste0(kdef, sapply(list.files(kdef), function(zz) paste0(zz,"/",zz,"NES.JPG")))
+neutral_A_files <- paste0(kdef_A, sapply(list.files(kdef_A), function(zz) paste0(zz,"/",zz,"NES.JPG")))
+
+
+#rs <- sample(1:70, 35, replace = F)
+
+
+happy_straight %<-% readImage(happy_straight_files, 50, 68)
+neutral_straight %<-% readImage(neutral_straight_files, 50, 68)
+neutral_A %<-% readImage(neutral_A_files, 50, 68)
+
+t_HS %<-% transpose(happy_straight)
+t_NS %<-% transpose(neutral_straight)
+t_NSA %<-% transpose(neutral_A)
+
+# 
+# t_AS1 <- t_AS[rs, ]
+# t_AS2 <- t_AS[-rs, ]
+# 
+# t_DS1 <- t_DS[rs, ]
+# t_DS2 <- t_DS[-rs, ]
+
+
+
+stack_AS_DS1 <- rbind(t_HS,t_NS)
+pca_vectors <- svds(scale(stack_AS_DS1), k = 5)$v
+
+plotEigenfaces(toEigenfaces(-pca_vectors, 50, 68, "PCA"), title = "", nrow = 1)
+
+```
+
+
+```{R, fig.height=3.4, fig.width = 12}
+uca_hope <- uca(stack_AS_DS1, t_NSA, nv = 5, scale = T)
+plotEigenfaces(toEigenfaces(uca_hope$vectors, 50, 68, "UCA"), title = "", nrow = 1)
+
+```
+
+Alex says:
+
+$X_1 \sim MVN(0, \Sigma_1)$
+$X_2 \sim MVN(0, \Sigma_2)$
+$X_1 \perp X_2$
+$cI = \Sigma_1 + \Sigma_2$
+
+for a given $\Sigma_1$, we can construct $\Sigma_2 = c*I - \Sigma_1$  For sufficiently large scalar $c$, $\Sigma_2$ would be full rank.
+
+
+Generate $X_1$
+
+```{R, fig.height=13.6, fig.width = 12}
+c=1000
+t_NSA_scaled <- scale(t_NSA)
+cov_NSA <- cov(t_NSA_scaled)
+
+inverse_cov_NSA <- -cov_NSA
+diag(inverse_cov_NSA) = c + diag(cov_NSA)
+  
+t_NSA_inv <- mvrnorm(n = 70, mu = rep(0,3400), Sigma = inverse_cov_NSA) 
+
+uca_hope_split <- uca(stack_AS_DS1, list(t_NSA, t_NSA_inv), nv = 5, scale = T)
+uca_hope_stack <- uca(stack_AS_DS1, rbind(t_NSA, t_NSA_inv), nv = 5, scale = T)
+
+uca_hope_split$tau
+uca_hope_stack$tau
+
+temp_plot <- rbind(toEigenfaces(-pca_vectors, 50, 68, "PCA"),
+                   toEigenfaces(pos_corr(uca_hope$vectors, -pca_vectors), 50, 68, "Neutral (Practice)"),
+                   toEigenfaces(pos_corr(uca_hope_split$vectors, -pca_vectors), 50, 68, "Split"),
+                   toEigenfaces(pos_corr(uca_hope_stack$vectors, -pca_vectors), 50, 68, "Stack"))
+ggsave("Happy_Neutral_Practice_Final_Contrastive.png", plotEigenfaces2(temp_plot, ""), height = 13.6, width = 12, units = "in")
+
+```
