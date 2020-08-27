@@ -17,6 +17,56 @@ score_calc = function(A, B, tau){
               tau = tau))
   }
 
+#' objective function
+#' @param A Target Covariance Matrix
+#' @param B list of background covariance(s).
+#' @param tau lowerbound for root finding
+#' @return value of objective function 
+#' @importFrom methods as
+#' @importFrom RSpectra eigs_sym
+obj_fun <- function(A, B, tau){
+  eigen_calc <- eigs_sym ( A - tau * B, 1L, "LA")
+  eigen_calc$values + tau
+}
+
+#' gradient function
+#' @param A Target Covariance Matrix
+#' @param B list of background covariance(s).
+#' @param tau lowerbound for root finding
+#' @return value of gradient function 
+#' @importFrom methods as
+#' @importFrom RSpectra eigs_sym
+gr_fun = function(A, B, tau){
+  eigen_calc <- eigs_sym ( A - tau * B, 1L, "LA")
+   1 - as( crossprod(eigen_calc$vectors, B %*% eigen_calc$vectors), "numeric")
+}
+
+#' optim_bfgs
+#' 
+#' Use optim-L-BFGS-S to find the optimal Lagrangian for solving unique component analysis (uca) 
+#' @param A Target Covariance Matrix
+#' @param B Background Covariance Matrix. 
+#' @param nv number of eigenvectors to use
+#' @param maxit maxium number of iterations for the algorithm to run
+#' @return the final list of tau (the optimal lagrange multiplier), vector (eigenvector)
+#'  associated with tau, value (eigenvalue), and score (derivative value of the lagrangian)
+
+optim_bfgs = function(A, B, maxit = 5E2L, nv = 1){
+  
+optim_with_grad = optim(par = 2,
+                        fn = obj_fun,
+                        gr = gr_fun,
+                        A = A,
+                        B = B,
+                        method = "L-BFGS-B",
+                        lower = 0,
+                        control = list(maxit = maxit))
+tau = optim_with_grad$par
+eigen_calc <- eigs_sym ( A - tau * B, 1L, "LA")
+
+return(list(values = eigen_calc$values, tau=tau ))
+}
+
 #' bisection
 #'
 #' Use bisection method to find the optimal Lagrangian for solving unique component analysis (uca)
@@ -30,7 +80,7 @@ score_calc = function(A, B, tau){
 #' @return the final list of tau (the optimal lagrange multiplier), vector (eigenvector)
 #'  associated with tau, value (eigenvalue), and score (derivative value of the lagrangian)
 
-bisection = function(A, B, limit = 20, maxit = 1E5L, nv = 1, tol = 1E-6){
+bisection = function(A, B, limit = 50, maxit = 1E5L, nv = 1, tol = 1E-6){
   
   f_val <- vector(mode = "list", length = 2L)
   f_val[[1]] <- score_calc(A, B, 0)
@@ -55,7 +105,7 @@ bisection = function(A, B, limit = 20, maxit = 1E5L, nv = 1, tol = 1E-6){
       }
     }  
     if(round(tau_score$tau) == og_upper_lim){
-      warning("Lagrange Multiplier is near upperbound. Consider increasing the upperbound.(default is 20) \n")
+      warning(paste("Lagrange Multiplier is near upperbound. Consider increasing the upperbound. current limit is",og_upper_lim,"\n"))
     }
     return(f_val[[ which.min(abs(c(f_val[[1]]$score, f_val[[2]]$score))) ]]) 
   }
@@ -72,19 +122,20 @@ bisection = function(A, B, limit = 20, maxit = 1E5L, nv = 1, tol = 1E-6){
 #' @param nv number of uca components to estimate
 #' @param max_iter maximum iterations for coordinate descent, if tolerance is not reached. default 1E5
 #' @param tol tolerance for stopping criteria of coordinate descent. default 1E-6
+#' @param algo which algorithm to use. default algo == "bisection". If algo = "optim", L-BFGS-S optimization is used instead. algo== "optim" can improve speed
 #' @param ... other parameters to pass in to bisection(...)
 #' @return for each background covariance matrix in B, return list of tau (the optimal lagrange multiplier), vectors(eigenvector)
 #'  associated with largest value (eigenvalue)
 #' @importFrom RSpectra eigs_sym
 
-bisection.multiple = function(A, B, lambda=NULL, nv = 2L, max_iter = 1E5L, tol = 1E-6, ...){
+bisection.multiple = function(A, B, lambda=NULL, nv = 2L, max_iter = 1E5L, tol = 1E-6, algo = "bisection", ...){
   
   #initialize starting point if one isn't supplied
   if(length(lambda) == 0){
     lambda = c(0, sapply(seq_along(B)[-1], function(zz){bisection(A,B[[zz]])$tau}))
     }
   score = Inf; 
-  
+  if(algo == "bisection"){
     for(i in 1L:max_iter){
       old.score <- score
       for (j in seq_along(B)){
@@ -94,6 +145,21 @@ bisection.multiple = function(A, B, lambda=NULL, nv = 2L, max_iter = 1E5L, tol =
       score <- sum(bisection_j$values, lambda)
       if( abs(old.score - score) < tol * abs(old.score)) break;
     }
+  }else if(algo == "optim"){
+    for(i in 1L:max_iter){
+      old.score <- score
+      for (j in seq_along(B)){
+        bisection_j <- optim_bfgs(A - Reduce("+", Map("*", lambda[-j], B[-j])), B[[j]], ...) 
+        lambda[j] = bisection_j$tau
+      }
+      score <- sum(bisection_j$values, lambda)
+      if( abs(old.score - score) < tol * abs(old.score)) break;
+    }
+  }else{
+    stop(paste("algo",algo," not recognized"))
+  }
+  
+  
   dca <- eigs_sym(A - Reduce("+", Map("*", lambda, B)), nv, "LA")
  return(list(values = dca$values, vectors = dca$vectors, tau = lambda))
 }
@@ -106,16 +172,17 @@ bisection.multiple = function(A, B, lambda=NULL, nv = 2L, max_iter = 1E5L, tol =
 #' @param A Target Data or Covariance Matrix
 #' @param B list of background data or covariance matrices. 
 #' @param nv number of uca components to estimate
-#' @param method method used to calculate the uca values and vectors. 
+#' @param method method used to calculate the uca values and vectors. Use method = 'data' when passing a n*p data matrix. Use method = 'cov' when passing in a covariance matrix 
 #' @param center logical: default False. If False, data matrix A and B will not be centered
 #' @param scale logical: default False. If True, will center and scale, regardless of what center variable is set to
-#' @param ... other parameters to pass in to bisection(...) and bisection.multiple(...)
+#' @param algo algorithm to find lagrange multiplier. only takes values "bisection" and "optim"
+#' @param ... other parameters to pass in to bisection(...) and bisection.multiple(...).  (Default: limit=20, maxit=1E5L, max_iter = 1E5L, tol = 1E-6, algo = "bisection")
 #' @return values(eigenvalues), vectors (eigenvectors), tau (Lagrange Multiplier) associated with unique component analysis
 #' @importFrom RSpectra eigs_sym
 #' @importFrom Rfast transpose
 #' @export
 
-uca = function(A, B, nv = 2, method = "data", center = F, scale = T, ...){
+uca = function(A, B, nv = 2, method = "data", center = F, scale = F, algo = "bisection", ...){
   if(!(class(B) %in% c("list","matrix")) ){
     stop("B is not a list of matrix, matrices")
   }
@@ -130,7 +197,7 @@ uca = function(A, B, nv = 2, method = "data", center = F, scale = T, ...){
         stop("at least one background dimension does not match target dimension")
       }
       
-      bisection.multiple(A=A, B=B, nv=nv, ... )
+      bisection.multiple(A=A, B=B, nv=nv, algo=algo, ... )
 
       
     }else{
@@ -138,7 +205,13 @@ uca = function(A, B, nv = 2, method = "data", center = F, scale = T, ...){
       if((nrow(A) != nrow(B)) | nrow(A) != ncol(A) | nrow(B) != ncol(B)){
         stop("either A or B are not square, or don't have the same dimensions")
       }
+      if(algo == "bisection"){
       tmp_res <- bisection(A=A, B=B, nv=nv, ...)
+      }else if(algo == "optim"){
+      tmp_res <- optim_bfgs(A=A, B=B, nv=nv, ...)  
+      }else{
+        stop(paste("algo", algo,"not regonized \n"))
+      }
       res <- eigs_sym(A - tmp_res$tau*B, nv, "LA")
       return(list(values = res$values, vectors = res$vectors, tau = tmp_res$tau))
     }  

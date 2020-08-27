@@ -1,0 +1,149 @@
+---
+title: "Untitled"
+author: "Robin Tu"
+date: "8/26/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library("RSpectra")
+library("tidyverse")
+library("uca")
+library("microbenchmark")
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+
+score_calc = function(A, B, tau){
+  eigen_calc <- eigs_sym ( A - tau * B, 1L, "LA")
+  return(list(#score = 1 - as(eigenSandwich(eigen_calc$vectors, B), "numeric"),
+  score = 1 - as( crossprod(eigen_calc$vectors, B %*% eigen_calc$vectors), "numeric"),
+              values = eigen_calc$values,
+              tau = tau))
+  }
+bisection = function(A, B, limit = 20, maxit = 1E5L, nv = 1, tol = 1E-6){
+  
+  f_val <- vector(mode = "list", length = 2L)
+  f_val[[1]] <- score_calc(A, B, 0)
+  og_upper_lim <- f_val[[2]]$tau <- limit
+
+  if(f_val[[1]]$score >= 0){
+    warning("Redundant Constraint: Lagrange Multiplier is negative. Setting lambda to 0 \n");
+    return(f_val[[1]]);
+  }else{
+    
+    for(iter in 1L:maxit){
+      limit <- c(f_val[[1]]$tau, f_val[[2]]$tau)
+      if( limit[2] - limit[1] < tol * limit[1]) break;
+      if(iter == maxit) warning("maximum iteration reached: solution may not be optimal \n");
+      
+      tau_score = score_calc(A, B, sum(limit)/2)
+      
+      if(tau_score$score < 0){
+        f_val[[1]] = tau_score
+      }else{
+        f_val[[2]] = tau_score
+      }
+    }  
+    if(round(tau_score$tau) == og_upper_lim){
+      warning(paste("Lagrange Multiplier is near upperbound. Consider increasing the upperbound. current limit is",og_upper_lim,"\n"))
+    }
+    return(f_val[[ which.min(abs(c(f_val[[1]]$score, f_val[[2]]$score))) ]]) 
+  }
+}
+
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+mouse = read_csv("../contrastive/experiments/datasets/Data_Cortex_Nuclear.csv")
+mouse[is.na(mouse)] = 0
+
+## remove duplicate rows and columns
+mouse = distinct(mouse) %>% select(-which(duplicated(t(mouse))))
+
+tg = filter(mouse, Behavior == "S/C", Treatment %in% c("Saline")) %>%
+  select(-c(MouseID, class, Treatment, Behavior))
+bg = filter(mouse, Behavior == "C/S", Treatment %in% c("Saline")) %>%
+  select(-c(MouseID, class, Treatment, Behavior))
+
+classes = as.factor(tg$Genotype)
+X = scale(select(tg, -Genotype))
+B = scale(filter(bg, Genotype == "Control") %>% select(-Genotype))
+B2 = scale(filter(bg, Genotype == "Ts65Dn") %>% select(-Genotype))
+
+covX = cov(X)
+covB = cov(B)
+covB2 = cov(B2)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+```{R}
+
+obj_fun <- function(A, B, tau){
+  eigen_calc <- eigs_sym ( A - tau * B, 1L, "LA")
+  eigen_calc$values + tau
+}
+
+gr_fun = function(A, B, tau){
+  eigen_calc <- eigs_sym ( A - tau * B, 1L, "LA")
+   1 - as( crossprod(eigen_calc$vectors, B %*% eigen_calc$vectors), "numeric")
+}
+```
+
+microbenchmarking on the mouse data
+
+```{R}
+microbenchmark(#bisection = bisection(covX, covB, limit = 100),
+optim_with_grad = optim(par = 2, fn = obj_fun, gr = gr_fun,  A = covX, B = covB, method = "L-BFGS-B", control =  list(maxit = 500L)),
+#optim_only = optim(par = 2, fn = obj_fun,  A = cov(X), B = cov(B), method = "L-BFGS-B", lower = 0, upper = 100)
+optim_with_grad2 = optim(par = 2, fn = obj_fun, gr = gr_fun,  A = covX, B = covB, method = "L-BFGS-B", lower = 0,  upper = 100, control =  list(maxit = 500L))
+)
+
+```
+
+
+```{R}
+bisection_meth = bisection(covX, covB, limit = 100)
+optim_with_grad = optim(par = 2, fn = obj_fun, gr = gr_fun,  A = covX, B = covB, method = "L-BFGS-B" , lower = 0, control = list(trace = 6))
+```
+
+
+
+```{R}
+bi_single <- uca(A = covX, B = covB, method = "cov", algo = "bisection")
+optim_single <- uca(A = covX, method = "cov", B = covB, algo = "optim")
+
+all.equal(bi_single, optim_single)
+```
+
+```{R}
+microbenchmark(bi_single = uca(A = covX, B = covB, method = "cov", algo = "bisection"),
+optim_single = uca(A = covX, B = covB, method = "cov", algo = "optim"))
+```
+
+
+
+```{R}
+bi_double <- uca(A = covX, B = list(covB, covB2), method = "cov", algo = "bisection")
+optim_double <- uca(A = covX, B = list(covB, covB2), method = "cov", algo = "optim")
+
+bi_double$values
+optim_double$values
+```
+
+
+```{R}
+microbenchmark(bi_double = uca(A = covX, B = list(covB, covB2), method = "cov", algo = "bisection"),
+optim_double = uca(A = covX, B = list(covB, covB2), method = "cov", algo = "optim"))
+```
