@@ -2,7 +2,7 @@
 % Please edit documentation in R/magic_eigen.R
 \name{center_f}
 \alias{center_f}
-\title{centeer}
+\title{center}
 \usage{
 center_f(X)
 }

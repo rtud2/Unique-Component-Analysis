@@ -3,7 +3,7 @@
 NULL
 
 
-#' centeer
+#' center
 #' 
 #' Convenient function to center the data, rather than typing `scale' or `sweep`
 #' 
@@ -50,7 +50,7 @@ broken_svd_R = function(left, right, nv){
 #' @param tol tolerance for convergence criteria
 #' @return list of tau, largest eigenvalue, and score
 #' @importFrom Rfast transpose
-#' 
+ 
 bisection2 = function(A, B, limit = 20L, maxit = 1E5L, tol = 1E-6){
   right <- rbind(A , B)
   svd_right <- arma_svd(right)
@@ -159,12 +159,12 @@ magic_eigen_multiple = function(B_focus, t_A, t_B, right, svd_right, lambda, j, 
       }else{
        f_val[[2]] <- tau_score
       }
-    }
-    if(round(tau_score$tau) == og_upper_lim){
-      warning("Lagrange Multiplier is near upperbound. Consider increasing the upperbound.(default is 20) \n")
-    }
-    return(f_val[[ which.min(abs(c(f_val[[1]]$score, f_val[[2]]$score))) ]]) 
   }
+      if(round(tau_score$tau) == og_upper_lim){
+        warning("Lagrange Multiplier is near upperbound. Consider increasing the upperbound.(default is 20) \n")
+      }
+      return(f_val[[ which.min(abs(c(f_val[[1]]$score, f_val[[2]]$score))) ]]) 
+    }
 }
 
 
@@ -178,17 +178,18 @@ magic_eigen_multiple = function(B_focus, t_A, t_B, right, svd_right, lambda, j, 
 #' @param B  List of k Background Data Matrix. n_k x p dimensions
 #' @param lambda contrastive parameters if known. used to start algorithm. defaults to NULL
 #' @param nv number of uca components to calculate
+#' @param algo which algorithm to use. default algo == "bisection". If algo = "optim", L-BFGS-S optimization is used instead. algo== "optim" can improve speed
 #' @param max_iter maximum number of iterations before giving up
 #' @param tol convergence criteria for coordinate descent
 #' @return list of tau, largest eigenvalue, and score
 #' @importFrom Rfast transpose
-bisection2.multiple <- function(A, B, lambda=NULL, nv = 2L, max_iter=1E5L, tol = 1E-6, ...){
+bisection2.multiple <- function(A, B, lambda=NULL, nv = 2L, max_iter=1E5L, tol = 1E-6, algo = "bisection", ...){
   
   #initialize starting point if one isn't supplied. greedy start
   if(length(lambda) == 0){
     #we use A and B here instead of divided b/c they divide in bisection2 function
     # do not initialize the first one since it just gets overwritten in step 1 of coordinate descent.
-    lambda = c(0, sapply(seq_along(B)[-1], function(zz){bisection2(A, B[[zz]], ...)$tau}))
+    lambda = sapply(seq_along(B), function(zz){optim_bfgs2(A, B[[zz]], ...)$tau})
   }
   
   t_A <- Rfast::transpose(A)
@@ -199,51 +200,36 @@ bisection2.multiple <- function(A, B, lambda=NULL, nv = 2L, max_iter=1E5L, tol =
   score = Inf; 
   
   #coordinate descent
-  for(i in 1L:max_iter){
-    old.score <- score
-    for (j in seq_along(B)){
-      #calculate the optimal lagrange multiplier for each background j
-      bisection_j <- magic_eigen_multiple(B[[j]], t_A, t_B, right, svd_right, lambda, j, ...)
-      lambda[j] <- bisection_j$tau
+  if(algo == "bisection"){
+    for(i in 1L:max_iter){
+      old.score <- score
+      for (j in seq_along(B)){
+        #calculate the optimal lagrange multiplier for each background j
+        bisection_j <- magic_eigen_multiple(B[[j]], t_A, t_B, right, svd_right, lambda, j, ...)
+        lambda[j] <- bisection_j$tau
+      }
+      score <- sum(bisection_j$values, lambda)
+      if( abs(old.score - score) < tol * abs(old.score)) break;
+      #print(paste("iteration", i))
     }
-    score <- sum(bisection_j$values, lambda)
-    if( abs(old.score - score) < tol * abs(old.score)) break;
-    #print(paste("iteration", i))
+  }else if(algo == "optim"){
+    for(i in 1L:max_iter){
+      old.score <- score
+      for (j in seq_along(B)){
+        #calculate the optimal lagrange multiplier for each background j
+        bisection_j <- optim_bfgs_multiple(B[[j]], t_A, t_B, right, svd_right, lambda, j, ...)
+        lambda[j] <- bisection_j$tau
+      }
+      score <- sum(bisection_j$values, lambda)
+      if( abs(old.score - score) < tol * abs(old.score)) break;
+      #print(paste("iteration", i))
+    }
+  }else{
+    stop(paste("algo",algo," not recognized"))
   }
-  
-  left <- do.call(cbind, c(list(t_A), Map("*", -lambda, t_B)))
-  final_res <- broken_svd_cpp(left, right, nv)
-  
-  return(list(values = final_res$values, vectors = final_res$vectors, tau = lambda))
+    left <- do.call(cbind, c(list(t_A), Map("*", -lambda, t_B)))
+    final_res <- broken_svd_cpp(left, right, nv)
+    
+    return(list(values = final_res$values, vectors = final_res$vectors, tau = lambda))
 }
 
-
- 
-
-
-# t_happy2 <- scale(t_happy, scale = F)
-# t_neutral2 <- scale(t_neutral, scale = F)
-
-###### for 100*136
-# > microbenchmark::microbenchmark(magic_eigen(t_happy2, t_neutral2, 2, 5), eigs_sym(cov_happy - 2*cov_neutral, 5, "LA"), times = 10)
-# Unit: seconds
-# expr      min       lq     mean   median        uq       max neval cld
-# magic_eigen(t_happy2, t_neutral2, 2, 5) 3.647757 3.667107 3.749784 3.696459  3.805642  4.017985    10  a 
-# eigs_sym(cov_happy - 2 * cov_neutral, 5, "LA") 9.804725 9.869240 9.947251 9.920517 10.016461 10.162978    10   b
-
-
-###### apparently cbinding transposes is easier than   rbinding then transpose.
-# > microbenchmark::microbenchmark(t(rbind(A_divided, - lambda * B_divided)), cbind(t(A_divided), - lambda*t(B_divided)))
-# Unit: milliseconds
-# expr     min      lq     mean  median       uq      max neval cld
-# t(rbind(A_divided, -lambda * B_divided)) 26.5603 26.8648 28.52919 27.0243 27.65665 142.5401   100   b
-# cbind(t(A_divided), -lambda * t(B_divided)) 14.5453 16.4540 19.09077 16.5184 16.69970 140.5627   100  a 
-
-
-#tmp_eigs <- magic_eigen(t_happy2, t_neutral2, 2, 5)
-#tmp_eigs2 <- eigs_sym(cov_happy - 2*cov_neutral, 5, "LA")
-
-#tmp_eigs$values - tmp_eigs2$values
-
-#sign flips on eigenvectors
-#sum(abs(tmp_eigs$vectors) - abs(tmp_eigs2$vectors))

@@ -17,55 +17,6 @@ score_calc = function(A, B, tau){
               tau = tau))
   }
 
-#' objective function
-#' @param A Target Covariance Matrix
-#' @param B list of background covariance(s).
-#' @param tau lowerbound for root finding
-#' @return value of objective function 
-#' @importFrom methods as
-#' @importFrom RSpectra eigs_sym
-obj_fun <- function(A, B, tau){
-  eigen_calc <- eigs_sym ( A - tau * B, 1L, "LA")
-  eigen_calc$values + tau
-}
-
-#' gradient function
-#' @param A Target Covariance Matrix
-#' @param B list of background covariance(s).
-#' @param tau lowerbound for root finding
-#' @return value of gradient function 
-#' @importFrom methods as
-#' @importFrom RSpectra eigs_sym
-gr_fun = function(A, B, tau){
-  eigen_calc <- eigs_sym ( A - tau * B, 1L, "LA")
-   1 - as( crossprod(eigen_calc$vectors, B %*% eigen_calc$vectors), "numeric")
-}
-
-#' optim_bfgs
-#' 
-#' Use optim-L-BFGS-S to find the optimal Lagrangian for solving unique component analysis (uca) 
-#' @param A Target Covariance Matrix
-#' @param B Background Covariance Matrix. 
-#' @param nv number of eigenvectors to use
-#' @param maxit maxium number of iterations for the algorithm to run
-#' @return the final list of tau (the optimal lagrange multiplier), vector (eigenvector)
-#'  associated with tau, value (eigenvalue), and score (derivative value of the lagrangian)
-
-optim_bfgs = function(A, B, maxit = 5E2L, nv = 1){
-  
-optim_with_grad = optim(par = 2,
-                        fn = obj_fun,
-                        gr = gr_fun,
-                        A = A,
-                        B = B,
-                        method = "L-BFGS-B",
-                        lower = 0,
-                        control = list(maxit = maxit))
-tau = optim_with_grad$par
-eigen_calc <- eigs_sym ( A - tau * B, 1L, "LA")
-
-return(list(values = eigen_calc$values, tau=tau ))
-}
 
 #' bisection
 #'
@@ -175,14 +126,14 @@ bisection.multiple = function(A, B, lambda=NULL, nv = 2L, max_iter = 1E5L, tol =
 #' @param method method used to calculate the uca values and vectors. Use method = 'data' when passing a n*p data matrix. Use method = 'cov' when passing in a covariance matrix 
 #' @param center logical: default False. If False, data matrix A and B will not be centered
 #' @param scale logical: default False. If True, will center and scale, regardless of what center variable is set to
-#' @param algo algorithm to find lagrange multiplier. only takes values "bisection" and "optim"
+#' @param algo algorithm to find lagrange multiplier. only takes values "bisection" and "optim". default is "optim" as it's much faster, but bisection exists for backwards compatibility.
 #' @param ... other parameters to pass in to bisection(...) and bisection.multiple(...).  (Default: limit=20, maxit=1E5L, max_iter = 1E5L, tol = 1E-6, algo = "bisection")
 #' @return values(eigenvalues), vectors (eigenvectors), tau (Lagrange Multiplier) associated with unique component analysis
 #' @importFrom RSpectra eigs_sym
 #' @importFrom Rfast transpose
 #' @export
 
-uca = function(A, B, nv = 2, method = "data", center = F, scale = F, algo = "bisection", ...){
+uca = function(A, B, nv = 2, method = "data", center = F, scale = F, algo = "optim", ...){
   if(!(class(B) %in% c("list","matrix")) ){
     stop("B is not a list of matrix, matrices")
   }
@@ -257,7 +208,7 @@ uca = function(A, B, nv = 2, method = "data", center = F, scale = F, algo = "bis
         B_divided <- Map(function(z){z/sqrt(nrow(z) - 1)}, B)  
       }
       
-      bisection2.multiple(A=A_divided, B=B_divided, nv = nv, ... )
+      bisection2.multiple(A=A_divided, B=B_divided, nv = nv, algo = algo, ... )
       
       }else{
         #run single background
@@ -269,8 +220,14 @@ uca = function(A, B, nv = 2, method = "data", center = F, scale = F, algo = "bis
       }else{
         B_divided = B/sqrt(nrow(B) - 1)    
       }
+      if(algo == "bisection"){
+        tmp_res <- bisection2(A=A_divided, B=B_divided, ...)  
+      } else if(algo == "optim"){
+        tmp_res <- optim_bfgs2(A = A_divided, B = B_divided, ...)
+      }else{
+        stop(paste("algo", algo,"not regonized \n"))
+      }
       
-      tmp_res <- bisection2(A=A_divided, B=B_divided, ...)
       
       #calculate the svd
       left <- cbind(Rfast::transpose(A_divided), - tmp_res$tau * Rfast::transpose(B_divided))

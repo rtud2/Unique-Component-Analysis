@@ -4,7 +4,7 @@
 \alias{uca}
 \title{uca}
 \usage{
-uca(A, B, nv = 2, method = "data", center = F, scale = T, ...)
+uca(A, B, nv = 2, method = "data", center = F, scale = F, algo = "optim", ...)
 }
 \arguments{
 \item{A}{Target Data or Covariance Matrix}
@@ -13,13 +13,15 @@ uca(A, B, nv = 2, method = "data", center = F, scale = T, ...)
 
 \item{nv}{number of uca components to estimate}
 
-\item{method}{method used to calculate the uca values and vectors.}
+\item{method}{method used to calculate the uca values and vectors. Use method = 'data' when passing a n*p data matrix. Use method = 'cov' when passing in a covariance matrix}
 
 \item{center}{logical: default False. If False, data matrix A and B will not be centered}
 
 \item{scale}{logical: default False. If True, will center and scale, regardless of what center variable is set to}
 
-\item{...}{other parameters to pass in to bisection(...) and bisection.multiple(...)}
+\item{algo}{algorithm to find lagrange multiplier. only takes values "bisection" and "optim". default is "optim" as it's much faster, but bisection exists for backwards compatibility.}
+
+\item{...}{other parameters to pass in to bisection(...) and bisection.multiple(...).  (Default: limit=20, maxit=1E5L, max_iter = 1E5L, tol = 1E-6, algo = "bisection")}
 }
 \value{
 values(eigenvalues), vectors (eigenvectors), tau (Lagrange Multiplier) associated with unique component analysis

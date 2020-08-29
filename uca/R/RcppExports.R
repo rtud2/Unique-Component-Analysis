@@ -21,3 +21,11 @@ multiple_score_calc_cpp <- function(left, right, right_u, right_d, B, tau) {
     .Call(`_uca_multiple_score_calc_cpp`, left, right, right_u, right_d, B, tau)
 }
 
+gr_fun_cpp <- function(t_A, t_B, B, right, right_u, right_d, tau) {
+    .Call(`_uca_gr_fun_cpp`, t_A, t_B, B, right, right_u, right_d, tau)
+}
+
+obj_fun_cpp <- function(t_A, t_B, B, right, right_u, right_d, tau) {
+    .Call(`_uca_obj_fun_cpp`, t_A, t_B, B, right, right_u, right_d, tau)
+}
+

@@ -11,6 +11,7 @@ bisection2.multiple(
   nv = 2L,
   max_iter = 100000L,
   tol = 1e-06,
+  algo = "bisection",
   ...
 )
 }
@@ -26,6 +27,8 @@ bisection2.multiple(
 \item{max_iter}{maximum number of iterations before giving up}
 
 \item{tol}{convergence criteria for coordinate descent}
+
+\item{algo}{which algorithm to use. default algo == "bisection". If algo = "optim", L-BFGS-S optimization is used instead. algo== "optim" can improve speed}
 }
 \value{
 list of tau, largest eigenvalue, and score

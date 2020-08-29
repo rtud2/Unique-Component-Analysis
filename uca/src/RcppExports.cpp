@@ -69,6 +69,40 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// gr_fun_cpp
+SEXP gr_fun_cpp(const arma::mat& t_A, const arma::mat& t_B, const arma::mat& B, const arma::mat& right, const arma::mat& right_u, const arma::vec& right_d, const double& tau);
+RcppExport SEXP _uca_gr_fun_cpp(SEXP t_ASEXP, SEXP t_BSEXP, SEXP BSEXP, SEXP rightSEXP, SEXP right_uSEXP, SEXP right_dSEXP, SEXP tauSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat& >::type t_A(t_ASEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type t_B(t_BSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type B(BSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type right(rightSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type right_u(right_uSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type right_d(right_dSEXP);
+    Rcpp::traits::input_parameter< const double& >::type tau(tauSEXP);
+    rcpp_result_gen = Rcpp::wrap(gr_fun_cpp(t_A, t_B, B, right, right_u, right_d, tau));
+    return rcpp_result_gen;
+END_RCPP
+}
+// obj_fun_cpp
+SEXP obj_fun_cpp(const arma::mat& t_A, const arma::mat& t_B, const arma::mat& B, const arma::mat& right, const arma::mat& right_u, const arma::vec& right_d, const double& tau);
+RcppExport SEXP _uca_obj_fun_cpp(SEXP t_ASEXP, SEXP t_BSEXP, SEXP BSEXP, SEXP rightSEXP, SEXP right_uSEXP, SEXP right_dSEXP, SEXP tauSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat& >::type t_A(t_ASEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type t_B(t_BSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type B(BSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type right(rightSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type right_u(right_uSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type right_d(right_dSEXP);
+    Rcpp::traits::input_parameter< const double& >::type tau(tauSEXP);
+    rcpp_result_gen = Rcpp::wrap(obj_fun_cpp(t_A, t_B, B, right, right_u, right_d, tau));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_uca_arma_qr", (DL_FUNC) &_uca_arma_qr, 1},
@@ -76,6 +110,8 @@ static const R_CallMethodDef CallEntries[] = {
     {"_uca_arma_score", (DL_FUNC) &_uca_arma_score, 2},
     {"_uca_broken_svd_cpp", (DL_FUNC) &_uca_broken_svd_cpp, 3},
     {"_uca_multiple_score_calc_cpp", (DL_FUNC) &_uca_multiple_score_calc_cpp, 6},
+    {"_uca_gr_fun_cpp", (DL_FUNC) &_uca_gr_fun_cpp, 7},
+    {"_uca_obj_fun_cpp", (DL_FUNC) &_uca_obj_fun_cpp, 7},
     {NULL, NULL, 0}
 };
 

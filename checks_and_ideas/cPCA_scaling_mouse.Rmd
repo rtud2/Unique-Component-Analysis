@@ -12,13 +12,12 @@ output:
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-library("testthat")
 library("data.table")
 library("ggplot2")
-library('Rcpp')
-library('irlba') #fast svd
+library("uca")
+library('RSpectra') #fast svd
 library("splines") #for calculating elbows
-library("future.apply")
+library("future")
 library("microbenchmark")
 
 function_dir <- "functions/"

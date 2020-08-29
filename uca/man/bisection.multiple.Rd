@@ -11,6 +11,7 @@ bisection.multiple(
   nv = 2L,
   max_iter = 100000L,
   tol = 1e-06,
+  algo = "bisection",
   ...
 )
 }
@@ -26,6 +27,8 @@ bisection.multiple(
 \item{max_iter}{maximum iterations for coordinate descent, if tolerance is not reached. default 1E5}
 
 \item{tol}{tolerance for stopping criteria of coordinate descent. default 1E-6}
+
+\item{algo}{which algorithm to use. default algo == "bisection". If algo = "optim", L-BFGS-S optimization is used instead. algo== "optim" can improve speed}
 
 \item{...}{other parameters to pass in to bisection(...)}
 }
