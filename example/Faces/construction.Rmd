@@ -7,28 +7,24 @@ output: html_document
 ```{R, message=FALSE, warning=FALSE, results="hide"}
 rm(list = ls())
 Sys.setenv(MKL_DEBUG_CPU_TYPE=5)#, MKL_VERBOSE=1) #intel MKL settings. latter to hack amd processors
-install.packages("../uca_0.12.zip", repos = NULL, type="source")
+install.packages("../../uca_0.13.zip", repos = NULL, type="source")
 libraries <- c("data.table", "MASS", "ggplot2", "splines","gridExtra", "uca", "imager", "future", "RSpectra", "microbenchmark", "Rfast")
 
 lapply(libraries, library, character.only = T)
 plan(multiprocess)
 
 ## Helper functions 
-source("../functions/helper_functions.R")
+source("../../functions/helper_functions.R")
 ```
 
 
 
 ```{R, fig.height=3.4, fig.width = 12}
-kdef <- "../faces/KDEF_and_AKDEF/KDEF/"
-kdef_A <- "../faces/KDEF_and_AKDEF/A_kdef_files/"
+kdef <- "../../faces/KDEF_and_AKDEF/KDEF/"
+kdef_A <- "../../faces/KDEF_and_AKDEF/A_kdef_files/"
 happy_straight_files <- paste0(kdef, sapply(list.files(kdef), function(zz) paste0(zz,"/",zz,"HAS.JPG")))
 neutral_straight_files <- paste0(kdef, sapply(list.files(kdef), function(zz) paste0(zz,"/",zz,"NES.JPG")))
 neutral_A_files <- paste0(kdef_A, sapply(list.files(kdef_A), function(zz) paste0(zz,"/",zz,"NES.JPG")))
-
-
-#rs <- sample(1:70, 35, replace = F)
-
 
 happy_straight %<-% readImage(happy_straight_files, 50, 68)
 neutral_straight %<-% readImage(neutral_straight_files, 50, 68)
@@ -37,15 +33,6 @@ neutral_A %<-% readImage(neutral_A_files, 50, 68)
 t_HS %<-% transpose(happy_straight)
 t_NS %<-% transpose(neutral_straight)
 t_NSA %<-% transpose(neutral_A)
-
-# 
-# t_AS1 <- t_AS[rs, ]
-# t_AS2 <- t_AS[-rs, ]
-# 
-# t_DS1 <- t_DS[rs, ]
-# t_DS2 <- t_DS[-rs, ]
-
-
 
 stack_AS_DS1 <- rbind(t_HS,t_NS)
 pca_vectors <- svds(scale(stack_AS_DS1), k = 5)$v
@@ -90,9 +77,46 @@ uca_hope_split$tau
 uca_hope_stack$tau
 
 temp_plot <- rbind(toEigenfaces(-pca_vectors, 50, 68, "PCA"),
-                   toEigenfaces(pos_corr(uca_hope$vectors, -pca_vectors), 50, 68, "Neutral (Practice)"),
-                   toEigenfaces(pos_corr(uca_hope_split$vectors, -pca_vectors), 50, 68, "Split"),
-                   toEigenfaces(pos_corr(uca_hope_stack$vectors, -pca_vectors), 50, 68, "Stack"))
-ggsave("Happy_Neutral_Practice_Final_Contrastive.png", plotEigenfaces2(temp_plot, ""), height = 13.6, width = 12, units = "in")
+                   toEigenfaces(pos_corr(uca_hope$vectors, -pca_vectors), 50, 68, "UCA - Neutral"),
+                   toEigenfaces(pos_corr(uca_hope_split$vectors, -pca_vectors), 50, 68, "UCA - Split"),
+                   toEigenfaces(pos_corr(uca_hope_stack$vectors, -pca_vectors), 50, 68, "UCA - Stack"))
+temp_plot[, alpha := factor(alpha, levels = c("PCA", "UCA - Neutral", "UCA - Stack", "UCA - Split"))]
+final_plot <- plotEigenfaces2(temp_plot, "")
+final_plot
 
+ggsave("Happy_Neutral_Practice_Final_Contrastive.png", final_plot, height = 13.6, width = 12, units = "in")
+
+```
+
+
+Plotting the difference faces
+
+```{R}
+split_single_diff <- pos_corr(uca_hope_split$vectors, -pca_vectors) - pos_corr(uca_hope$vectors, -pca_vectors)
+stack_pca_diff <- pos_corr(uca_hope_stack$vectors, -pca_vectors) -  (-pca_vectors)
+
+diff_img <- rbind(toEigenfaces(split_single_diff, 50, 68, "Split - Single BG"),
+      toEigenfaces(stack_pca_diff, 50, 68, "Stack - PCA"))
+diff_img[, alpha := factor(alpha, levels = c("Stack - PCA", "Split - Single BG"))]
+
+diff_plot <- plotEigenfaces2(diff_img, "")
+
+ggsave("Happy_Neutral_Diff.png", diff_plot, height = 13.6, width = 12, units = "in")
+```
+
+
+# plotting what the eigenfaces of inverse faces
+
+```{R}
+inv_faces <- svds(scale(t_NSA_inv), k = 5)$v
+inv_faces_plot_dat <- rbind(toEigenfaces(inv_faces, 50, 68, "Simulated"),
+                        toEigenfaces(eigs_sym(inverse_cov_NSA,k = 5,which = "LA")$vectors, 50, 68, "Actual"))
+inv_faces_plot_dat[, alpha := factor(alpha, levels = c("Simulated", "Actual"))]
+inv_faces_plot <- plotEigenfaces2(inv_faces_plot_dat, "")
+ggsave("inverse_face_plot.png", inv_faces_plot, height = 13.6, width = 12, units = "in")
+```
+
+
+```{R}
+plotEigenfaces(toEigenfaces(t_NSA_inv, 50, 68, ""))
 ```
