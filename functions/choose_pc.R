@@ -10,6 +10,9 @@
 #' @return either return the number optimal number of principal components or additionally, the data.frame of squared error for the linear spline 
 #' with knot for each principal component is outputted
 
+#' @importFrom RSpectra svds
+#' @importFrom Splines bs
+
 choose_pc <- function(d, total_component = 20, return_all = F){
   
   n_diag <- min(length(d), total_component) # capping at the number of components we look at to be the min of (n_components, total_component)
