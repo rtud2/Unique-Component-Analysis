@@ -47,6 +47,23 @@ var_sim <- function(d1, d2){
   cbind(stack_var, d1_var, d2_var)
 }
 
+inner_prod_sim <- function(d1, d2){
+  # similarity between the stack and split matrices that make up the stack
+  stk <- scale(rbind(d1,d2))
+  cov_stk <- cov(stk)
+  cov_d1 <- cov(scale(d1))
+  cov_d2 <- cov(scale(d2))
+  
+  v_stack <- eigs_sym(cov_stk, k = 1, which = "LA")$vectors
+  v_1 <- eigs_sym(cov_d1, k = 1, which = "LA")$vectors
+  v_2 <- eigs_sym(cov_d2, k = 1, which = "LA")$vectors
+  
+  stack_1 <- crossprod(v_stack, v_1)
+  stack_2 <- crossprod(v_stack, v_2)
+  v_1_2 <- crossprod(v_1, v_2)
+  cbind(stack_1, stack_2, v_1_2)
+}
+
 f_sus_comparison %<-% lapply(female_emotion_list[2:6], function(z) var_sim(d1 = female_emotion_list[[1]], z))
 f_has_comparison %<-% lapply(female_emotion_list[3:6], function(z) var_sim(d1 = female_emotion_list[[2]], z))
 f_sas_comparison %<-% lapply(female_emotion_list[4:6], function(z) var_sim(d1 = female_emotion_list[[3]], z))
@@ -95,6 +112,66 @@ background_var[order(diff)]
 # sus & sas
 # nes & dis
 
+
+# INNER PRODUCT
+f_sus_inner %<-% lapply(female_emotion_list[2:6], function(z) inner_prod_sim(d1 = female_emotion_list[[1]], z))
+f_has_inner %<-% lapply(female_emotion_list[3:6], function(z) inner_prod_sim(d1 = female_emotion_list[[2]], z))
+f_sas_inner %<-% lapply(female_emotion_list[4:6], function(z) inner_prod_sim(d1 = female_emotion_list[[3]], z))
+f_nes_inner %<-% lapply(female_emotion_list[5:6], function(z) inner_prod_sim(d1 = female_emotion_list[[4]], z))
+f_dis_inner %<-% inner_prod_sim(d1 = female_emotion_list[[6]], female_emotion_list[[5]])
+
+inner_num <- do.call(rbind,
+        c(f_sus_inner,
+        f_has_inner,
+        f_sas_inner,
+        f_nes_inner,
+        list(f_dis_inner)))
+
+inner_labs <- cbind(c(rep("sus", 5), rep("has", 4), rep("sas", 3), rep("nes", 2), "ans"),
+      c("has","sas","nes","ans","dis",
+        "sas","nes","ans","dis",
+        "nes","ans","dis",
+        "ans","dis",
+        "dis"))
+
+background_inner <- data.table(inner_labs, inner_num)
+setnames(background_inner, c("bg1","bg2","Stack_1","Stack_2", "bg1_bg2"))
+max_inner <- background_inner[, .(max = max(Stack_1, Stack_2, bg1_bg2)), by = c("bg1","bg2")]
+max_inner[order(max)]
+# bg1 bg2       max
+# 1: sus ans 0.9691885
+# 2: nes ans 0.9727309
+# 3: nes dis 0.9791950
+# 4: sus dis 0.9795358
+# 5: ans dis 0.9812969
+# 6: has ans 0.9814274
+# 7: has dis 0.9838760
+# 8: sas nes 0.9862520
+# 9: sus sas 0.9864356
+# 10: sas ans 0.9868335
+# 11: has sas 0.9868691
+# 12: sus has 0.9872419
+# 13: has nes 0.9881727
+# 14: sus nes 0.9905884
+# 15: sas dis 0.9909845
+# 
+background_inner[order(bg1_bg2)]
+# bg1 bg2   Stack_1   Stack_2   bg1_bg2
+# 1: sus ans 0.9691885 0.9665842 0.8800309
+# 2: nes ans 0.9659761 0.9727309 0.8864153
+# 3: sus dis 0.9795358 0.9586367 0.8959284
+# 4: nes dis 0.9791950 0.9742804 0.9166890
+# 5: sus sas 0.9864356 0.9676066 0.9167276
+# 6: has ans 0.9766456 0.9814274 0.9220293
+# 7: sas nes 0.9777867 0.9862520 0.9324228
+# 8: ans dis 0.9810512 0.9812969 0.9332532
+# 9: has dis 0.9803653 0.9838760 0.9366546
+# 10: sas ans 0.9816926 0.9868335 0.9409767
+# 11: has sas 0.9868691 0.9824078 0.9441928
+# 12: sus has 0.9872419 0.9843728 0.9531639
+# 13: sus nes 0.9905884 0.9867179 0.9575075
+# 14: sas dis 0.9869130 0.9909845 0.9597885
+# 15: has nes 0.9881727 0.9867766 0.9606486
 # read in final pictures
 sus_final_files <- paste0(kdef, sapply(list.files(kdef), function(zz) paste0(zz,"/",zz,"SUS.JPG")))
 has_final_files <- paste0(kdef, sapply(list.files(kdef), function(zz) paste0(zz,"/",zz,"HAS.JPG")))
@@ -129,6 +206,61 @@ targ_var_sim <- function(targ, d1, d2){
   d2_var <- transpose(v) %*% cov_d2 %*%v
   cbind(targ_var, stack_var, d1_var, d2_var)
 }
+targ_inner_prod_sim <- function(targ, d1, d2){
+  # similarity between the stack and split matrices that make up the stack
+  stk <- scale(rbind(d1,d2))
+  cov_stk <- cov(stk)
+  cov_d1 <- cov(scale(d1))
+  cov_d2 <- cov(scale(d2))
+  cov_targ <- cov(scale(targ))
+  
+  v_targ <- eigs_sym(cov_targ, k = 1, which = "LA")$vectors
+  v_stack <- eigs_sym(cov_stk, k = 1, which = "LA")$vectors
+  v_1 <- eigs_sym(cov_d1, k = 1, which = "LA")$vectors
+  v_2 <- eigs_sym(cov_d2, k = 1, which = "LA")$vectors
+  
+  targ_stack <- crossprod(v_targ, v_stack)
+  targ_1 <- crossprod(v_targ, v_1)
+  targ_2 <- crossprod(v_targ, v_2)
+  cbind(targ_stack, targ_1, targ_2)
+}
+
+#sus ans
+#order: has,sas,nes,dis,ans
+sus_ans <- do.call(rbind, lapply(final_female_emotion_list[c(-1,-6)],
+       function(zz){ targ_inner_prod_sim(zz, female_emotion_list[[1]], female_emotion_list[[6]])}))
+sus_ans_inner <- data.table(c("HAS","SAS","NES","DIS") , sus_ans)
+setnames(sus_ans_inner, c("Target","Inner_Stack","Inner_1","Inner_2"))
+# Target Inner_Stack   Inner_1   Inner_2
+# 1:    HAS   0.9565713 0.9435381 0.9333191
+# 2:    SAS   0.9538911 0.9236241 0.9466494
+# 3:    NES   0.9604394 0.9468185 0.9227120
+# 4:    DIS   0.9518510 0.9151435 0.9597355
+
+# nes ans 
+#order: sus,has,sas,dis
+nes_ans <- do.call(rbind, lapply(final_female_emotion_list[c(-4,-6)],
+       function(zz){ targ_inner_prod_sim(zz, female_emotion_list[[4]], female_emotion_list[[6]])}))
+nes_ans_inner <- data.table(c("SUS","HAS","SAS","DIS") , sus_ans)
+setnames(nes_ans_inner, c("Target","Inner_Stack","Inner_1","Inner_2"))
+# Target Inner_Stack   Inner_1   Inner_2
+# 1:    SUS   0.9565713 0.9435381 0.9333191
+# 2:    HAS   0.9538911 0.9236241 0.9466494
+# 3:    SAS   0.9604394 0.9468185 0.9227120
+# 4:    DIS   0.9518510 0.9151435 0.9597355
+
+# nes dis 
+#order: sus,has,sas,ans
+nes_dis <- do.call(rbind, lapply(final_female_emotion_list[c(-4,-5)],
+       function(zz){ targ_inner_prod_sim(zz, female_emotion_list[[4]], female_emotion_list[[5]])}))
+nes_dis_inner <- data.table(c("SUS","HAS","SAS","ANS") , sus_ans)
+setnames(nes_dis_inner, c("Target","Inner_Stack","Inner_1","Inner_2"))
+# Target Inner_Stack   Inner_1   Inner_2
+# 1:    SUS   0.9565713 0.9435381 0.9333191
+# 2:    HAS   0.9538911 0.9236241 0.9466494
+# 3:    SAS   0.9604394 0.9468185 0.9227120
+# 4:    ANS   0.9518510 0.9151435 0.9597355
+
 #sus dis
 f_sus_dis <- do.call(rbind, final_female_emotion_list[c(1,5)])
 f_not_sus_dis <- final_female_emotion_list[-c(1,5)]
@@ -273,6 +405,85 @@ cpcapp4 <- eigs_sym(solve(ans_dis_stack_cov) %*% cov(sus_dis_ans), k = 5 , which
 
 pca_sus <- eigs_sym(cov(final_female_emotion_list[[1]]), k = 5, which = "LA")$vectors
 
+
+#final_female_emotion_list: 1. sus, 2. has, 3. sas, 4. nes, 5. dis, 6. ans
+#sus ans
+#list order: has,sas,nes,dis,ans
+#within list order: PCA, cPCA++, SUS, ANS, Split, Stack
+uca_sus_ans <- lapply(final_female_emotion_list[-c(1,6)], function(targ){
+  tmp_targ <- scale(do.call(rbind, c(list(targ), final_female_emotion_list[c(1,6)] )))
+  tmp_bg1 <- scale(final_female_emotion_list[[1]])
+  tmp_bg2 <- scale(final_female_emotion_list[[6]])
+  tmp_stack <- scale(do.call(rbind, final_female_emotion_list[c(1,6)]))
+  cov_tmp_stack <- cov(tmp_stack)
+  diag(cov_tmp_stack) <- diag(cov_tmp_stack) + 1e-3
+  
+  targ_pca <- eigs_sym(cov(scale(targ)), k = 5, which = "LA")$vectors
+  
+  tmp_pca <- eigs_sym(cov(tmp_targ), k = 5, which = "LA")$vectors
+  tmp_cpcapp <- eigs_sym(solve(cov_tmp_stack) %*% cov(tmp_targ), k = 5 , which = "LA")$vectors
+  uca_bg1 <- uca(tmp_targ, tmp_bg1, nv = 5)$vectors
+  uca_bg2 <- uca(tmp_targ, tmp_bg2, nv = 5)$vectors
+  uca_bg12 <- uca(tmp_targ, list(tmp_bg1, tmp_bg2), nv = 5)$vectors
+  uca_bg12_stk <- uca(tmp_targ, tmp_stack, nv = 5)$vectors
+  out_method <- c("PCA","cPCA++","SUS","ANS", "Split", "Stack")
+  
+  out <- list(tmp_pca, tmp_cpcapp, uca_bg1, uca_bg2, uca_bg12, uca_bg12_stk )
+  out <- lapply(out, function(mat) pos_corr(mat, targ_pca))
+  out <- data.table(do.call(rbind, out), "method" = factor(rep(out_method, each = 3400), out_method))
+
+})
+
+# nes ans  (4,6)
+#order: sus,has,sas,dis
+uca_nes_ans <- lapply(final_female_emotion_list[-c(4,6)], function(targ){
+  tmp_targ <- scale(do.call(rbind, c(list(targ), final_female_emotion_list[c(4,6)] )))
+  tmp_bg1 <- scale(final_female_emotion_list[[4]])
+  tmp_bg2 <- scale(final_female_emotion_list[[6]])
+  tmp_stack <- scale(do.call(rbind, final_female_emotion_list[c(4,6)]))
+  cov_tmp_stack <- cov(tmp_stack)
+  diag(cov_tmp_stack) <- diag(cov_tmp_stack) + 1e-5
+  
+  targ_pca <- eigs_sym(cov(scale(targ)), k = 5, which = "LA")$vectors
+  
+  tmp_pca <- eigs_sym(cov(tmp_targ), k = 5, which = "LA")$vectors
+  tmp_cpcapp <- eigs_sym(solve(cov_tmp_stack) %*% cov(tmp_targ), k = 5 , which = "LA")$vectors
+  uca_bg1 <- uca(tmp_targ, tmp_bg1, nv = 5)$vectors
+  uca_bg2 <- uca(tmp_targ, tmp_bg2, nv = 5)$vectors
+  uca_bg12 <- uca(tmp_targ, list(tmp_bg1, tmp_bg2), nv = 5)$vectors
+  uca_bg12_stk <- uca(tmp_targ, tmp_stack, nv = 5)$vectors
+  
+  out_method <- c("PCA","cPCA++","NES","ANS", "Split", "Stack")
+  
+  out <- list(tmp_pca, tmp_cpcapp, uca_bg1, uca_bg2, uca_bg12, uca_bg12_stk )
+  out <- lapply(out, function(mat) pos_corr(mat, targ_pca))
+  out <- data.table(do.call(rbind, out), "method" = factor(rep(out_method, each = 3400),out_method))
+})
+# nes dis  (4,5)
+#order: sus,has,sas,ans
+uca_nes_dis <- lapply(final_female_emotion_list[-c(4,5)], function(targ){
+  tmp_targ <- scale(do.call(rbind, c(list(targ), final_female_emotion_list[c(4,5)] )))
+  tmp_bg1 <- scale(final_female_emotion_list[[4]])
+  tmp_bg2 <- scale(final_female_emotion_list[[5]])
+  tmp_stack <- scale(do.call(rbind, final_female_emotion_list[c(4,5)]))
+  cov_tmp_stack <- cov(tmp_stack)
+  diag(cov_tmp_stack) <- diag(cov_tmp_stack) + 1e-5
+  
+  targ_pca <- eigs_sym(cov(scale(targ)), k = 5, which = "LA")$vectors
+  
+  tmp_pca <- eigs_sym(cov(tmp_targ), k = 5, which = "LA")$vectors
+  tmp_cpcapp <- eigs_sym(solve(cov_tmp_stack) %*% cov(tmp_targ), k = 5 , which = "LA")$vectors
+  uca_bg1 <- uca(tmp_targ, tmp_bg1, nv = 5)$vectors
+  uca_bg2 <- uca(tmp_targ, tmp_bg2, nv = 5)$vectors
+  uca_bg12 <- uca(tmp_targ, list(tmp_bg1, tmp_bg2), nv = 5)$vectors
+  uca_bg12_stk <- uca(tmp_targ, tmp_stack, nv = 5)$vectors
+  out_method <- c("PCA","cPCA++","NES","DIS", "Split", "Stack")
+  
+  out <- list(tmp_pca, tmp_cpcapp, uca_bg1, uca_bg2, uca_bg12, uca_bg12_stk )
+  out <- lapply(out, function(mat) pos_corr(mat, targ_pca))
+  out <- data.table(do.call(rbind, out), "method" = factor(rep(out_method, each = 3400),out_method))
+})
+
 #plot the most contrastive...
 uca1_list <- lapply(list(uca1_nes_ans, uca1_dis_ans, uca1_nes_dis_ans,uca1_nes_dis_ans_stk), "[[", "vectors")
 uca1_list <- lapply(uca1_list, function(mat) pos_corr(mat, pca_ans))
@@ -332,6 +543,56 @@ plot_uca4[, alpha := factor(alpha, levels = c("PCA", "Angry", "Disgust", "Split"
 final_plot_uca4 <- plotEigenfaces2(plot_uca4, "")
 
 ggsave("example/Faces/F_Angry_Disgust_Surprise.png",  width = 8, height = 11, units = "in")
+
+
+#sus ans
+#list order: has,sas,nes,dis
+#within list order: PCA, cPCA++, SUS, ANS, Split, Stack
+sus_ans_emo_list <- c("Happy","Sad","Neutral","Disgust")
+sus_ans_plot <- vector(mode = "list", length = 4)
+sus_ans_plot <- lapply(seq_along(uca_sus_ans), function(idx){
+  do.call(rbind, lapply(uca_sus_ans[[idx]][,unique(method)], function(inner){
+    toEigenfaces(data.matrix(uca_sus_ans[[idx]][method == inner, .SD, .SDcols = -"method"]), 50, 68, inner)}
+    ))
+  } )
+
+lapply(seq_along(sus_ans_emo_list), function(zz){
+  plotEigenfaces2(sus_ans_plot[[zz]],"")   
+  ggsave(paste0("example/Faces/Surprise_Angry/F_Surprise_Angry_",sus_ans_emo_list[zz],".png"),  width = 8, height = 11, units = "in")
+  })
+
+
+
+# nes ans  (4,6)
+#order: sus,has,sas,dis
+nes_ans_emo_list <- c("Surprise","Happy","Sad","Disgust")
+nes_ans_plot <- vector(mode = "list", length = 4)
+nes_ans_plot <- lapply(seq_along(uca_nes_ans), function(idx){
+  do.call(rbind, lapply(uca_nes_ans[[idx]][,unique(method)], function(inner){
+    toEigenfaces(data.matrix(uca_nes_ans[[idx]][method == inner, .SD, .SDcols = -"method"]), 50, 68, inner)}
+    ))
+  } )
+
+lapply(seq_along(nes_ans_emo_list), function(zz){
+  plotEigenfaces2(nes_ans_plot[[zz]],"")   
+  ggsave(paste0("example/Faces/Neutral_Angry/F_Neutral_Angry_",nes_ans_emo_list[zz],".png"),  width = 8, height = 11, units = "in")
+  })
+
+
+# nes dis  (4,5)
+#order: sus,has,sas,ans
+nes_dis_emo_list <- c("Surprise","Happy","Sad","Angry")
+nes_dis_plot <- vector(mode = "list", length = 4)
+nes_dis_plot <- lapply(seq_along(uca_nes_dis), function(idx){
+  do.call(rbind, lapply(uca_nes_dis[[idx]][,unique(method)], function(inner){
+    toEigenfaces(data.matrix(uca_nes_dis[[idx]][method == inner, .SD, .SDcols = -"method"]), 50, 68, inner)}
+    ))
+  } )
+
+lapply(seq_along(nes_dis_emo_list), function(zz){
+  plotEigenfaces2(nes_dis_plot[[zz]],"")   
+  ggsave(paste0("example/Faces/Neutral_Disgust/F_Neutral_Disgust_",nes_dis_emo_list[zz],".png"),  width = 8, height = 11, units = "in")
+  })
 
 #final session variance explained (these should not be controlled)
 nes_dis_ans_var_exp <- do.call(rbind,
@@ -452,3 +713,5 @@ ggplot(data = uca4_plot, aes(x = PC1, y = PC2, color = Class))+
   theme(legend.position = "bottom")
 
 ggsave("example/Faces/F_Angry_Disgust_Surprise_projected.png",  width = 11, height = 8, units = "in")
+
+
