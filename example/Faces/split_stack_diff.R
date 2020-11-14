@@ -406,83 +406,58 @@ cpcapp4 <- eigs_sym(solve(ans_dis_stack_cov) %*% cov(sus_dis_ans), k = 5 , which
 pca_sus <- eigs_sym(cov(final_female_emotion_list[[1]]), k = 5, which = "LA")$vectors
 
 
+getFaceProjection=function(idx1, idx2){
+  emo_names <- c("SUS","HAS", "SAS", "NES", "DIS","ANS")
+  # function to cat class names onto output...
+  bg_idx <- c(idx1,idx2)
+  class_names = lapply(emo_names[-bg_idx], function(others){rep(c(others,emo_names[bg_idx]), each = 35)})  
+  
+  uca_bg1_bg2 <- lapply(final_female_emotion_list[-c(idx1,idx2)], function(targ){
+    tmp_targ <- scale(do.call(rbind, c(list(targ), final_female_emotion_list[c(idx1,idx2)] )))
+    tmp_bg1 <- scale(final_female_emotion_list[[idx1]])
+    tmp_bg2 <- scale(final_female_emotion_list[[idx2]])
+    tmp_stack <- scale(do.call(rbind, final_female_emotion_list[c(idx1,idx2)]))
+    cov_tmp_stack <- cov(tmp_stack)
+    diag(cov_tmp_stack) <- diag(cov_tmp_stack) + 1e-3
+    
+    targ_pca <- eigs_sym(cov(scale(targ)), k = 5, which = "LA")$vectors
+    
+    tmp_pca <- eigs_sym(cov(tmp_targ), k = 5, which = "LA")$vectors
+    tmp_cpcapp <- eigs_sym(solve(cov_tmp_stack) %*% cov(tmp_targ), k = 5 , which = "LA")$vectors
+    uca_bg1 <- uca(tmp_targ, tmp_bg1, nv = 5)$vectors
+    uca_bg2 <- uca(tmp_targ, tmp_bg2, nv = 5)$vectors
+    uca_bg12 <- uca(tmp_targ, list(tmp_bg1, tmp_bg2), nv = 5)$vectors
+    uca_bg12_stk <- uca(tmp_targ, tmp_stack, nv = 5)$vectors
+    out_method <- c("PCA","cPCA++",emo_names[bg_idx], "Split", "Stack")
+    
+    out <- list(tmp_pca, tmp_cpcapp, uca_bg1, uca_bg2, uca_bg12, uca_bg12_stk )
+    out <- lapply(out, function(mat) pos_corr(mat, targ_pca))
+    
+    projections <- do.call(rbind, lapply(seq_along(out), function(vec) data.table(tmp_targ %*% out[[vec]],
+                                                                                  "method" = out_method[vec]  )))
+    out <- data.table(do.call(rbind, out), "method" = factor(rep(out_method, each = 3400),out_method))
+    list(out, projections) 
+  })
+  uca_plot <- lapply(uca_bg1_bg2 , "[[", 1)
+  uca_proj <- lapply(uca_bg1_bg2, "[[", 2) #stores the projected eigenfaces on to 2-dims
+  uca_proj <- Map(cbind, uca_proj, class_names)
+  uca_proj <- lapply(uca_proj, function(dat) setnames(dat, c(paste0("PC",1:5), "Method","Class")))
+  list("Plot" = uca_plot, "Proj" = uca_proj) 
+}
+
 #final_female_emotion_list: 1. sus, 2. has, 3. sas, 4. nes, 5. dis, 6. ans
 #sus ans
 #list order: has,sas,nes,dis,ans
 #within list order: PCA, cPCA++, SUS, ANS, Split, Stack
-uca_sus_ans <- lapply(final_female_emotion_list[-c(1,6)], function(targ){
-  tmp_targ <- scale(do.call(rbind, c(list(targ), final_female_emotion_list[c(1,6)] )))
-  tmp_bg1 <- scale(final_female_emotion_list[[1]])
-  tmp_bg2 <- scale(final_female_emotion_list[[6]])
-  tmp_stack <- scale(do.call(rbind, final_female_emotion_list[c(1,6)]))
-  cov_tmp_stack <- cov(tmp_stack)
-  diag(cov_tmp_stack) <- diag(cov_tmp_stack) + 1e-3
-  
-  targ_pca <- eigs_sym(cov(scale(targ)), k = 5, which = "LA")$vectors
-  
-  tmp_pca <- eigs_sym(cov(tmp_targ), k = 5, which = "LA")$vectors
-  tmp_cpcapp <- eigs_sym(solve(cov_tmp_stack) %*% cov(tmp_targ), k = 5 , which = "LA")$vectors
-  uca_bg1 <- uca(tmp_targ, tmp_bg1, nv = 5)$vectors
-  uca_bg2 <- uca(tmp_targ, tmp_bg2, nv = 5)$vectors
-  uca_bg12 <- uca(tmp_targ, list(tmp_bg1, tmp_bg2), nv = 5)$vectors
-  uca_bg12_stk <- uca(tmp_targ, tmp_stack, nv = 5)$vectors
-  out_method <- c("PCA","cPCA++","SUS","ANS", "Split", "Stack")
-  
-  out <- list(tmp_pca, tmp_cpcapp, uca_bg1, uca_bg2, uca_bg12, uca_bg12_stk )
-  out <- lapply(out, function(mat) pos_corr(mat, targ_pca))
-  out <- data.table(do.call(rbind, out), "method" = factor(rep(out_method, each = 3400), out_method))
-
-})
-
+uca_sus_ans <- getFaceProjection(1,6)
 # nes ans  (4,6)
 #order: sus,has,sas,dis
-uca_nes_ans <- lapply(final_female_emotion_list[-c(4,6)], function(targ){
-  tmp_targ <- scale(do.call(rbind, c(list(targ), final_female_emotion_list[c(4,6)] )))
-  tmp_bg1 <- scale(final_female_emotion_list[[4]])
-  tmp_bg2 <- scale(final_female_emotion_list[[6]])
-  tmp_stack <- scale(do.call(rbind, final_female_emotion_list[c(4,6)]))
-  cov_tmp_stack <- cov(tmp_stack)
-  diag(cov_tmp_stack) <- diag(cov_tmp_stack) + 1e-5
-  
-  targ_pca <- eigs_sym(cov(scale(targ)), k = 5, which = "LA")$vectors
-  
-  tmp_pca <- eigs_sym(cov(tmp_targ), k = 5, which = "LA")$vectors
-  tmp_cpcapp <- eigs_sym(solve(cov_tmp_stack) %*% cov(tmp_targ), k = 5 , which = "LA")$vectors
-  uca_bg1 <- uca(tmp_targ, tmp_bg1, nv = 5)$vectors
-  uca_bg2 <- uca(tmp_targ, tmp_bg2, nv = 5)$vectors
-  uca_bg12 <- uca(tmp_targ, list(tmp_bg1, tmp_bg2), nv = 5)$vectors
-  uca_bg12_stk <- uca(tmp_targ, tmp_stack, nv = 5)$vectors
-  
-  out_method <- c("PCA","cPCA++","NES","ANS", "Split", "Stack")
-  
-  out <- list(tmp_pca, tmp_cpcapp, uca_bg1, uca_bg2, uca_bg12, uca_bg12_stk )
-  out <- lapply(out, function(mat) pos_corr(mat, targ_pca))
-  out <- data.table(do.call(rbind, out), "method" = factor(rep(out_method, each = 3400),out_method))
-})
+#classes <- c("SUS","HAS","SAS","DIS")
+uca_nes_ans <- getFaceProjection(4,6)
 # nes dis  (4,5)
 #order: sus,has,sas,ans
-uca_nes_dis <- lapply(final_female_emotion_list[-c(4,5)], function(targ){
-  tmp_targ <- scale(do.call(rbind, c(list(targ), final_female_emotion_list[c(4,5)] )))
-  tmp_bg1 <- scale(final_female_emotion_list[[4]])
-  tmp_bg2 <- scale(final_female_emotion_list[[5]])
-  tmp_stack <- scale(do.call(rbind, final_female_emotion_list[c(4,5)]))
-  cov_tmp_stack <- cov(tmp_stack)
-  diag(cov_tmp_stack) <- diag(cov_tmp_stack) + 1e-5
-  
-  targ_pca <- eigs_sym(cov(scale(targ)), k = 5, which = "LA")$vectors
-  
-  tmp_pca <- eigs_sym(cov(tmp_targ), k = 5, which = "LA")$vectors
-  tmp_cpcapp <- eigs_sym(solve(cov_tmp_stack) %*% cov(tmp_targ), k = 5 , which = "LA")$vectors
-  uca_bg1 <- uca(tmp_targ, tmp_bg1, nv = 5)$vectors
-  uca_bg2 <- uca(tmp_targ, tmp_bg2, nv = 5)$vectors
-  uca_bg12 <- uca(tmp_targ, list(tmp_bg1, tmp_bg2), nv = 5)$vectors
-  uca_bg12_stk <- uca(tmp_targ, tmp_stack, nv = 5)$vectors
-  out_method <- c("PCA","cPCA++","NES","DIS", "Split", "Stack")
-  
-  out <- list(tmp_pca, tmp_cpcapp, uca_bg1, uca_bg2, uca_bg12, uca_bg12_stk )
-  out <- lapply(out, function(mat) pos_corr(mat, targ_pca))
-  out <- data.table(do.call(rbind, out), "method" = factor(rep(out_method, each = 3400),out_method))
-})
+uca_nes_dis <- getFaceProjection(4,5)
+
 
 #plot the most contrastive...
 uca1_list <- lapply(list(uca1_nes_ans, uca1_dis_ans, uca1_nes_dis_ans,uca1_nes_dis_ans_stk), "[[", "vectors")
@@ -549,50 +524,89 @@ ggsave("example/Faces/F_Angry_Disgust_Surprise.png",  width = 8, height = 11, un
 #list order: has,sas,nes,dis
 #within list order: PCA, cPCA++, SUS, ANS, Split, Stack
 sus_ans_emo_list <- c("Happy","Sad","Neutral","Disgust")
-sus_ans_plot <- vector(mode = "list", length = 4)
-sus_ans_plot <- lapply(seq_along(uca_sus_ans), function(idx){
-  do.call(rbind, lapply(uca_sus_ans[[idx]][,unique(method)], function(inner){
-    toEigenfaces(data.matrix(uca_sus_ans[[idx]][method == inner, .SD, .SDcols = -"method"]), 50, 68, inner)}
+uca_sus_ans_plot <- uca_sus_ans[[1]]
+
+sus_ans_plot <- lapply(seq_along(uca_sus_ans_plot), function(idx){
+  do.call(rbind, lapply(uca_sus_ans_plot[[idx]][,unique(method)], function(inner){
+    toEigenfaces(data.matrix(uca_sus_ans_plot[[idx]][method == inner, .SD, .SDcols = -"method"]), 50, 68, inner)}
     ))
   } )
-
+#plot eigenfaces
 lapply(seq_along(sus_ans_emo_list), function(zz){
   plotEigenfaces2(sus_ans_plot[[zz]],"")   
   ggsave(paste0("example/Faces/Surprise_Angry/F_Surprise_Angry_",sus_ans_emo_list[zz],".png"),  width = 8, height = 11, units = "in")
   })
-
-
+#plot projected faces
+lapply(seq_along(uca_sus_ans[[2]]), function(idx){
+  tmp_dat <- uca_sus_ans[[2]][[idx]]
+  tmp_dat[,Method := factor(Method, levels = c("PCA","cPCA++","SUS","ANS","Split","Stack"))]
+  ggplot(data = tmp_dat, aes(x = PC1, y = PC2, color = Class))+
+  geom_point()+
+  facet_wrap(~Method, scale = "free")+
+  labs(title = paste0("Female Surprise, Angry, ", sus_ans_emo_list[idx]), x = "Component 1", y = "Component 2")+
+  theme_bw()+
+  theme(legend.position = "bottom")
+ggsave(paste0("example/Faces/Surprise_Angry/F_Surprise_Angry_",sus_ans_emo_list[idx],"_projected.png"),  width = 11, height = 8, units = "in")
+    }        
+  )
 
 # nes ans  (4,6)
 #order: sus,has,sas,dis
 nes_ans_emo_list <- c("Surprise","Happy","Sad","Disgust")
-nes_ans_plot <- vector(mode = "list", length = 4)
-nes_ans_plot <- lapply(seq_along(uca_nes_ans), function(idx){
-  do.call(rbind, lapply(uca_nes_ans[[idx]][,unique(method)], function(inner){
-    toEigenfaces(data.matrix(uca_nes_ans[[idx]][method == inner, .SD, .SDcols = -"method"]), 50, 68, inner)}
+uca_nes_ans_plot <- uca_nes_ans[[1]]
+
+nes_ans_plot <- lapply(seq_along(uca_nes_ans_plot), function(idx){
+  do.call(rbind, lapply(uca_nes_ans_plot[[idx]][,unique(method)], function(inner){
+    toEigenfaces(data.matrix(uca_nes_ans_plot[[idx]][method == inner, .SD, .SDcols = -"method"]), 50, 68, inner)}
     ))
   } )
-
+#plot eigenfaces
 lapply(seq_along(nes_ans_emo_list), function(zz){
   plotEigenfaces2(nes_ans_plot[[zz]],"")   
   ggsave(paste0("example/Faces/Neutral_Angry/F_Neutral_Angry_",nes_ans_emo_list[zz],".png"),  width = 8, height = 11, units = "in")
   })
-
+#plot projected faces
+lapply(seq_along(uca_nes_ans[[2]]), function(idx){
+  tmp_dat <- uca_nes_ans[[2]][[idx]]
+  tmp_dat[,Method := factor(Method, levels = c("PCA","cPCA++","NES","ANS","Split","Stack"))]
+  ggplot(data = tmp_dat, aes(x = PC1, y = PC2, color = Class))+
+  geom_point()+
+  facet_wrap(~Method, scale = "free")+
+  labs(title = paste0("Female Neutral, Angry, ", nes_ans_emo_list[idx]), x = "Component 1", y = "Component 2")+
+  theme_bw()+
+  theme(legend.position = "bottom")
+ggsave(paste0("example/Faces/Neutral_Angry/F_Surprise_Angry_",nes_ans_emo_list[idx],"_projected.png"),  width = 11, height = 8, units = "in")
+    }        
+  )
 
 # nes dis  (4,5)
 #order: sus,has,sas,ans
 nes_dis_emo_list <- c("Surprise","Happy","Sad","Angry")
-nes_dis_plot <- vector(mode = "list", length = 4)
-nes_dis_plot <- lapply(seq_along(uca_nes_dis), function(idx){
-  do.call(rbind, lapply(uca_nes_dis[[idx]][,unique(method)], function(inner){
-    toEigenfaces(data.matrix(uca_nes_dis[[idx]][method == inner, .SD, .SDcols = -"method"]), 50, 68, inner)}
+uca_nes_dis_plot <- uca_nes_dis[[1]]
+
+nes_dis_plot <- lapply(seq_along(uca_nes_dis_plot), function(idx){
+  do.call(rbind, lapply(uca_nes_dis_plot[[idx]][,unique(method)], function(inner){
+    toEigenfaces(data.matrix(uca_nes_dis_plot[[idx]][method == inner, .SD, .SDcols = -"method"]), 50, 68, inner)}
     ))
   } )
-
+#plot eigenfaces
 lapply(seq_along(nes_dis_emo_list), function(zz){
   plotEigenfaces2(nes_dis_plot[[zz]],"")   
   ggsave(paste0("example/Faces/Neutral_Disgust/F_Neutral_Disgust_",nes_dis_emo_list[zz],".png"),  width = 8, height = 11, units = "in")
   })
+#plot projected faces
+lapply(seq_along(uca_nes_dis[[2]]), function(idx){
+  tmp_dat <- uca_nes_dis[[2]][[idx]]
+  tmp_dat[,Method := factor(Method, levels = c("PCA","cPCA++","NES","DIS","Split","Stack"))]
+  ggplot(data = tmp_dat, aes(x = PC1, y = PC2, color = Class))+
+  geom_point()+
+  facet_wrap(~Method, scale = "free")+
+  labs(title = paste0("Female Neutral, Disgust, ", nes_dis_emo_list[idx]), x = "Component 1", y = "Component 2")+
+  theme_bw()+
+  theme(legend.position = "bottom")
+ggsave(paste0("example/Faces/Neutral_Disgust/F_Surprise_Disgust_",nes_dis_emo_list[idx],"_projected.png"),  width = 11, height = 8, units = "in")
+    }        
+  )
 
 #final session variance explained (these should not be controlled)
 nes_dis_ans_var_exp <- do.call(rbind,
