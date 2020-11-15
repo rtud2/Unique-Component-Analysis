@@ -1,7 +1,0 @@
-GUE.ped GUE.map
-SON.ped	SON.map
-VER.ped	VER.map
-YUC.ped	YUC.map
-ZAC.ped	ZAC.map
-ZAP.ped	ZAP.map
-CEU_all.ped CEU_all.map
