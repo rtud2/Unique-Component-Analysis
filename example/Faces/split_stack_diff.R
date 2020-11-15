@@ -604,7 +604,7 @@ lapply(seq_along(uca_nes_dis[[2]]), function(idx){
   labs(title = paste0("Female Neutral, Disgust, ", nes_dis_emo_list[idx]), x = "Component 1", y = "Component 2")+
   theme_bw()+
   theme(legend.position = "bottom")
-ggsave(paste0("example/Faces/Neutral_Disgust/F_Surprise_Disgust_",nes_dis_emo_list[idx],"_projected.png"),  width = 11, height = 8, units = "in")
+ggsave(paste0("example/Faces/Neutral_Disgust/F_Neutral_Disgust_",nes_dis_emo_list[idx],"_projected.png"),  width = 11, height = 8, units = "in")
     }        
   )
 
