@@ -124,12 +124,16 @@ To solve this tuning parameter problem, we use the elbow method of finding the b
    
 \section{Results}
 \subsection{Subgroup discovery in protein expression data}
-We make a direct comparison between UCA and cPCA by using the mouse protein expression dataset. This dataset measured expression of 76 mice proteins of 1080 control or trisomic (Down Syndrome) mice samples (each mice measurement considered an independent sample/mouse) receiving a combination of shock therapy (Context Shock vs. Shock Context) and drugs (Saline vs. Memantine)  \cite{Ahmed, Higuera, Abid}.  
-Since saline treated mice not exposed to shock therapy (Shock Context) are similar to those that are saline treated and exposed (Context Shock) to shock therapy, we can investigate the variation unique to unshocked mice by removing variation resulting from shock therapy by contrasting shocked control mice protein expression measurements-- an analysis that was carried out in the original cPCA paper  \cite{Abid}. 
-We compare the directions found by UCA to those found by cPCA ($\lambda = 0.5, 1, 5, 10$), cPCA++, PCA, and rPCA on Saline injected mice which have not received shock therapy (Shock Context) and use the Down Syndrome information to evaluate these methods.
+The goal of the mouse protein expression experiment was to assess whether Memantine recovered the ability to learn in Down Syndrome mice, with the aim to identify subsets of protein that discriminate between treatment classes.
+ The study measured expression of 76 mice proteins of 1080 control or trisomic (Down Syndrome) mice samples (each mice measurement considered an independent sample/mouse), which received a combination of shock therapy (Context Shock vs. Shock Context) and drugs (Saline vs. Memantine)  \cite{Ahmed, Higuera, Abid}.  
+Since saline treated mice not exposed to shock therapy (Shock Context) are similar to those that are saline treated but also exposed (Context Shock) to shock therapy, we can investigate the variation unique to undruged and unshocked mice by contrasting shocked control mice protein expression measurements, which removes variation resulting from shock therapy. Doing so may show how control mice and Down Syndrome mice differ in the control setting.
+We compare the principal directions found by UCA to those found by PCA, cPCA ($\lambda = 0.5, 1, 5, 10$), cPCA++, and rPCA on Saline injected mice which have not received shock therapy (Shock Context) and use Down Syndrome class to evaluate separability when observations are projected onto the first two directions found by each method.
 
-The results in Figure \ref{fig:Mouse} show that PCA has difficulty distinguishing between mice with Down Syndrome and mice without.  In this example, the resulting separation in the first two contrastive principal components does not really depend on the chosen $\lambda$. At all values of $\lambda$, cPCA achieves good separation, therefore it is unsurprising UCA has similar results. These results align with the results found in  \cite{Abid}. cPCA++, which also does not require specifying a contrastive tuning parameter, does better than PCA at separating control and Down Syndrome mice, but falls short of achieving similar performance to cPCA for any value of the contrastive tuning parameter. Interestingly, the simple and intuitive rPCA method, with $k$ chosen by single knot spline with smallest MSE, achieved similar results to cPCA and UCA and outperformed cPCA++.
+The results in Figure \ref{fig:Mouse} show that PCA has difficulty distinguishing between mice with Down Syndrome and mice without.  In this example, the resulting separation in the first two contrastive principal components does not depend on the chosen $\lambda$. At all values of $\lambda$, cPCA achieves good separation, therefore it is unsurprising UCA has similar results. These results align with the results found in  \cite{Abid}.
+cPCA++, which also does not require specifying a contrastive tuning parameter, performs better than PCA at separating control and Down Syndrome mice, but falls short of achieving similar performance to cPCA for any value of the contrastive tuning parameter. Interestingly, the simple and intuitive rPCA method, with $k$ chosen by single knot spline with smallest MSE, achieved similar results to both cPCA and UCA, while outperforming cPCA++.
 
+% rewrite caption
+\cite{Abid} we confirm their results. 
 \begin{figure}[t]
     \centering
 	\includegraphics[width = 0.8\textwidth]{figure/Mouse_Data.png}
@@ -161,17 +165,25 @@ We note that this problem isn't easily separable by using cPCA++, rPCA, and cPCA
 
 
 \subsection{Faces}
-We illustrate the advantages of the multiple background capabilities of UCA using the Karolinska Directed Emotional Faces (KDEF) \cite{Calvo2008}, which captured images of 7 emotions, 5 different perspectives, from 70 amateur actors in either a practice or final session.
-We first construct a target data set by combining Surprise, Angry, and Disgust emotions from the final session and attempt to uncover variation unique to Disgust. 
+We exemplify the advantages of the multiple background capabilities of UCA using the Karolinska Directed Emotional Faces (KDEF) \cite{Calvo2008}, which captured images of 7 emotions, 5 different perspectives, from 70 amateur actors in either a practice or final session.
+Here we construct an example demonstrating that using UCA with multiple backgrounds is superior to using a single background. 
+This is similar to a real world use-case of UCA where researchers may have targeted variation of interest, but also various control groups.
+For illustrative purposes, We focus on  uncover variation unique to the Disgust emotion after contaminating the data with Surprise and Angry emotions from the final session.
+In Figure \ref{fig:Faces}, we look at the top five eigenfaces produced by PCA, UCA with a single practice session background emotion of either Angry, Surprise, or an amalgamation of both Angry and Suprise (Stack), compared to cPCA++ with stacked background and UCA with dual practice session backgrounds of Angry and Suprised (Split). 
+% Since UCA represents the best case, we did not compare to different values of contrastive tuning parameter alpha
+
+% some conclusions about the image
+
 With PCA, eigenfaces represent faces that appear mostly angry.  
 UCA with only Surprise practice faces as the background is dominated by surprise faces.
 UCA with only Angry practice faces as the background contains a mixture of surprise (2) and disgust (1,4,5) faces.
 When UCA has both Surprise and Angry in the background, we see that features of digust are highlighted in the first two eigenfaces
 However, when using the joint covariance of Surprise and Angry as the background, features of disgust are pushed until the 3rd eigenface. The 2nd eigenface here closely resembles that from the 3rd eigenface of Split, and the third eigenface closely resembles the 2nd eigenface from split.
+
 Using cPCA++ with the stacked background, I'm not sure what we get. it looks pretty bad.
 
-\ref{fig:Faces}
-\ref{fig:Face_Projections}
+
+To better see the differences between the eigenfaces, we project the faces onto the first two components found and color the points by emotional class in figure \ref{fig:Face_Projections}.
 
 \begin{figure}[!th]
     \centering
