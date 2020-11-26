@@ -98,64 +98,70 @@ Boileau et al.  \cite{Boileau} described Sparse cPCA (scPCA) by adding $l_1$ and
     %    \item no intuition on how to extend to multiple data
     %\end{enumerate}
    
-   However, there are two main disadvantages to these existing methods. First, they cannot accommodate multiple background datasets. Multiple backgrounds would allow researchers to target the exact variability of interest by removing unwanted variation from multiple sources and/or conditions. For example...
-   Naively applying existing methods by stacking the multiple background data matrices together and forming a pooled covariance matrix will not work well. The pooled covariance is a sample-weighted average of the individual background covariance matrices and may not be representative of any of the individual datasets. %The resulting best case scenario is multiple backgrounds with the exact same covariance matrix such that background variation is preserved.  However, the worst case scenario, background covariances may sum to a diagonal matrix, washing out background variation when stacking and reducing cPCA and its variants to PCA. 
+   However, there are two main disadvantages to these existing methods. First, they cannot accommodate multiple background datasets. Multiple backgrounds would allow researchers to target the exact variability of interest by removing unwanted variation from multiple sources and/or conditions. 
+   For example, identifying unique facial features of Happy Emotions in a data set which also contains Surprise, Angry, and Sad faces. If researchers have prior data on Surprise, Angry, and Sad faces, they can contrast those emotions without diluting the structure of each individual background, therefore recovering features specific to Happy.
+   Naively applying existing methods by stacking the multiple background data matrices together and forming a pooled covariance matrix is suboptimal. The pooled covariance is a sample-weighted average of the individual background covariance matrices and may not be representative of any of the individual datasets. %The resulting best case scenario is multiple backgrounds with the exact same covariance matrix such that background variation is preserved.  However, the worst case scenario, background covariances may sum to a diagonal matrix, washing out background variation when stacking and reducing cPCA and its variants to PCA. 
    
    The second disadvantage of existing contrastive methods is that they require one (e.g., cPCA and ccPCA) or several (e.g., scPCA) tuning parameters, user input variables that influence an algorithm's behavior. Since existing contrastive methods heavily depend on the tuning parameter, finding the optimal tuning parameter(s) which balances the dual mandate of maximizing variability in the target and minimizing variability variability in the background may be tedious and frustrating. Although cPCA and ccPCA have criteria-based tuning parameter solutions, the right tuning parameter may not be among the default candidates. An apparent exception is cPCA++, but in practice it requires a tuning parameter when its background sample covariance matrix is not positive definite, which is common many applications.
    
    %Lastly, from a computational perspective, they each revolve around the construction of the complete $p \times p$ contrastive covariance matrix, involving two $p\times p$ target and background covariance matrice. When $p$ is large, the required memory scales with $p^2$, making these methods unsuitable for high-dimensional settings, especially for dense matrices.
     
     
-    We propose Unique Component Analysis (UCA) to address both of these issues. UCA works by constraining the objective function in cPCA to give directions that are orthonormal and explain small amounts of variation in each background dataset. Specifically, let $A$ be the $p \times p$ target covariance matrix and $B_j$, $j \in 1,...,m$ be the $m$ $p\times p$ background covariance matrices. We seek to: 
+    We propose Unique Component Analysis (UCA) to address both of these issues. UCA works by constraining the objective function in cPCA to give directions that are orthonormal and explain small amounts of variation in each background dataset. Specifically, let $A$ be the $p \times p$ target covariance matrix and $B_j$, $j \in 1,\ldots, m$ be the $m$ $p\times p$ background covariance matrices. We seek to: 
      \begin{align}
          &\max_{v\in \mathbb{R}^p}{v^TAv} \nonumber\\ 
          \text{subject to }&\; v^{T}v=I,\;\; v^TB_1 v \leq 1, \cdots, v^T B_m v \leq 1 \nonumber
      \end{align}
     These constraints are naturally found in generalized eigenvalue problems and can be solved using weak duality of the Lagrangian.
-    UCA is tuning-free, is easily extensible to multiple background data sets, and is scalable to high-dimensions. We hope to provide a way for researchers to explore higher dimensional data and uncover variation unique to the data of interest, variation not shown in previous studies, control groups, and other known sources of variation, simultaneously. UCA seeks to find the unique directions of variation which both maximize the varability in the target dataset and also account for little variation in each of the background dataset(s). We show that UCA achieves similar results as cPCA and cPCA++ with a single background dataset and that it can outperform them when using multiple backgrounds. %We then use UCA to find prominent emotional features using eigenfaces and illustrate where stacking may fail. In the methods section, we provide detail to how UCA works and how we handle high-dimensional problems. 
-    %We provide three examples illustrating the effectiveness of UCA and 
+    UCA is tuning-free, is easily extensible to multiple background data sets, and is scalable to high-dimensions. We hope to provide a way for researchers to explore higher dimensional data and uncover variation unique to the data of interest, variation not shown in previous studies, control groups, and other known sources of variation, simultaneously. UCA seeks to find the unique directions of variation which both maximize the varability in the target dataset and also account for little variation in each of the background dataset(s). We show that UCA achieves similar results as cPCA and cPCA++ with a single background dataset and that it can outperform them when using multiple backgrounds. 
 
 Another way to conduct contrastive dimension reduction is with ``Residual PCA''. We note that residual PCA (rPCA) is not a formal technique but is used as an ad-hoc method of removing noise from known variability  \cite{rpca}. Again, let $A$ be the $p \times p$ target covariance matrix and $B$ be the $p\times p$ background covariance matrix.  For some integer $k$ which denotes the low dimensional representation of $B$, rPCA performs PCA after projecting $A$ onto the ``residual'' space of $B$. More specifically, if $W$ denotes the eigenvectors of $B$ and $W_{(k+1):p}$ the top $(k+1):p$ eigenvectors of $B$,then rPCA seeks to:
 \[\max_{v\in \mathbb{R}^p}{v^T \left(W_{(k+1):p}W_{(k+1):p}^T A\right) v}\]
 Note that cPCA with contrastive parameter $\lambda \rightarrow \infty$ is different from rPCA because rPCA requires user to choose the number of background components to be kept, whereas cPCA with $\lambda \rightarrow \infty$ maps reduces the target on the nullspace of the background-- they would be equivalent for $k = p$. We present rPCA to demonstrate that some of the same underlying directions can be found in a more intuitive way. It also can easily be extensible to multiple backgrounds by projecting onto addition background residual spaces. Since the residual space of the background can be done easily with singular-value decomposition, it is computationally simple and straight forward. However, one still needs to choose the background data dimension, $k$.
-To solve this tuning parameter problem, we use the elbow method of finding the best linear single knot spline at $k$ such that the mean-square error is minimized in the scree plot.%(Cite...I don't remember the citation for this...)
+To solve this tuning parameter problem, we use the elbow method of finding the best linear single knot spline at $k$ such that the mean-square error is minimized in the scree plot. For the examples below, we will default to this method of selecting $k$. %(Cite...I don't remember the citation for this...)
    
-   
-   
+  % some thing that leads to the results section  
+   %We then use UCA to find prominent emotional features using eigenfaces and illustrate where stacking may fail. In the methods section, we provide detail to how UCA works and how we handle high-dimensional problems. 
+    %We provide three examples illustrating the effectiveness of UCA and 
+
 \section{Results}
 \subsection{Subgroup discovery in protein expression data}
+\begin{figure}[th!]
+    \centering
+	\includegraphics[width = 0.8\textwidth]{figure/Mouse_Data.png}
+	\caption{Mouse Protein Expression: Down Syndrome Separability of Saline injected mice which were not shocked. confirming  \cite{Abid} results where Down Syndrome and control mice were unseparable using PCA alone but is easily separable by cPCA at all values of $\lambda$, cPCA++, rPCA, and UCA.}
+	\label{fig:Mouse}
+\end{figure}
+We show UCA has consistent performance to cPCA, and better performance than cPCA++ using the Mouse Protein Expression data.
 The goal of the mouse protein expression experiment was to assess whether Memantine recovered the ability to learn in Down Syndrome mice, with the aim to identify subsets of protein that discriminate between treatment classes.
  The study measured expression of 76 mice proteins of 1080 control or trisomic (Down Syndrome) mice samples (each mice measurement considered an independent sample/mouse), which received a combination of shock therapy (Context Shock vs. Shock Context) and drugs (Saline vs. Memantine)  \cite{Ahmed, Higuera, Abid}.  
-Since saline treated mice not exposed to shock therapy (Shock Context) are similar to those that are saline treated but also exposed (Context Shock) to shock therapy, we can investigate the variation unique to undruged and unshocked mice by contrasting shocked control mice protein expression measurements, which removes variation resulting from shock therapy. Doing so may show how control mice and Down Syndrome mice differ in the control setting.
+Here, we investigate the variation unique to unshocked, saline injected mice.
+Since saline treated mice not exposed to shock therapy (Shock Context) are similar to saline treated mice that are exposed to shock therapy (Context Shock), we can contrast protein expression measurements from shocked, saline treated mice, effectively removing variation resulting from shock therapy. Doing so may show how control mice and Down Syndrome mice differ in the saline treated setting.
+
 We compare the principal directions found by UCA to those found by PCA, cPCA ($\lambda = 0.5, 1, 5, 10$), cPCA++, and rPCA on Saline injected mice which have not received shock therapy (Shock Context) and use Down Syndrome class to evaluate separability when observations are projected onto the first two directions found by each method.
 
 The results in Figure \ref{fig:Mouse} show that PCA has difficulty distinguishing between mice with Down Syndrome and mice without.  In this example, the resulting separation in the first two contrastive principal components does not depend on the chosen $\lambda$. At all values of $\lambda$, cPCA achieves good separation, therefore it is unsurprising UCA has similar results. These results align with the results found in  \cite{Abid}.
-cPCA++, which also does not require specifying a contrastive tuning parameter, performs better than PCA at separating control and Down Syndrome mice, but falls short of achieving similar performance to cPCA for any value of the contrastive tuning parameter. Interestingly, the simple and intuitive rPCA method, with $k$ chosen by single knot spline with smallest MSE, achieved similar results to both cPCA and UCA, while outperforming cPCA++.
+cPCA++, which also does not require specifying a contrastive tuning parameter, performs better than PCA at separating control and Down Syndrome mice, but falls short of achieving similar performance to cPCA at any value of the contrastive tuning parameter. Interestingly, the simple and intuitive rPCA method, with $k$ chosen by single knot spline with smallest MSE, achieved similar results to both cPCA and UCA, while outperforming cPCA++.
 
-% rewrite caption
-\cite{Abid} we confirm their results. 
-\begin{figure}[t]
-    \centering
-	\includegraphics[width = 0.8\textwidth]{figure/Mouse_Data.png}
-	\caption{Mouse Protein Expression: Separability of Saline injected mice which were not shocked. confirming  \cite{Abid} results where a background of Saline injected mice who were shocked was used. This example is unseparable using PCA alone but is easily separable by cPCA for all values of $\alpha$, cPCA++, rPCA, and UCA.}
-	\label{fig:Mouse}
-\end{figure}
 
 \subsection{Subgroup discovery in protein expression data with multiple backgrounds}
-A more challenging problem for cPCA and it's variants is separating Down Syndrome and Control mice when the target involves Saline injected mice which received shock therapy. In figure \ref{fig:MouseSplitStack} we show the results of PCA, cPCA++, rPCA, and UCA with a variety of backgrounds (shown in parenthesis): memantine injected mice with Down Syndrome that were shocked (Mem-C/S-Ts65Dn), memantine injected mice with Down Syndrome that were not shocked (Mem-S/C-Ts65Dn), saline injected mice with Down Syndrome that were not shocked (Saline-S/C-Ts65Dn), all of the aforementioned backgrounds stacked before forming their joint covariance matrix (Stack All), and aforementioned backgrounds treated as separate backgrounds simultaneously (Split All). 
-
-PCA and the single background condition UCA, cPCA++ and rPCA ($k$ chosen with single knot spline with lowest MSE) with stacked background cannot distinguish between Down Syndrome and control mice. UCA with stacked background performs better at splitting the two groups compared with the other methods.  However, UCA with split background yields almost complete separability compared with the stack background result, demonstrating the additional leverage when we treat each background separately.
-We note that this problem isn't easily separable by using cPCA++, rPCA, and cPCA with a variety of contrastive parameter and the results are generally worse than figure \ref{fig:MouseSplitStack} (see figure \ref{fig:mouse_stack_cpca} in the Appendix). 
-
-%We also note that the choice of background is crucial and that not some backgrounds are unsuitable... using control instead leads to bad results?
-% extension by multiple targets? Dave says that you can just maximize the one with the smallest variability.
-
-\begin{figure}[t]
+\begin{figure}[th!]
     \centering
-	\includegraphics[width = 1.0\textwidth]{figure/Mouse_split_stack_Ts65Dn.png}
-	\caption{Mouse Protein Expression : Separability of saline injected mice which were shocked. Separating Down Syndrome and control mice is more difficult in this case when only using a single background dataset. UCA with every combination of background (in parenthesis) represents the best case sceario for cPCA, and cannot separate between Down Syndrome and control mice. However, when combining information from all backgrounds via stacking, UCA improves the separation. Note that cPCA++ and rPCA both have difficulty even when leveraging the same stacked background.  When treating each background separately, UCA improves on the stacking results.}
+	\includegraphics[width = 0.9\textwidth]{figure/Mouse_split_stack_Ts65Dn.png}
+    \caption{Mouse Protein Expression : Separability of context shocked (C/S) and saline injected mice. Separating Down Syndrome and control mice is more difficult in this case when only using a single background dataset. UCA with every combination of background (in parenthesis), which represents cPCA under the best case scenario, ncannot separate between Down Syndrome and control mice. However, when combining information from all backgrounds via stacking (Stack All), UCA improves the separation. Note that cPCA++ and rPCA both have difficulty even when leveraging the same stacked (Stack All) background.  When treating each background separately, UCA improves on the stacking results.}
 	    \label{fig:MouseSplitStack}
 \end{figure}
+A more challenging problem for cPCA and it's variants is separating Down Syndrome and control mice when mice receive both saline and shock therapy.
+In figure \ref{fig:MouseSplitStack} we show the results of PCA, cPCA++, rPCA, and UCA with a variety of backgrounds (shown in parenthesis): memantine injected mice with Down Syndrome that were shocked (Mem-C/S-Ts65Dn), memantine injected mice with Down Syndrome that were not shocked (Mem-S/C-Ts65Dn), saline injected mice with Down Syndrome that were not shocked (Saline-S/C-Ts65Dn), all of the aforementioned backgrounds stacked before forming their joint covariance matrix (Stack All), and aforementioned backgrounds treated as separate backgrounds simultaneously (Split All). 
+Here, we use UCA as a best case proxy for cPCA.  We note that under the shock therapy condition, cPCA with other values of the contrastive parameter result in worse separability than figure \ref{fig:MouseSplitStack} (see figure \ref{fig:mouse_stack_cpca} in the Appendix). 
+
+Similar to the singe background situation above, PCA is unable to distinguish between control and Down Syndrome mice.
+In contrast, UCA with a single background (Mem-C/S-Ts65Dn, Mem-S/C-Ts65Dn, Saline-S/C-Ts65Dn) also fails to distinguish between control and Down Syndrome mice.
+Combining multiple backgrounds improves the group separability. When combining the individual backgrounds to create the ``Stack All'' background, rPCA, cPCA++, and UCA significantly improve the separability between the two group, with UCA achieving the best separability.
+However, UCA demonstrates the additional leverage gained by individually contrasting each background simultaneously: UCA with the ``Split All'' background yields almost complete separability. 
+
+%We also note that the choice of background is crucial and that not some backgrounds are unsuitable... using control instead leads to bad results?
+
 
 
 %We show that our results match the cPCA results
@@ -164,39 +170,38 @@ We note that this problem isn't easily separable by using cPCA++, rPCA, and cPCA
 %residual PCA yields similar results.
 
 
-\subsection{Faces}
-We exemplify the advantages of the multiple background capabilities of UCA using the Karolinska Directed Emotional Faces (KDEF) \cite{Calvo2008}, which captured images of 7 emotions, 5 different perspectives, from 70 amateur actors in either a practice or final session.
-Here we construct an example demonstrating that using UCA with multiple backgrounds is superior to using a single background. 
-This is similar to a real world use-case of UCA where researchers may have targeted variation of interest, but also various control groups.
-For illustrative purposes, We focus on  uncover variation unique to the Disgust emotion after contaminating the data with Surprise and Angry emotions from the final session.
-In Figure \ref{fig:Faces}, we look at the top five eigenfaces produced by PCA, UCA with a single practice session background emotion of either Angry, Surprise, or an amalgamation of both Angry and Suprise (Stack), compared to cPCA++ with stacked background and UCA with dual practice session backgrounds of Angry and Suprised (Split). 
-% Since UCA represents the best case, we did not compare to different values of contrastive tuning parameter alpha
-
-% some conclusions about the image
-
-With PCA, eigenfaces represent faces that appear mostly angry.  
-UCA with only Surprise practice faces as the background is dominated by surprise faces.
-UCA with only Angry practice faces as the background contains a mixture of surprise (2) and disgust (1,4,5) faces.
-When UCA has both Surprise and Angry in the background, we see that features of digust are highlighted in the first two eigenfaces
-However, when using the joint covariance of Surprise and Angry as the background, features of disgust are pushed until the 3rd eigenface. The 2nd eigenface here closely resembles that from the 3rd eigenface of Split, and the third eigenface closely resembles the 2nd eigenface from split.
-
-Using cPCA++ with the stacked background, I'm not sure what we get. it looks pretty bad.
-
-
-To better see the differences between the eigenfaces, we project the faces onto the first two components found and color the points by emotional class in figure \ref{fig:Face_Projections}.
-
+\subsection{Separating Emotional Features with Karolinska Directed Emotional Faces}
 \begin{figure}[!th]
     \centering
-	\includegraphics[width = 0.93\textwidth]{figure/F_Surprise_Angry_Disgust.png}
-	\caption{First Five Eigenfaces of Surprise, Angry, and Disgust emotions from the Female Actors from Karolinska Directed Emotional Faces (KDEF) \cite{Calvo2008}. Target data is sus/ans/dis }
+	\includegraphics[width = 0.78\textwidth]{figure/F_Surprise_Angry_Disgust_1.png}
+    \caption{Eigenfaces of Surprise (SUS), Angry (ANS), and Disgust (DIS) emotions from the Female Actors from KDEF \cite{Calvo2008}. ``Emotion'' row contains final session DIS eigenfaces. PCA eigenfaces describe general emotional faces of SUS, ANS, and DIS, whereas UCA with only SUS background exhibits features of both ANS and DIS. UCA with only ANS as background exhibits features of both SUS and DIS. Combining backgrounds SUS and ANS in the Split manner better highlight the nasolabial fold and the eyebrows, features unique to DIS, but not as prominent in SUS or ANS. Combining SUS and ANS in the Stacking manner using UCA does not achieve similar results.}
 	    \label{fig:Faces}
 \end{figure}
 \begin{figure}[!th]
     \centering
-	\includegraphics[width = 0.93\textwidth]{figure/F_Surprise_Angry_Disgust_projected.png}
-	\caption{Eigenfaces projected onto the first two components found by PCA, cPCA++, UCA using Surprise (SUS) as the background, UCA using Angry (ANS) faces as the background, UCA using both Surprise and Angry as the background treated separately (Split), UCA using the joint covariance of Surprise and Split (Stack) as the background}
+	\includegraphics[width = 0.9\textwidth]{figure/F_Surprise_Angry_Disgust_projected.png}
+    \caption{Eigenfaces projected onto the first two components found by PCA, cPCA++, UCA using Surprise (SUS) as the background, UCA using Angry (ANS) faces as the background, UCA using both Surprise and Angry as the background treated separately (Split), UCA using the joint covariance of Surprise and Split (Stack) as the background. UCA with Split background is capable of separating final session emotions whereas UCA with a single practice session background and both UCA and cPCA++ with stacked practice session backgrounds cannot produce the same separation.}
 	\label{fig:Face_Projections}
 \end{figure}
+We exemplify the advantages of the multiple background capabilities of UCA using the Karolinska Directed Emotional Faces (KDEF) \cite{Calvo2008}, which captured images of 7 emotions, 5 different perspectives, from 70 amateur actors in either a practice or final session.
+Here we construct an example demonstrating that using UCA with multiple backgrounds is superior to using a single background. 
+This is similar to a real world use-case of UCA where researchers may have targeted variation of interest, but also various control groups which may be used to remove known variability.
+For illustrative purposes, We focus on  uncover variation unique to the Disgust emotion after contaminating the data with Surprise and Angry emotions from the final session. 
+In Figure \ref{fig:Faces}, we look at the top five eigenfaces produced by PCA, UCA with a single practice session background emotion of either Angry, Surprise, or an amalgamation of both Angry and Suprise (Stack), compared to cPCA++ with stacked background and UCA with dual practice session backgrounds of Angry and Suprised (Split). 
+% Since UCA represents the best case, we did not compare to different values of contrastive tuning parameter alpha
+
+% some conclusions about the image
+PCA eigenfaces generally represent faces of all the emotions and does not highlighting features specifically to any individual emotion.
+UCA with only Surprise (SUS) practice faces as the background is dominated by features unique to Angry faces, whereas UCA with only Angry (ANS) practice faces as the background contains a mixture of surprise and disgust emotional features.
+Using both Surprise and Angry practice faces in the background in either Split or Stack better highlights emotional features of Disgust better than using a single background emotion.
+When UCA has both Surprise and Angry in the background (Split), we see that eyebrows and nasolabial folds, features unique to digust, are more pronounced compared to using the joint covariance of Surprise and Angry as the background, where features of disgust are pushed to the third eigenface. The second eigenface of Stack closely resembles the third eigenface of Split, and the third eigenface closely resembles the 2nd eigenface from split.
+% cPCA++ with the stacked background does not share the same features highlighted by using UCA with both practice emotions as the background in either the split or stack framework.
+
+To better see the differences between the eigenfaces, we project the faces onto the first two components found and color the points by emotional class in figure \ref{fig:Face_Projections}.
+% Here it is clear that cPCA++ does not yield any advantage in emotional class separation over PCA and UCA.
+We can see that under the Split framework unique to UCA, we can actually separate each emotional face in the final session using the first two component, which cannot be accomplished when only using a single background, or combining multiple background data to produce a single joint covariance matrix.
+
+Other face combinations show either similar or better separation when treating backgrounds separately, rather than stacking them to form a joint covariance matrix.
 
 %\begin{figure}[!ht]
 %    \label{fig:Diff_faces}
@@ -222,10 +227,16 @@ To better see the differences between the eigenfaces, we project the faces onto 
 %\end{figure}
 
 \section{Discussion}
-In many data analytics settings we are interested in removing uninteresting variation that contaminate the data of interest
+In many data analytics settings we are interested in removing uninteresting variation that contaminate the data of interest.
 We propose an update to the original cPCA framework, UCA, by extending contrastive abilities to multiple background data. To do this, we first solved the tuning parameter problem which plague current methods. UCA does not require user input in selecting the best contrastive parameter, rather it works by maximizing the target data variability subject to keeping the variability in each background small using weak duality of Lagrangians. Furthermore, we reformulate the contrastive problem to avoid creating several $p \times p$ covariance matrices, enabling us to perform contrastive analysis in high-dimensions.
 
-We show that UCA performs adequately as compared to cPCA, cPCA++, and rPCA in the easily separable case within the mouse data. We then presented a less separable case with the mouse data, in which cPCA, cPCA++, and rPCA fail to do an adequate job in separating Down Syndrome and control mice.  We then showed how leveraging multiple backgrounds allows us to better separate Down Syndrome and control mice than each individual background dataset and simply stacking the individual datasets together. Lastly, we demonstrate how UCA can be used at highlighting emotions in eigenfaces and show that we can construct an example where stacking individual background data can cause cPCA to fail.
+We show that UCA is consistent with existing methods in the easily separable case within the mouse data. We then presented a less separable case with the mouse data, in which cPCA, cPCA++, and rPCA fail to do an adequate job in separating Down Syndrome and control mice for any choice of tuning parameter, where applicable.
+We showed that simply stacking individual background datasets can leverage multiple backgrounds to improve the single background separation between Down Syndrome and control mice.
+However, using the multiple background framework provided by UCA achieves even better results than stacking individual background datasets. 
+Lastly, we demonstrate how UCA can be used to highlight emotions in eigenfaces by natively handling multiple backgrounds, which cannot be replicated by cPCA and UCA under the stacking framework. 
+
+Like cPCA, the choice of background still plays a pivotal role in the directions found by UCA. UCA only finds the optimal contrastive parameter using Lagrange Multipliers and does not remedy a poor background choice.
+We have released the code for UCA as an R package, along with documentation and examples.
 
 
 %cPCA++ isn't all that impressive
@@ -362,6 +373,13 @@ to solve for the each of the $m$ Lagrange Multipliers we use Algorithm \ref{alg:
 The advantage to the Lagrangian method in the multiple background setting is that rather than constructing an aggregated covariance matrix by stacking data, which arbitrarily weighs covariance matrices by their sample size, our method objectively constructs weights which satisfy the constraint $ v^TB_jv\leq 1$ for each $m$ background covariance matrix. If multiple backgrounds contain the same information, constructing the covariance matrix by stacking data will change the covariance by a factor less than 1, e.g. if two backgrounds, the covariance changes by $\frac{2}{2n - 1}$.  If only one covariance matrix will constrain the Lagrangian, the corresponding Lagrange Multiplier will be non-zero and Lagrange Multipliers corresponding to all other redundant constraints on the Lagrangian are set to zero.  
 
 \subsection{Extension to High Dimensional Data:}
+\begin{figure}[!ht]
+    \label{fig:computational_perf}
+    \centering
+	\includegraphics[width = 0.8\textwidth]{figure/final_perf.png}
+	\caption{UCA and cPCA implementation using Product SVD vs. Eigen decomposition for high-dimensional data: 25 random $100 \times p $ target and background matrices are generated from a standard normal distribution and where $p$, the dimension varied from 1,000 to 10,000 in steps of 1,000. Box plots of time (in seconds) is plotted for both Eigen decomposition and the product SVD method. For small $p$, there is a negligible difference between the methods. However, as dimension $p$ increases, the Product SVD is significantly faster.}
+\end{figure}
+
 To extend our method to high-dimensional data, we avoid the traditional Eigen decomposition method of finding eigenvalue/eigenvectors of the covariance matrix. Just like how singular-value decomposition (SVD) of the data matrix can be used to find the top eigenvalue/eigenvectors of it's covariance, we introduce the Product SVD method to exploit the structure of how the contrastive covariance matrices are formed and employ SVD of a product of matrices to quickly find our top eigenvalue.  Breaking the problem down in this way considerably speeds up our L-BFGS-B algorithm, and allows us to run UCA even in the high-dimensional setting.
 
 For a single background, let the $p \times p$ covariance matrices $A$ be the target covariance matrix and $B$ be the background covariance matrix. $A$ and $B$ are formed from corresponding centered $n_y \times p$ target data matrix $Y$,   and centered $n_x \times p$ background data matrix $X$.  We can write the difference of the covariance matrices $A - \lambda B$ as a product of a $p \times (n_y + n_x)$ dimensional left matrix , $L$, and a $(n_y + n_x) \times p$ dimensional right matrix, $R$ as seen in equation \ref{eq:7}:
@@ -373,7 +391,7 @@ C_\lambda &= A - \lambda B \nonumber\\
 With this formulation, we can follow the steps in Golub et al.  \cite{Golub}, and find the singular values and vectors of $C_\lambda$ using a sequence of SVD and QR decompositions operating on the left and right matrices. Since singular values and eigenvalues coincide in square matrices, we use the singular vectors, $U$, to find the largest eigenvalues by sorting the diagonal of $ULRU^T$.  
 We describe the Product SVD Method in algorithm \ref{algo:product-svd}, which can directly replace the eigen decomposition in the single background UCA (Algorithm \ref{alg:uca-single}).
 
-\begin{algorithm}[h]
+\begin{algorithm}[ht]
 \label{algo:product-svd}
 \caption{Product SVD Method to calculate the largest Eigenvalue of $C_\lambda$}
 \SetAlgoLined
@@ -405,13 +423,6 @@ Similarly, in the multi-background scenario, rather than modifying $A^*$ in the 
  
 To demonstrate the speed improvements of the Product SVD method compared to the current fastest implementations of Eigen decomposition in high-dimensions, we conduct a simulation study with 25 sample $100 \times p$ target and background data matrices generated from a standard Normal distribution with $p$ varying from 1.000 to 10,000 in steps of 1,000. To ensure a fair comparison, we leverage C++ in both implementations using a custom RcppArmadillo \cite{rcpparmadillo} function for the Product SVD method and the RSpectra package (0.16-0) \cite{Rspectra} for the Eigen decomposition method; RSpectra being a package designed for large-scale Eigen decompositions based off the C++ Spectra library. We use the microbenchmark package \cite{microbenchmark} to ensure accurate timings. Our benchmark does not take into account the additional cost of forming the $p\times p$ covariance matrices, which would only exacerbate the difference between the two methods in real world applications.
 
-\begin{figure}[!ht]
-    \label{fig:computational_perf}
-    \centering
-	\includegraphics[width = 0.8\textwidth]{figure/final_perf.png}
-	\caption{UCA and cPCA implementation using Product SVD vs. Eigen decomposition for high-dimensional data: 25 random $100 \times p $ target and background matrices are generated from a standard normal distribution and where $p$, the dimension varied from 1,000 to 10,000 in steps of 1,000. Box plots of time (in seconds) is plotted for both Eigen decomposition and the product SVD method. For small $p$, there is a negligible difference between the methods. However, as dimension $p$ increases, the Product SVD is significantly faster.}
-\end{figure}
-
 Figure \ref{fig:computational_perf} show box plots of time (in seconds) versus the dimension, $p$, colored by method, summarizes the results of the simulation study. As dimension $p$ increases, the computational time of our Product SVD method increases much slower than the current Eigen decomposition implementations. It should be mentioned that for $p < 1000$ the Product SVD method is slower due to overhead of additional computation on small matrices. In general, for low-dimensional settings where $n \geq p$, the Product SVD will be negligibly slower because of the additional QR, SVD, matrix products, and sort computations. 
 
  %More concretely, an UCA analysis of a target $3400\times 3400$ dimensional covariance matrix with two backgrounds requires 88 MB of storage for each of the three covariance matrices formed, compared to 1.8 MB for each data matrix.  Assuming these matrices have all been pre-calculated, using a RSpectra implementation of eigendecomposition, UCA takes 93 seconds vs. 9 seconds with our method.
@@ -427,10 +438,8 @@ Figure \ref{fig:computational_perf} show box plots of time (in seconds) versus t
  \subsection{Data availability}
  Datasets that have been used to evaluate UCA in this paper are publicly available from the authors of the original studies. You can download the mouse protein expression dataset from the \href{https://archive.ics.uci.edu/ml/datasets/Mice+Protein+Expression}{UCI Machine Learning Repository} \cite{Higuera} and the Karolinska Directed Emotional Faces (KDEF) from \href{https://kdef.se/}{kdef} website  \cite{Calvo2008}.
  
-\newpage
 \bibliography{mybib}{}
 \bibliographystyle{plain}
-\newpage
 \section{Appendix}
 \begin{figure}[!ht]
     \centering
