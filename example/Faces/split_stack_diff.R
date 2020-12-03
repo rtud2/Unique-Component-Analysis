@@ -1,12 +1,13 @@
 rm(list = ls())
 Sys.setenv(MKL_DEBUG_CPU_TYPE=5)#, MKL_VERBOSE=1) #intel MKL settings. latter to hack amd processors
 #setwd("/mnt/d/Residual-Dimension-Reduction")
-setwd("D:/Residual-Dimension-Reduction/")
+setwd("~/Desktop/Residual-Dimension-Reduction")
+# setwd("D:/Residual-Dimension-Reduction/")
 #install.packages("uca_0.13.zip", repos = NULL, type="source")
-#install.packages("uca_0.13.tar.gz",type="source", repos = NULL) 
-libraries <- c("data.table", "MASS", "ggplot2", "splines","gridExtra", "uca", "imager", "future", "RSpectra", "microbenchmark", "Rfast")
+#install.packages("uca_0.13.tar.gz", type="source", repos = NULL) 
+libraries <- c("data.table", "MASS", "ggplot2", "splines", "gridExtra", "uca", "imager", "future", "RSpectra", "microbenchmark", "Rfast")
 invisible(lapply(libraries, library, character.only = T))
-plan(multiprocess)
+plan(tweak(multicore, workers = 8L))
 
 ## Helper functions 
 source("functions/helper_functions.R")
@@ -14,14 +15,14 @@ kdef <- "faces/KDEF_and_AKDEF/KDEF/"
 kdef_A <- "faces/KDEF_and_AKDEF/A_kdef_files/"
 
 # Practice Emotions
-sus_pract_files <- paste0(kdef_A, sapply(list.files(kdef_A), function(zz) paste0(zz,"/",zz,"SUS.JPG")))
-sas_pract_files <- paste0(kdef_A, sapply(list.files(kdef_A), function(zz) paste0(zz,"/",zz,"SAS.JPG")))
-nes_pract_files <- paste0(kdef_A, sapply(list.files(kdef_A), function(zz) paste0(zz,"/",zz,"NES.JPG")))
-dis_pract_files <- paste0(kdef_A, sapply(list.files(kdef_A), function(zz) paste0(zz,"/",zz,"DIS.JPG")))
-ans_pract_files <- paste0(kdef_A, sapply(list.files(kdef_A), function(zz) paste0(zz,"/",zz,"ANS.JPG")))
-has_pract_files <- paste0(kdef_A, sapply(list.files(kdef_A), function(zz) paste0(zz,"/",zz,"HAS.JPG")))
+sus_pract_files <- paste0(kdef_A, sapply(list.files(kdef_A), function(zz) paste0(zz, "/", zz, "SUS.JPG")))
+sas_pract_files <- paste0(kdef_A, sapply(list.files(kdef_A), function(zz) paste0(zz, "/", zz, "SAS.JPG")))
+nes_pract_files <- paste0(kdef_A, sapply(list.files(kdef_A), function(zz) paste0(zz, "/", zz, "NES.JPG")))
+dis_pract_files <- paste0(kdef_A, sapply(list.files(kdef_A), function(zz) paste0(zz, "/", zz, "DIS.JPG")))
+ans_pract_files <- paste0(kdef_A, sapply(list.files(kdef_A), function(zz) paste0(zz, "/", zz, "ANS.JPG")))
+has_pract_files <- paste0(kdef_A, sapply(list.files(kdef_A), function(zz) paste0(zz, "/", zz, "HAS.JPG")))
 
-practice_list <- list(sus_pract_files, has_pract_files,sas_pract_files,nes_pract_files,dis_pract_files,ans_pract_files)
+practice_list <- list(sus_pract_files, has_pract_files, sas_pract_files, nes_pract_files, dis_pract_files, ans_pract_files)
 
 # practice_male_list <- lapply(practice_list, function(zz){grep(pattern = "AM", x = zz, value = T)})
 # male_emotion_list %<-% lapply(practice_male_list, function(x) readImage(x, 50, 68))
@@ -31,14 +32,14 @@ female_emotion_list %<-% lapply(practice_female_list, function(x) readImage(x, 5
 female_emotion_list <- lapply(female_emotion_list, transpose)
 
 # Final Emotions
-sus_final_files <- paste0(kdef, sapply(list.files(kdef), function(zz) paste0(zz,"/",zz,"SUS.JPG")))
-has_final_files <- paste0(kdef, sapply(list.files(kdef), function(zz) paste0(zz,"/",zz,"HAS.JPG")))
-sas_final_files <- paste0(kdef, sapply(list.files(kdef), function(zz) paste0(zz,"/",zz,"SAS.JPG")))
-nes_final_files <- paste0(kdef, sapply(list.files(kdef), function(zz) paste0(zz,"/",zz,"NES.JPG")))
-dis_final_files <- paste0(kdef, sapply(list.files(kdef), function(zz) paste0(zz,"/",zz,"DIS.JPG")))
-ans_final_files <- paste0(kdef, sapply(list.files(kdef), function(zz) paste0(zz,"/",zz,"ANS.JPG")))
+sus_final_files <- paste0(kdef, sapply(list.files(kdef), function(zz) paste0(zz, "/", zz, "SUS.JPG")))
+has_final_files <- paste0(kdef, sapply(list.files(kdef), function(zz) paste0(zz, "/", zz, "HAS.JPG")))
+sas_final_files <- paste0(kdef, sapply(list.files(kdef), function(zz) paste0(zz, "/", zz, "SAS.JPG")))
+nes_final_files <- paste0(kdef, sapply(list.files(kdef), function(zz) paste0(zz, "/", zz, "NES.JPG")))
+dis_final_files <- paste0(kdef, sapply(list.files(kdef), function(zz) paste0(zz, "/", zz, "DIS.JPG")))
+ans_final_files <- paste0(kdef, sapply(list.files(kdef), function(zz) paste0(zz, "/", zz, "ANS.JPG")))
 
-final_list <- list(sus_final_files, has_final_files,sas_final_files,nes_final_files,dis_final_files,ans_final_files)
+final_list <- list(sus_final_files, has_final_files, sas_final_files, nes_final_files, dis_final_files, ans_final_files)
 
 # final_male_list <- lapply(final_list, function(zz){grep(pattern = "AM", x = zz, value = T)})
 # final_male_emotion_list %<-% lapply(final_male_list, function(x) readImage(x, 50, 68))
@@ -51,7 +52,7 @@ final_female_emotion_list <- lapply(final_female_emotion_list, transpose)
 
 var_sim <- function(d1, d2){
   # similarity between the stack and split matrices that make up the stack
-  stk <- scale(rbind(d1,d2))
+  stk <- scale(rbind(d1, d2))
   cov_stk <- cov(stk)
   cov_d1 <- cov(scale(d1))
   cov_d2 <- cov(scale(d2))
@@ -65,7 +66,7 @@ var_sim <- function(d1, d2){
 
 inner_prod_sim <- function(d1, d2){
   # similarity between the stack and split matrices that make up the stack
-  stk <- scale(rbind(d1,d2))
+  stk <- scale(rbind(d1, d2))
   cov_stk <- cov(stk)
   cov_d1 <- cov(scale(d1))
   cov_d2 <- cov(scale(d2))
@@ -96,14 +97,14 @@ comparison_num <- do.call(rbind,
         list(f_dis_comparison)))
 
 comparison_labs <- cbind(c(rep("sus", 5), rep("has", 4), rep("sas", 3), rep("nes", 2), "ans"),
-      c("has","sas","nes","ans","dis",
-        "sas","nes","ans","dis",
-        "nes","ans","dis",
-        "ans","dis",
+      c("has", "sas", "nes", "ans", "dis",
+        "sas", "nes", "ans", "dis",
+        "nes", "ans", "dis",
+        "ans", "dis",
         "dis"))
 
 background_var <- data.table(comparison_labs, comparison_num)
-setnames(background_var, c("bg1","bg2","Stack_var","bg1_var", "bg2_var"))
+setnames(background_var, c("bg1", "bg2", "Stack_var", "bg1_var", "bg2_var"))
 
 background_var[Stack_var > 0.5*(bg1_var +  bg2_var)]
 background_var[, diff := abs(bg1_var - bg2_var)] #if diff is large means stack is overrun by one group
@@ -132,15 +133,15 @@ inner_num <- do.call(rbind,
         list(f_dis_inner)))
 
 inner_labs <- cbind(c(rep("sus", 5), rep("has", 4), rep("sas", 3), rep("nes", 2), "ans"),
-      c("has","sas","nes","ans","dis",
-        "sas","nes","ans","dis",
-        "nes","ans","dis",
-        "ans","dis",
+      c("has", "sas", "nes", "ans", "dis",
+        "sas", "nes", "ans", "dis",
+        "nes", "ans", "dis",
+        "ans", "dis",
         "dis"))
 
 background_inner <- data.table(inner_labs, inner_num)
-setnames(background_inner, c("bg1","bg2","Stack_1","Stack_2", "bg1_bg2"))
-max_inner <- background_inner[, .(max = max(Stack_1, Stack_2, bg1_bg2)), by = c("bg1","bg2")]
+setnames(background_inner, c("bg1", "bg2", "Stack_1", "Stack_2", "bg1_bg2"))
+max_inner <- background_inner[, .(max = max(Stack_1, Stack_2, bg1_bg2)), by = c("bg1", "bg2")]
 head(max_inner[order(max)])
 # bg1 bg2       max
 # 1: sus ans 0.9691885
@@ -162,7 +163,7 @@ background_inner[order(bg1_bg2)]
 targ_var_sim <- function(targ, d1, d2){
   # similarity between the stack and split matrices that make up the stack
   # to the target data
-  stk <- scale(rbind(d1,d2))
+  stk <- scale(rbind(d1, d2))
   cov_stk <- cov(stk)
   cov_d1 <- cov(scale(d1))
   cov_d2 <- cov(scale(d2))
@@ -177,7 +178,7 @@ targ_var_sim <- function(targ, d1, d2){
 }
 targ_inner_prod_sim <- function(targ, d1, d2){
   # similarity between the stack and split matrices that make up the stack
-  stk <- scale(rbind(d1,d2))
+  stk <- scale(rbind(d1, d2))
   cov_stk <- cov(stk)
   cov_d1 <- cov(scale(d1))
   cov_d2 <- cov(scale(d2))
@@ -195,11 +196,11 @@ targ_inner_prod_sim <- function(targ, d1, d2){
 }
 
 #sus ans
-#order: has,sas,nes,dis,ans
-sus_ans <- do.call(rbind, lapply(final_female_emotion_list[c(-1,-6)],
+#order: has, sas, nes, dis, ans
+sus_ans <- do.call(rbind, lapply(final_female_emotion_list[c(-1, -6)],
        function(zz){ targ_inner_prod_sim(zz, female_emotion_list[[1]], female_emotion_list[[6]])}))
-sus_ans_inner <- data.table(c("HAS","SAS","NES","DIS") , sus_ans)
-setnames(sus_ans_inner, c("Target","Inner_Stack","Inner_1","Inner_2"))
+sus_ans_inner <- data.table(c("HAS", "SAS", "NES", "DIS") , sus_ans)
+setnames(sus_ans_inner, c("Target", "Inner_Stack", "Inner_1", "Inner_2"))
 # Target Inner_Stack   Inner_1   Inner_2
 # 1:    HAS   0.9565713 0.9435381 0.9333191
 # 2:    SAS   0.9538911 0.9236241 0.9466494
@@ -207,11 +208,11 @@ setnames(sus_ans_inner, c("Target","Inner_Stack","Inner_1","Inner_2"))
 # 4:    DIS   0.9518510 0.9151435 0.9597355
 
 # nes ans 
-#order: sus,has,sas,dis
-nes_ans <- do.call(rbind, lapply(final_female_emotion_list[c(-4,-6)],
+#order: sus, has, sas, dis
+nes_ans <- do.call(rbind, lapply(final_female_emotion_list[c(-4, -6)],
        function(zz){ targ_inner_prod_sim(zz, female_emotion_list[[4]], female_emotion_list[[6]])}))
-nes_ans_inner <- data.table(c("SUS","HAS","SAS","DIS") , sus_ans)
-setnames(nes_ans_inner, c("Target","Inner_Stack","Inner_1","Inner_2"))
+nes_ans_inner <- data.table(c("SUS", "HAS", "SAS", "DIS") , sus_ans)
+setnames(nes_ans_inner, c("Target", "Inner_Stack", "Inner_1", "Inner_2"))
 # Target Inner_Stack   Inner_1   Inner_2
 # 1:    SUS   0.9565713 0.9435381 0.9333191
 # 2:    HAS   0.9538911 0.9236241 0.9466494
@@ -219,11 +220,11 @@ setnames(nes_ans_inner, c("Target","Inner_Stack","Inner_1","Inner_2"))
 # 4:    DIS   0.9518510 0.9151435 0.9597355
 
 # nes dis 
-#order: sus,has,sas,ans
-nes_dis <- do.call(rbind, lapply(final_female_emotion_list[c(-4,-5)],
+#order: sus, has, sas, ans
+nes_dis <- do.call(rbind, lapply(final_female_emotion_list[c(-4, -5)],
        function(zz){ targ_inner_prod_sim(zz, female_emotion_list[[4]], female_emotion_list[[5]])}))
-nes_dis_inner <- data.table(c("SUS","HAS","SAS","ANS") , sus_ans)
-setnames(nes_dis_inner, c("Target","Inner_Stack","Inner_1","Inner_2"))
+nes_dis_inner <- data.table(c("SUS", "HAS", "SAS", "ANS") , sus_ans)
+setnames(nes_dis_inner, c("Target", "Inner_Stack", "Inner_1", "Inner_2"))
 # Target Inner_Stack   Inner_1   Inner_2
 # 1:    SUS   0.9565713 0.9435381 0.9333191
 # 2:    HAS   0.9538911 0.9236241 0.9466494
@@ -231,8 +232,8 @@ setnames(nes_dis_inner, c("Target","Inner_Stack","Inner_1","Inner_2"))
 # 4:    ANS   0.9518510 0.9151435 0.9597355
 
 #sus dis
-f_sus_dis <- do.call(rbind, final_female_emotion_list[c(1,5)])
-f_not_sus_dis <- final_female_emotion_list[-c(1,5)]
+f_sus_dis <- do.call(rbind, final_female_emotion_list[c(1, 5)])
+f_not_sus_dis <- final_female_emotion_list[-c(1, 5)]
 
 f_not_sus_dis_cat <- lapply(f_not_sus_dis, function(zz){rbind(f_sus_dis, zz)})
 
@@ -240,11 +241,11 @@ sus_dis %<-% lapply(f_not_sus_dis_cat,
                   function(z) targ_var_sim(targ = z,
                                            d1 = female_emotion_list[[1]],
                                            d2 = female_emotion_list[[5]]))
-#order idx: has,sas,nes,ans
+#order idx: has, sas, nes, ans
 
 #sus sas
-f_sus_sas <- do.call(rbind, final_female_emotion_list[c(1,3)])
-f_not_sus_sas <- final_female_emotion_list[-c(1,3)]
+f_sus_sas <- do.call(rbind, final_female_emotion_list[c(1, 3)])
+f_not_sus_sas <- final_female_emotion_list[-c(1, 3)]
 
 f_not_sus_sas_cat <- lapply(f_not_sus_sas, function(zz){rbind(f_sus_sas, zz)})
 
@@ -252,11 +253,11 @@ sus_sas %<-% lapply(f_not_sus_sas_cat,
                   function(z) targ_var_sim(targ = z,
                                            d1 = female_emotion_list[[1]],
                                            d2 = female_emotion_list[[3]]))
-#order idx: has,nes,dis,ans
+#order idx: has, nes, dis, ans
 
 #nes dis
-f_nes_dis <- do.call(rbind, final_female_emotion_list[c(4,5)])
-f_not_nes_dis <- final_female_emotion_list[-c(4,5)]
+f_nes_dis <- do.call(rbind, final_female_emotion_list[c(4, 5)])
+f_not_nes_dis <- final_female_emotion_list[-c(4, 5)]
 
 f_not_nes_dis_cat <- lapply(f_not_nes_dis, function(zz){rbind(f_nes_dis, zz)})
 
@@ -265,16 +266,16 @@ nes_dis %<-% lapply(f_not_nes_dis_cat,
                                            d1 = female_emotion_list[[4]],
                                            d2 = female_emotion_list[[5]]))
 
-#order idx: sus,has,sas,ans
+#order idx: sus, has, sas, ans
 
 comparison_target <- rbind(
-data.table(c("has","sas","nes","ans"),"sus_dis", do.call(rbind, sus_dis)),
-data.table(c("has","sas","nes","ans"),"sus_sas", do.call(rbind, sus_sas)),
-data.table(c("sus","has","sas","ans"),"nes_dis", do.call(rbind, nes_dis)))
+data.table(c("has", "sas", "nes", "ans"), "sus_dis", do.call(rbind, sus_dis)),
+data.table(c("has", "sas", "nes", "ans"), "sus_sas", do.call(rbind, sus_sas)),
+data.table(c("sus", "has", "sas", "ans"), "nes_dis", do.call(rbind, nes_dis)))
 
-setnames(comparison_target, c("Target","Background", "Target.Variation", "Stack.Variation","Bg1.Variation","Bg2.Variation"))
+setnames(comparison_target, c("Target", "Background", "Target.Variation", "Stack.Variation", "Bg1.Variation", "Bg2.Variation"))
 
-comparison_target[,.SD, keyby = c("Background","Target.Variation")]
+comparison_target[, .SD, keyby = c("Background", "Target.Variation")]
 # Background Target.Variation Target Stack.Variation Bg1.Variation Bg2.Variation
 # 1:    nes_dis         702.5117    ans        793.3335      855.7559      814.1901
 # 2:    nes_dis         745.8252    sas        793.3335      855.7559      814.1901
@@ -293,25 +294,25 @@ comparison_target[,.SD, keyby = c("Background","Target.Variation")]
 #
 
 # combos that stack does the worst in target, but also washes out one of the signals
-# final_list <- list(sus_final_files, has_final_files,sas_final_files,nes_final_files,dis_final_files,ans_final_files)
-# practice_list <- list(sus_pract_files, has_pract_files,sas_pract_files,nes_pract_files,dis_pract_files,ans_pract_files)
+# final_list <- list(sus_final_files, has_final_files, sas_final_files, nes_final_files, dis_final_files, ans_final_files)
+# practice_list <- list(sus_pract_files, has_pract_files, sas_pract_files, nes_pract_files, dis_pract_files, ans_pract_files)
 
 
 getFaceProjection=function(idx1, idx2){
-  emo_names <- c("SUS","HAS", "SAS", "NES", "DIS","ANS")
+  emo_names <- c("SUS", "HAS", "SAS", "NES", "DIS", "ANS")
   # function to cat class names onto output...
-  bg_idx <- c(idx1,idx2)
-  class_names = lapply(emo_names[-bg_idx], function(others){rep(c(others,emo_names[bg_idx]), each = 35)})  
+  bg_idx <- c(idx1, idx2)
+  class_names = lapply(emo_names[-bg_idx], function(others){rep(c(others, emo_names[bg_idx]), each = 35)})  
   
-  uca_bg1_bg2 <- lapply(final_female_emotion_list[-c(idx1,idx2)], function(targ){
-    tmp_targ <- scale(do.call(rbind, c(list(targ), final_female_emotion_list[c(idx1,idx2)] )))
+  uca_bg1_bg2 <- lapply(final_female_emotion_list[-c(idx1, idx2)], function(targ){
+    tmp_targ <- scale(do.call(rbind, c(list(targ), final_female_emotion_list[c(idx1, idx2)] )))
     tmp_bg1 <- scale(female_emotion_list[[idx1]])
     tmp_bg2 <- scale(female_emotion_list[[idx2]])
-    tmp_stack <- scale(do.call(rbind, female_emotion_list[c(idx1,idx2)]))
+    tmp_stack <- scale(do.call(rbind, female_emotion_list[c(idx1, idx2)]))
     cov_tmp_stack <- cov(tmp_stack)
     diag(cov_tmp_stack) <- diag(cov_tmp_stack) + 1e-3
     
-    targ_pca <- eigs_sym(cov(scale(targ)), k = 5, which = "LA")$vectors
+    targ_pca <- -eigs_sym(cov(scale(targ)), k = 5, which = "LA")$vectors
     
     tmp_pca <- eigs_sym(cov(tmp_targ), k = 5, which = "LA")$vectors
     #tmp_cpcapp <- eigs_sym(solve(cov_tmp_stack) %*% cov(tmp_targ), k = 5 , which = "LA")$vectors
@@ -325,7 +326,7 @@ getFaceProjection=function(idx1, idx2){
     
     out <- list(tmp_pca,
                 #tmp_cpcapp,
-                uca_bg1, uca_bg2,uca_bg12_stk,uca_bg12 )
+                uca_bg1, uca_bg2, uca_bg12_stk, uca_bg12 )
     out <- lapply(out, function(mat) pos_corr(mat, targ_pca))
     
     projections <- do.call(rbind, lapply(seq_along(out), function(vec) data.table(tmp_targ %*% out[[vec]],
@@ -333,7 +334,7 @@ getFaceProjection=function(idx1, idx2){
     
     out_method <- c("Emotion", out_method)
     out <- c(list(targ_pca), out) # combine the target emotion PCA by itself
-    out <- data.table(do.call(rbind, out), "method" = factor(rep(out_method, each = 3400),out_method))
+    out <- data.table(do.call(rbind, out), "method" = factor(rep(out_method, each = 3400), out_method))
     
     
     list(out, projections) 
@@ -341,64 +342,64 @@ getFaceProjection=function(idx1, idx2){
   uca_plot <- lapply(uca_bg1_bg2 , "[[", 1)
   uca_proj <- lapply(uca_bg1_bg2, "[[", 2) #stores the projected eigenfaces on to 2-dims
   uca_proj <- Map(cbind, uca_proj, class_names)
-  uca_proj <- lapply(uca_proj, function(dat) setnames(dat, c(paste0("PC",1:5), "Method","Class")))
+  uca_proj <- lapply(uca_proj, function(dat) setnames(dat, c(paste0("PC", 1:5), "Method", "Class")))
   list("Plot" = uca_plot, "Proj" = uca_proj) 
 }
 #final_female_emotion_list: 1. sus, 2. has, 3. sas, 4. nes, 5. dis, 6. ans
 
 #nes-dis
 # order: sus, has, sas, ans
-#background: female_emotion_list[c(4,5)] (NES,DIS)
-uca_nes_dis <- getFaceProjection(4,5)
+#background: female_emotion_list[c(4, 5)] (NES, DIS)
+uca_nes_dis <- getFaceProjection(4, 5)
 #sus-dis
 # order: has, sas, dis, ans
-#background: female_emotion_list[c(1,5)] (SUS,DIS)
-uca_sus_dis <- getFaceProjection(1,5)
+#background: female_emotion_list[c(1, 5)] (SUS, DIS)
+uca_sus_dis <- getFaceProjection(1, 5)
 
 #sus-sas
 # order: has, nes, dis, ans
-#background: female_emotion_list[c(1,3)] (SUS,SAS)
-uca_sus_sas <- getFaceProjection(1,3)
+#background: female_emotion_list[c(1, 3)] (SUS, SAS)
+uca_sus_sas <- getFaceProjection(1, 3)
 
 #ans-dis
 # order: sus, has, sas, nes
-#background: female_emotion_list[c(5,6)] (DIS,ANS)
-uca_ans_dis <- getFaceProjection(5,6)
+#background: female_emotion_list[c(5, 6)] (DIS, ANS)
+uca_ans_dis <- getFaceProjection(5, 6)
 
 #sus ans
-#list order: has,sas,nes,dis,ans
+#list order: has, sas, nes, dis, ans
 #within list order: PCA, cPCA++, SUS, ANS, Split, Stack
-uca_sus_ans <- getFaceProjection(1,6)
-# nes ans  (4,6)
-#order: sus,has,sas,dis
-#classes <- c("SUS","HAS","SAS","DIS")
-uca_nes_ans <- getFaceProjection(4,6)
+uca_sus_ans <- getFaceProjection(1, 6)
+# nes ans  (4, 6)
+#order: sus, has, sas, dis
+#classes <- c("SUS", "HAS", "SAS", "DIS")
+uca_nes_ans <- getFaceProjection(4, 6)
 
 
 #plot the most contrastive...
 #ans_dis
 #list order: sus, has, sad, nes
 #within list order: PCA, cPCA++, ANS, DIS, Split, Stack
-ans_dis_emo_list <- c("Surprise","Happy","Sad","Neutral")
+ans_dis_emo_list <- c("Surprise", "Happy", "Sad", "Neutral")
 uca_ans_dis_plot <- uca_ans_dis[[1]]
 
 ans_dis_plot <- lapply(seq_along(uca_ans_dis_plot), function(idx){
-  do.call(rbind, lapply(uca_ans_dis_plot[[idx]][,unique(method)], function(inner){
+  do.call(rbind, lapply(uca_ans_dis_plot[[idx]][, unique(method)], function(inner){
     toEigenfaces(data.matrix(uca_ans_dis_plot[[idx]][method == inner, .SD, .SDcols = -"method"]), 50, 68, inner)}
     ))
   } )
 #plot eigenfaces
 lapply(seq_along(ans_dis_emo_list), function(zz){
-  plotEigenfaces2(ans_dis_plot[[zz]],"")   
-  ggsave(paste0("example/Faces/Angry_Disgust/F_Angry_Disgust_",ans_dis_emo_list[zz],".png"),  width = 8, height = 11, units = "in")
+  plotEigenfaces2(ans_dis_plot[[zz]], "")   
+  ggsave(paste0("example/Faces/Angry_Disgust/F_Angry_Disgust_", ans_dis_emo_list[zz], ".png"),  width = 8, height = 11, units = "in")
   })
 #plot projected faces
 lapply(seq_along(uca_ans_dis[[2]]), function(idx){
   tmp_dat <- uca_ans_dis[[2]][[idx]]
-  tmp_dat[,Method := factor(Method, levels = c(
+  tmp_dat[, Method := factor(Method, levels = c(
                                                "PCA",
                                                #"cPCA++",
-                                               "ANS","DIS","Stack","Split"))]
+                                               "ANS", "DIS", "Stack", "Split"))]
   ggplot(data = tmp_dat, aes(x = PC1, y = PC2, color = Class))+
   geom_point()+
   facet_wrap(~Method, scale = "free")+
@@ -412,32 +413,32 @@ lapply(seq_along(uca_ans_dis[[2]]), function(idx){
         legend.text = element_text(size = 13),
         legend.title = element_text(size = 13)
         )
-ggsave(paste0("example/Faces/Angry_Disgust/F_Angry_Disgust_",ans_dis_emo_list[idx],"_projected.png"),  width = 11, height = 8, units = "in")
+ggsave(paste0("example/Faces/Angry_Disgust/F_Angry_Disgust_", ans_dis_emo_list[idx], "_projected.png"),  width = 11, height = 8, units = "in")
     }        
   )
 
 #sus_sas
 #list order: has, nes, dis, ans
 #within list order: PCA, cPCA++, SUS, SAS, Split, Stack
-sus_sas_emo_list <- c("Happy","Neutral","Disgust","Angry")
+sus_sas_emo_list <- c("Happy", "Neutral", "Disgust", "Angry")
 uca_sus_sas_plot <- uca_sus_sas[[1]]
 
 sus_sas_plot <- lapply(seq_along(uca_sus_sas_plot), function(idx){
-  do.call(rbind, lapply(uca_sus_sas_plot[[idx]][,unique(method)], function(inner){
+  do.call(rbind, lapply(uca_sus_sas_plot[[idx]][, unique(method)], function(inner){
     toEigenfaces(data.matrix(uca_sus_sas_plot[[idx]][method == inner, .SD, .SDcols = -"method"]), 50, 68, inner)}
     ))
   } )
 #plot eigenfaces
 lapply(seq_along(sus_sas_emo_list), function(zz){
-  plotEigenfaces2(sus_sas_plot[[zz]],"")   
-  ggsave(paste0("example/Faces/Surprise_Sad/F_Surprise_Sad_",sus_sas_emo_list[zz],".png"),  width = 8, height = 11, units = "in")
+  plotEigenfaces2(sus_sas_plot[[zz]], "")   
+  ggsave(paste0("example/Faces/Surprise_Sad/F_Surprise_Sad_", sus_sas_emo_list[zz], ".png"),  width = 8, height = 11, units = "in")
   })
 #plot projected faces
 lapply(seq_along(uca_sus_sas[[2]]), function(idx){
   tmp_dat <- uca_sus_sas[[2]][[idx]]
-  tmp_dat[,Method := factor(Method, levels = c(
-                                               "PCA",#"cPCA++",
-                                               "SUS","SAS","Stack","Split"))]
+  tmp_dat[, Method := factor(Method, levels = c(
+                                               "PCA", #"cPCA++",
+                                               "SUS", "SAS", "Stack", "Split"))]
   ggplot(data = tmp_dat, aes(x = PC1, y = PC2, color = Class))+
   geom_point()+
   facet_wrap(~Method, scale = "free")+
@@ -451,32 +452,32 @@ lapply(seq_along(uca_sus_sas[[2]]), function(idx){
         legend.text = element_text(size = 13),
         legend.title = element_text(size = 13)
         )
-ggsave(paste0("example/Faces/Surprise_Sad/F_Surprise_Sad_",sus_sas_emo_list[idx],"_projected.png"),  width = 11, height = 8, units = "in")
+ggsave(paste0("example/Faces/Surprise_Sad/F_Surprise_Sad_", sus_sas_emo_list[idx], "_projected.png"),  width = 11, height = 8, units = "in")
     }        
   )
 
 #sus_dis
 #list order: has, sas, nes, ans
 #within list order: PCA, cPCA++, SUS, DIS, Split, Stack
-sus_dis_emo_list <- c("Happy","Sad","Neutral","Angry")
+sus_dis_emo_list <- c("Happy", "Sad", "Neutral", "Angry")
 uca_sus_dis_plot <- uca_sus_dis[[1]]
 
 sus_dis_plot <- lapply(seq_along(uca_sus_dis_plot), function(idx){
-  do.call(rbind, lapply(uca_sus_dis_plot[[idx]][,unique(method)], function(inner){
+  do.call(rbind, lapply(uca_sus_dis_plot[[idx]][, unique(method)], function(inner){
     toEigenfaces(data.matrix(uca_sus_dis_plot[[idx]][method == inner, .SD, .SDcols = -"method"]), 50, 68, inner)}
     ))
   } )
 #plot eigenfaces
 lapply(seq_along(sus_dis_emo_list), function(zz){
-  plotEigenfaces2(sus_dis_plot[[zz]],"")   
-  ggsave(paste0("example/Faces/Surprise_Disgust/F_Surprise_Disgust_",sus_dis_emo_list[zz],".png"),  width = 8, height = 11, units = "in")
+  plotEigenfaces2(sus_dis_plot[[zz]], "")   
+  ggsave(paste0("example/Faces/Surprise_Disgust/F_Surprise_Disgust_", sus_dis_emo_list[zz], ".png"),  width = 8, height = 11, units = "in")
   })
 #plot projected faces
 lapply(seq_along(uca_sus_dis[[2]]), function(idx){
   tmp_dat <- uca_sus_dis[[2]][[idx]]
-  tmp_dat[,Method := factor(Method, levels = c(
-                                               "PCA",#"cPCA++",
-                                               "SUS","DIS","Stack","Split"))]
+  tmp_dat[, Method := factor(Method, levels = c(
+                                               "PCA", #"cPCA++",
+                                               "SUS", "DIS", "Stack", "Split"))]
   ggplot(data = tmp_dat, aes(x = PC1, y = PC2, color = Class))+
   geom_point()+
   facet_wrap(~Method, scale = "free")+
@@ -490,32 +491,32 @@ lapply(seq_along(uca_sus_dis[[2]]), function(idx){
         legend.text = element_text(size = 13),
         legend.title = element_text(size = 13)
         )
-ggsave(paste0("example/Faces/Surprise_Disgust/F_Surprise_Disgust_",sus_dis_emo_list[idx],"_projected.png"),  width = 11, height = 8, units = "in")
+ggsave(paste0("example/Faces/Surprise_Disgust/F_Surprise_Disgust_", sus_dis_emo_list[idx], "_projected.png"),  width = 11, height = 8, units = "in")
     }        
   )
 
 #sus_dis
 #list order: has, sas, nes, ans
 #within list order: PCA, cPCA++, SUS, DIS, Split, Stack
-sus_dis_emo_list <- c("Happy","Sad","Neutral","Angry")
+sus_dis_emo_list <- c("Happy", "Sad", "Neutral", "Angry")
 uca_sus_dis_plot <- uca_sus_dis[[1]]
 
 sus_dis_plot <- lapply(seq_along(uca_sus_dis_plot), function(idx){
-  do.call(rbind, lapply(uca_sus_dis_plot[[idx]][,unique(method)], function(inner){
+  do.call(rbind, lapply(uca_sus_dis_plot[[idx]][, unique(method)], function(inner){
     toEigenfaces(data.matrix(uca_sus_dis_plot[[idx]][method == inner, .SD, .SDcols = -"method"]), 50, 68, inner)}
     ))
   } )
 #plot eigenfaces
 lapply(seq_along(sus_dis_emo_list), function(zz){
-  plotEigenfaces2(sus_dis_plot[[zz]],"")   
-  ggsave(paste0("example/Faces/Surprise_Disgust/F_Surprise_Disgust_",sus_dis_emo_list[zz],".png"),  width = 8, height = 11, units = "in")
+  plotEigenfaces2(sus_dis_plot[[zz]], "")   
+  ggsave(paste0("example/Faces/Surprise_Disgust/F_Surprise_Disgust_", sus_dis_emo_list[zz], ".png"),  width = 8, height = 11, units = "in")
   })
 #plot projected faces
 lapply(seq_along(uca_sus_dis[[2]]), function(idx){
   tmp_dat <- uca_sus_dis[[2]][[idx]]
-  tmp_dat[,Method := factor(Method, levels = c(
-                                               "PCA",#"cPCA++",
-                                               "SUS","DIS","Stack","Split"))]
+  tmp_dat[, Method := factor(Method, levels = c(
+                                               "PCA", #"cPCA++",
+                                               "SUS", "DIS", "Stack", "Split"))]
   ggplot(data = tmp_dat, aes(x = PC1, y = PC2, color = Class))+
   geom_point()+
   facet_wrap(~Method, scale = "free")+
@@ -529,32 +530,32 @@ lapply(seq_along(uca_sus_dis[[2]]), function(idx){
         legend.text = element_text(size = 13),
         legend.title = element_text(size = 13)
         )
-ggsave(paste0("example/Faces/Surprise_Disgust/F_Surprise_Disgust_",sus_dis_emo_list[idx],"_projected.png"),  width = 11, height = 8, units = "in")
+ggsave(paste0("example/Faces/Surprise_Disgust/F_Surprise_Disgust_", sus_dis_emo_list[idx], "_projected.png"),  width = 11, height = 8, units = "in")
     }        
   )
 
 #sus ans
-#list order: has,sas,nes,dis
+#list order: has, sas, nes, dis
 #within list order: PCA, cPCA++, SUS, ANS, Split, Stack
-sus_ans_emo_list <- c("Happy","Sad","Neutral","Disgust")
+sus_ans_emo_list <- c("Happy", "Sad", "Neutral", "Disgust")
 uca_sus_ans_plot <- uca_sus_ans[[1]]
 
 sus_ans_plot <- lapply(seq_along(uca_sus_ans_plot), function(idx){
-  do.call(rbind, lapply(uca_sus_ans_plot[[idx]][,unique(method)], function(inner){
+  do.call(rbind, lapply(uca_sus_ans_plot[[idx]][, unique(method)], function(inner){
     toEigenfaces(data.matrix(uca_sus_ans_plot[[idx]][method == inner, .SD, .SDcols = -"method"]), 50, 68, inner)}
     ))
   } )
 #plot eigenfaces
 lapply(seq_along(sus_ans_emo_list), function(zz){
-  plotEigenfaces2(sus_ans_plot[[zz]],"")   
-  ggsave(paste0("example/Faces/Surprise_Angry/F_Surprise_Angry_",sus_ans_emo_list[zz],".png"),  width = 8, height = 11, units = "in")
+  plotEigenfaces2(sus_ans_plot[[zz]], "")   
+  ggsave(paste0("example/Faces/Surprise_Angry/F_Surprise_Angry_", sus_ans_emo_list[zz], ".png"),  width = 8, height = 11, units = "in")
   })
 #plot projected faces
 lapply(seq_along(uca_sus_ans[[2]]), function(idx){
   tmp_dat <- uca_sus_ans[[2]][[idx]]
-  tmp_dat[,Method := factor(Method, levels = c(
-                                               "PCA",#"cPCA++",
-                                               "SUS","ANS","Stack","Split"))]
+  tmp_dat[, Method := factor(Method, levels = c(
+                                               "PCA", #"cPCA++",
+                                               "SUS", "ANS", "Stack", "Split"))]
   ggplot(data = tmp_dat, aes(x = PC1, y = PC2, color = Class))+
   geom_point()+
   facet_wrap(~Method, scale = "free")+
@@ -568,70 +569,70 @@ lapply(seq_along(uca_sus_ans[[2]]), function(idx){
         legend.text = element_text(size = 13),
         legend.title = element_text(size = 13)
         )
-ggsave(paste0("example/Faces/Surprise_Angry/F_Surprise_Angry_",sus_ans_emo_list[idx],"_projected.png"),  width = 11, height = 8, units = "in")
+ggsave(paste0("example/Faces/Surprise_Angry/F_Surprise_Angry_", sus_ans_emo_list[idx], "_projected.png"),  width = 11, height = 8, units = "in")
     }        
   )
 
-# nes ans  (4,6)
-#order: sus,has,sas,dis
-nes_ans_emo_list <- c("Surprise","Happy","Sad","Disgust")
+# nes ans  (4, 6)
+#order: sus, has, sas, dis
+nes_ans_emo_list <- c("Surprise", "Happy", "Sad", "Disgust")
 uca_nes_ans_plot <- uca_nes_ans[[1]]
 
 nes_ans_plot <- lapply(seq_along(uca_nes_ans_plot), function(idx){
-  do.call(rbind, lapply(uca_nes_ans_plot[[idx]][,unique(method)], function(inner){
+  do.call(rbind, lapply(uca_nes_ans_plot[[idx]][, unique(method)], function(inner){
     toEigenfaces(data.matrix(uca_nes_ans_plot[[idx]][method == inner, .SD, .SDcols = -"method"]), 50, 68, inner)}
     ))
   } )
 #plot eigenfaces
 lapply(seq_along(nes_ans_emo_list), function(zz){
-  plotEigenfaces2(nes_ans_plot[[zz]],"")   
-  ggsave(paste0("example/Faces/Neutral_Angry/F_Neutral_Angry_",nes_ans_emo_list[zz],".png"),  width = 8, height = 11, units = "in")
+  plotEigenfaces2(nes_ans_plot[[zz]], "")   
+  ggsave(paste0("example/Faces/Neutral_Angry/F_Neutral_Angry_", nes_ans_emo_list[zz], ".png"),  width = 8, height = 11, units = "in")
   })
 #plot projected faces
 lapply(seq_along(uca_nes_ans[[2]]), function(idx){
   tmp_dat <- uca_nes_ans[[2]][[idx]]
-  tmp_dat[,Method := factor(Method, levels = c(
+  tmp_dat[, Method := factor(Method, levels = c(
                                                "PCA",
                                                #"cPCA++",
-                                               "NES","ANS","Stack","Split"))]
+                                               "NES", "ANS", "Stack", "Split"))]
   ggplot(data = tmp_dat, aes(x = PC1, y = PC2, color = Class))+
   geom_point()+
   facet_wrap(~Method, scale = "free")+
   labs(title = paste0("Female Neutral, Angry, ", nes_ans_emo_list[idx]), x = "Component 1", y = "Component 2")+
   theme_bw()+
   theme(legend.position = "bottom")
-ggsave(paste0("example/Faces/Neutral_Angry/F_Neutral_Angry_",nes_ans_emo_list[idx],"_projected.png"),  width = 11, height = 8, units = "in")
+ggsave(paste0("example/Faces/Neutral_Angry/F_Neutral_Angry_", nes_ans_emo_list[idx], "_projected.png"),  width = 11, height = 8, units = "in")
     }        
   )
 
-# nes dis  (4,5)
-#order: sus,has,sas,ans
-nes_dis_emo_list <- c("Surprise","Happy","Sad","Angry")
+# nes dis  (4, 5)
+#order: sus, has, sas, ans
+nes_dis_emo_list <- c("Surprise", "Happy", "Sad", "Angry")
 uca_nes_dis_plot <- uca_nes_dis[[1]]
 
 nes_dis_plot <- lapply(seq_along(uca_nes_dis_plot), function(idx){
-  do.call(rbind, lapply(uca_nes_dis_plot[[idx]][,unique(method)], function(inner){
+  do.call(rbind, lapply(uca_nes_dis_plot[[idx]][, unique(method)], function(inner){
     toEigenfaces(data.matrix(uca_nes_dis_plot[[idx]][method == inner, .SD, .SDcols = -"method"]), 50, 68, inner)}
     ))
   } )
 #plot eigenfaces
 lapply(seq_along(nes_dis_emo_list), function(zz){
-  plotEigenfaces2(nes_dis_plot[[zz]],"")   
-  ggsave(paste0("example/Faces/Neutral_Disgust/F_Neutral_Disgust_",nes_dis_emo_list[zz],".png"),  width = 8, height = 11, units = "in")
+  plotEigenfaces2(nes_dis_plot[[zz]], "")   
+  ggsave(paste0("example/Faces/Neutral_Disgust/F_Neutral_Disgust_", nes_dis_emo_list[zz], ".png"),  width = 8, height = 11, units = "in")
   })
 #plot projected faces
 lapply(seq_along(uca_nes_dis[[2]]), function(idx){
   tmp_dat <- uca_nes_dis[[2]][[idx]]
-  tmp_dat[,Method := factor(Method, levels = c(
-                                               "PCA",#"cPCA++",
-                                               "NES","DIS","Stack","Split"))]
+  tmp_dat[, Method := factor(Method, levels = c(
+                                               "PCA", #"cPCA++",
+                                               "NES", "DIS", "Stack", "Split"))]
   ggplot(data = tmp_dat, aes(x = PC1, y = PC2, color = Class))+
   geom_point()+
   facet_wrap(~Method, scale = "free")+
   labs(title = paste0("Female Neutral, Disgust, ", nes_dis_emo_list[idx]), x = "Component 1", y = "Component 2")+
   theme_bw()+
   theme(legend.position = "bottom")
-ggsave(paste0("example/Faces/Neutral_Disgust/F_Neutral_Disgust_",nes_dis_emo_list[idx],"_projected.png"),  width = 11, height = 8, units = "in")
+ggsave(paste0("example/Faces/Neutral_Disgust/F_Neutral_Disgust_", nes_dis_emo_list[idx], "_projected.png"),  width = 11, height = 8, units = "in")
     }        
   )
 
@@ -639,47 +640,114 @@ ggsave(paste0("example/Faces/Neutral_Disgust/F_Neutral_Disgust_",nes_dis_emo_lis
 # nes_dis_ans_var_exp <- do.call(rbind,
 #         lapply(uca1_list, function(v){
 #   sapply(nes_dis_ans_cov_list,
-#          function(c) crossprod(v[,1,drop = f], c %*% v[,1,drop = f]))
+#          function(c) crossprod(v[, 1, drop = f], c %*% v[, 1, drop = f]))
 #     }))
-# colnames(nes_dis_ans_var_exp) <- c("neutral","disgust","angry")
+# colnames(nes_dis_ans_var_exp) <- c("neutral", "disgust", "angry")
 # nes_dis_ans_var_exp <- data.table(nes_dis_ans_var_exp)
-# nes_dis_ans_var_exp[, background :=  c("nes","dis","split","stack")]
+# nes_dis_ans_var_exp[, background :=  c("nes", "dis", "split", "stack")]
 # 
 # 
 # sus_dis_ans_var_exp <- do.call(rbind,
 #         lapply(uca2_list, function(v){
 #   sapply(sus_dis_ans_cov_list,
-#          function(c) crossprod(v[,1,drop = f], c %*% v[,1,drop = f]))
+#          function(c) crossprod(v[, 1, drop = f], c %*% v[, 1, drop = f]))
 #     }))
 # 
-# colnames(sus_dis_ans_var_exp) <- c("surprise","disgust","angry")
+# colnames(sus_dis_ans_var_exp) <- c("surprise", "disgust", "angry")
 # sus_dis_ans_var_exp <- data.table(sus_dis_ans_var_exp)
-# sus_dis_ans_var_exp[, background :=  c("sus","dis","split","stack")]
+# sus_dis_ans_var_exp[, background :=  c("sus", "dis", "split", "stack")]
 # 
 # sus_sas_ans_var_exp <- do.call(rbind,
 #         lapply(uca3_list, function(v){
 #   sapply(sus_sas_ans_cov_list,
-#          function(c) crossprod(v[,1,drop = f], c %*% v[,1,drop = f]))
+#          function(c) crossprod(v[, 1, drop = f], c %*% v[, 1, drop = f]))
 #     }))
 # 
-# colnames(sus_sas_ans_var_exp) <- c("surprise","sad","angry")
+# colnames(sus_sas_ans_var_exp) <- c("surprise", "sad", "angry")
 # sus_sas_ans_var_exp <- data.table(sus_sas_ans_var_exp)
-# sus_sas_ans_var_exp[, background :=  c("sus","sas","split","stack")]
+# sus_sas_ans_var_exp[, background :=  c("sus", "sas", "split", "stack")]
 # 
 # ans_dis_sus_var_exp <- do.call(rbind,
 #         lapply(uca4_list, function(v){
 #   sapply(sus_dis_ans_cov_list,
-#          function(c) crossprod(v[,1,drop = f], c %*% v[,1,drop = f]))
+#          function(c) crossprod(v[, 1, drop = f], c %*% v[, 1, drop = f]))
 #     }))
 # 
-# colnames(ans_dis_sus_var_exp) <- c("surprise","disgust","angry")
+# colnames(ans_dis_sus_var_exp) <- c("surprise", "disgust", "angry")
 # ans_dis_sus_var_exp <- data.table(sus_dis_ans_var_exp)
-# ans_dis_sus_var_exp[, background :=  c("ans","dis","split","stack")]
+# ans_dis_sus_var_exp[, background :=  c("ans", "dis", "split", "stack")]
 # 
 # fwrite(nes_dis_ans_var_exp, file = "example/faces/nes_dis_ans_var.csv")
 # fwrite(sus_dis_ans_var_exp, file = "example/faces/sus_dis_ans_var.csv")
 # fwrite(sus_sas_ans_var_exp, file = "example/faces/sus_sas_ans_var.csv")
 # fwrite(ans_dis_sus_var_exp, file = "example/Faces/ANS_DIS_SUS_Var.csv")
 
-#classification results on 2 dimensions?
+
+# Stack All emotions. Can UCA find features unique to Disgust?
+#practice_list <- list(sus_pract_files, has_pract_files, sas_pract_files, nes_pract_files, dis_pract_files, ans_pract_files)
+
+all_final <- scale(do.call(rbind, final_female_emotion_list))
+final_labels <- rep(c("SUS", "HAS", "SAS", "NES", "DIS", "ANS"), each = 35)
+
+all_pca <- eigs_sym(cov(all_final), k = 5, "LA")
+emo = 1
+lapply(seq_along(female_emotion_list), function(emo) {
+    emo_list <- female_emotion_list[-emo]
+    emo_list_stack <- scale(do.call(rbind, emo_list))
+
+    tmp_split <- uca(all_final, lapply(emo_list, scale), nv = 5, method = "data")
+    tmp_stack <- uca(all_final, emo_list_stack, nv = 5, method = "data")
+
+    method_labs <- c("PCA", "Stack", "Split")
+    method_obj <- list(all_pca, tmp_stack, tmp_split)
+    tmp_projected <- lapply(seq_along(method_obj), function(iter) {
+        data.table(all_final %*% method_obj[[iter]]$vectors[, c(1:2)], final_labels, method_labs[iter])
+    })
+    tmp_projected <- do.call(rbind, tmp_projected)
+    setnames(tmp_projected, c("V1", "V2", "Emotion", "Method"))
+
+    ggplot(data = tmp_projected) +
+    geom_point(aes(x = V1, y = V2, color = Emotion)) +
+    facet_wrap(~ Method, scale = "free") +
+    theme_bw() +
+    labs(x = "Component 1", y = "Component 2")
+    ggsave(paste0("example/Faces/all_projected_", final_labels[emo], "_removed.png"),
+           width = 11, height = 8, units = "in")
+
+    all_emotion_faces <- do.call(rbind, lapply(lapply(method_obj, "[[", "vectors"),
+                                function(vectors){toEigenfaces(vectors, 50, 68, "")}))
+
+    all_emotion_faces$alpha <- rep(method_labs, each = 17E3)
+    plotEigenfaces2(all_emotion_faces, "")  
+    ggsave(paste0("example/Faces/all_", final_labels[emo], "_removed.png"),  width = 11, height = 8, units = "in")
+})
+
+# Stack All emotions. Can UCA find features unique to Disgust?
+# jk we only have to use two emotions and see if it makes a diff emotion go away
+
+f_dis_ans <- scale(do.call(rbind, final_female_emotion_list[c(5, 6)]))
+practice_no_dis_list <- female_emotion_list[-5]
+practice_no_dis_stack <- scale(do.call(rbind, practice_no_dis_list))
+dis_ans_labs <- rep(c("DIS", "ANS"), each = 35)
+  
+
+dis_ans_split <- uca(f_dis_ans, lapply(practice_no_dis_list, scale), nv = 5, method = "data")
+dis_ans_stack <- uca(f_dis_ans, practice_no_dis_stack, nv = 5, method = "data")
+dis_ans_projected <- rbind(data.table(f_dis_ans %*% dis_ans_stack$vectors[, 1:2], dis_ans_labs, "Stack"),
+                               data.table(f_dis_ans %*% dis_ans_split$vectors[, 1:2], dis_ans_labs, "Split"))
+setnames(dis_ans_projected, c("V1", "V2", "Emotion", "Method"))
+
+
+ggplot(data = dis_ans_projected)+
+  geom_point(aes(x = V1, y = V2, color = Emotion))+
+  facet_wrap(~Method, scale = "free")+
+  theme_bw()+
+  labs(x = "Component 1", y = "Component 2")
+ggsave(paste0("example/Faces/dis_ans_projected.png"),  width = 11, height = 8, units = "in")
+
+dis_ans_faces <- do.call(rbind, lapply(lapply(list(dis_ans_split, dis_ans_stack), "[[", "vectors"), function(vectors){ toEigenfaces(vectors, 50, 68, "")}))
+dis_ans_faces$alpha <- rep(c("Split", "Stack"), each = 17E3)
+plotEigenfaces2(dis_ans_faces, "")   
+ggsave(paste0("example/Faces/dis_ans_faces.png"),  width = 11, height = 8, units = "in")
+
 
