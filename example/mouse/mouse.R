@@ -7,12 +7,12 @@ library(RSpectra)
 library(uca)
 library(latex2exp)
 library(data.table)
-source("functions/helper_functions.R")
+source("../../functions/helper_functions.R")
 
 ## ##############################################################
 ## mouse data
 ## ##############################################################
-mouse = read_csv("../contrastive/experiments/datasets/Data_Cortex_Nuclear.csv")
+mouse = read_csv("Data_Cortex_Nuclear.csv")
 mouse[is.na(mouse)] = 0
 
 ## remove duplicate rows and columns
@@ -322,3 +322,45 @@ ggplot(data = plot_memantine_saline)+
   facet_wrap(~Method, scale = "free")+
   theme_bw()
   
+
+# Target: (S/C) Saline Trisomic+Normal target
+# Background: normal (C/S) mice with Saline and Memantine
+target_data <- data.matrix(mouse_dt[Treatment == "Saline" & Behavior == "S/C",lapply(.SD, scale), .SDcols = -c("MouseID","Genotype","Treatment","Behavior","class")])
+target_data_labs <- mouse_dt[Treatment == "Saline" & Behavior == "S/C", .SD, .SDcols = c("Genotype")]
+
+bg1 <- data.matrix(mouse_dt[Treatment == "Memantine" & Behavior == "C/S" & Genotype == "Control", lapply(.SD, scale), .SDcols = -c("MouseID","Genotype","Treatment","Behavior","class")])
+bg2 <- data.matrix(mouse_dt[Treatment == "Saline" & Behavior == "C/S" & Genotype == "Control", lapply(.SD, scale), .SDcols = -c("MouseID","Genotype","Treatment","Behavior","class")])
+
+bg12 <- mouse_dt[Behavior == "C/S" & Genotype == "Control"]
+bg12 <- data.matrix(bg12[, lapply(.SD, scale),.SDcols = -c("MouseID","Genotype","Treatment","Behavior","class")])
+
+target_cov <- cov(target_data)
+bg1_cov <- cov(bg1)
+bg2_cov <- cov(bg2)
+bg_stack_cov <- cov(bg12)
+
+uca_bg1 <- uca(A = target_cov, B = bg1_cov, method = "cov")$vectors
+uca_bg2 <- uca(A = target_cov, B = bg2_cov, method = "cov")$vectors
+uca_stack <- uca(A = target_cov, B = bg_stack_cov, method = "cov")$vectors
+uca_split <- uca(A = target_cov, B = list(bg1_cov, bg2_cov), method = "cov")$vectors
+
+plot_normal_saline <- rbind(
+  data.table(target_data %*% uca_bg1, "Memantine-C/S-Control", target_data_labs),
+  data.table(target_data %*% uca_bg2, "Saline-C/S-Control", target_data_labs),
+  data.table(target_data %*% uca_stack, "Pooled", target_data_labs),
+  data.table(target_data %*% uca_split, "Unpooled", target_data_labs))
+setnames(plot_normal_saline, c("UC1","UC2","Method","Label"))
+ggplot(data = plot_normal_saline)+
+  geom_point(aes(x = UC1, y = UC2, color = Label), alpha = 0.5)+
+  facet_wrap(~Method, scale = "free")+
+  theme_bw()
+ggsave("Unshocked_Sal_Tri_Normal_vs_Shocked_Mem_Sal_Normal.png", width = 11, height = 8, units = "in")
+
+
+
+
+
+
+
+
+
