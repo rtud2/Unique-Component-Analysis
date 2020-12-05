@@ -1,6 +1,5 @@
 rm(list = ls())
 Sys.setenv(MKL_DEBUG_CPU_TYPE=5)#, MKL_VERBOSE=1) #intel MKL settings. latter to hack amd processors
-#setwd("/mnt/d/Residual-Dimension-Reduction")
 #setwd("~/Desktop/Residual-Dimension-Reduction")
 setwd("D:/Residual-Dimension-Reduction/")
 #install.packages("uca_0.13.zip", repos = NULL, type="source")
@@ -687,10 +686,11 @@ ggsave(paste0("example/Faces/Neutral_Disgust/F_Neutral_Disgust_", nes_dis_emo_li
 #practice_list <- list(sus_pract_files, has_pract_files, sas_pract_files, nes_pract_files, dis_pract_files, ans_pract_files)
 
 all_final <- scale(do.call(rbind, final_female_emotion_list))
-kdef_emotions <- c("SUS", "HAS", "SAS", "NES", "DIS", "ANS")
-final_labels <- rep(c("SUS", "HAS", "SAS", "NES", "DIS", "ANS"), each = 35)
-
+kdef_emotions <- c("Surprise", "Happy", "Sad", "Neutral", "Disgust", "Angry")
+final_labels <- rep(kdef_emotions, each = 35)
+clrsc1 <- c('#933e9b', '#2e9e7f', '#e33754', '#3a7637', '#ef7d55', '#806b2f')
 all_pca <- eigs_sym(cov(all_final), k = 5, "LA")
+
 for(emo in seq_along(female_emotion_list)){
     emo_list <- female_emotion_list[-emo]
     emo_list_stack <- scale(do.call(rbind, emo_list))
@@ -698,7 +698,7 @@ for(emo in seq_along(female_emotion_list)){
     tmp_split <- uca(all_final, lapply(emo_list, scale), nv = 5, method = "data")
     tmp_stack <- uca(all_final, emo_list_stack, nv = 5, method = "data")
 
-    method_labs <- c("PCA", "Stack", "Split")
+    method_labs <- c("PCA", "Pooled", "Split")
     method_obj <- list(all_pca, tmp_stack, tmp_split)
     tmp_projected <- lapply(seq_along(method_obj), function(iter) {
         data.table(all_final %*% method_obj[[iter]]$vectors[, c(1:2)], final_labels, method_labs[iter])
@@ -710,9 +710,10 @@ for(emo in seq_along(female_emotion_list)){
     geom_point(aes(x = V1, y = V2, color = Emotion)) +
     facet_wrap(~ Method, scale = "free") +
     theme_bw() +
+    scale_color_manual(values = clrscl) +
     labs(x = "Component 1", y = "Component 2")
     
-    ggsave(paste0("example/Faces/all_projected_", kdef_emotions[emo], "_removed.png"),
+    ggsave(paste0("example/Faces/One_Background_Removed/all_projected_", kdef_emotions[emo], "_removed.png"),
        tmp_projected_plot,
        width = 11, height = 8, units = "in")
 
@@ -722,9 +723,10 @@ for(emo in seq_along(female_emotion_list)){
     all_emotion_faces$alpha <- rep(method_labs, each = 17E3)
     tmp_eigenfaces <- plotEigenfaces2(all_emotion_faces, "")  
     
-    ggsave(paste0("example/Faces/all_", kdef_emotions[emo], "_removed.png"),
+    ggsave(paste0("example/Faces/One_Background_Removed/all_", kdef_emotions[emo], "_removed.png"),
        tmp_eigenfaces,
        width = 11, height = 8, units = "in")
+    message(paste0("finish ", kdef_emotions[emo]))
 }
 
 
