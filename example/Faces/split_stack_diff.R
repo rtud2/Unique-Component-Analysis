@@ -1,7 +1,8 @@
 rm(list = ls())
-Sys.setenv(MKL_DEBUG_CPU_TYPE=5)#, MKL_VERBOSE=1) #intel MKL settings. latter to hack amd processors
+# Sys.setenv(MKL_DEBUG_CPU_TYPE=5)#, MKL_VERBOSE=1) #intel MKL settings. latter to hack amd processors (use Openblas on ubuntu)
 #setwd("~/Desktop/Residual-Dimension-Reduction")
-setwd("D:/Residual-Dimension-Reduction/")
+#setwd("/mnt/d/Residual-Dimension-Reduction")
+#setwd("D:/Residual-Dimension-Reduction/")
 #install.packages("uca_0.13.zip", repos = NULL, type="source")
 #install.packages("uca_0.13.tar.gz", type="source", repos = NULL) 
 libraries <- c("data.table", "MASS", "ggplot2", "splines", "gridExtra", "uca", "imager", "future", "RSpectra", "microbenchmark", "Rfast")
@@ -682,16 +683,15 @@ ggsave(paste0("example/Faces/Neutral_Disgust/F_Neutral_Disgust_", nes_dis_emo_li
 # fwrite(ans_dis_sus_var_exp, file = "example/Faces/ANS_DIS_SUS_Var.csv")
 
 
-# Stack All emotions. Can UCA find features unique to Disgust?
-#practice_list <- list(sus_pract_files, has_pract_files, sas_pract_files, nes_pract_files, dis_pract_files, ans_pract_files)
+#### Every Combination of One-Background-Removed ####
 
 all_final <- scale(do.call(rbind, final_female_emotion_list))
 kdef_emotions <- c("Surprise", "Happy", "Sad", "Neutral", "Disgust", "Angry")
 final_labels <- rep(kdef_emotions, each = 35)
-clrsc1 <- c('#933e9b', '#2e9e7f', '#e33754', '#3a7637', '#ef7d55', '#806b2f')
+csrsc1 <- c('#933e9b', '#2e9e7f', '#e33754', '#3a7637', '#ef7d55', '#806b2f')
 all_pca <- eigs_sym(cov(all_final), k = 5, "LA")
 
-for(emo in seq_along(female_emotion_list)){
+res_list <- lapply(seq_along(female_emotion_list), function(emo){
     emo_list <- female_emotion_list[-emo]
     emo_list_stack <- scale(do.call(rbind, emo_list))
 
@@ -706,30 +706,40 @@ for(emo in seq_along(female_emotion_list)){
     tmp_projected <- do.call(rbind, tmp_projected)
     setnames(tmp_projected, c("V1", "V2", "Emotion", "Method"))
 
+    all_emotion_faces <- do.call(rbind, lapply(lapply(method_obj, "[[", "vectors"),
+                                function(vectors){toEigenfaces(vectors, 50, 68, "")}))
+
+    all_emotion_faces$alpha <- rep(method_labs, each = 17E3)
+    list(tmp_projected, all_emotion_faces)
+})
+
+# Saving the data so i dont have to re-run this everytime dave asks me to tweak a figure
+saveRDS(res_list, "example/Faces/One_Background_Removed.rds")
+
+#Plotting the images
+for(emo in seq_along(res_list)){
+    tmp_projected <- res_list[[emo]][[1]]
+    all_emotion_faces <- res_list[[emo]][[2]]
+
     tmp_projected_plot <- ggplot(data = tmp_projected) +
     geom_point(aes(x = V1, y = V2, color = Emotion)) +
     facet_wrap(~ Method, scale = "free") +
     theme_bw() +
-    scale_color_manual(values = clrscl) +
+    scale_color_manual(values = csrsc1) +
     labs(x = "Component 1", y = "Component 2")
     
     ggsave(paste0("example/Faces/One_Background_Removed/all_projected_", kdef_emotions[emo], "_removed.png"),
        tmp_projected_plot,
        width = 11, height = 8, units = "in")
 
-    all_emotion_faces <- do.call(rbind, lapply(lapply(method_obj, "[[", "vectors"),
-                                function(vectors){toEigenfaces(vectors, 50, 68, "")}))
-
-    all_emotion_faces$alpha <- rep(method_labs, each = 17E3)
     tmp_eigenfaces <- plotEigenfaces2(all_emotion_faces, "")  
     
     ggsave(paste0("example/Faces/One_Background_Removed/all_", kdef_emotions[emo], "_removed.png"),
        tmp_eigenfaces,
        width = 11, height = 8, units = "in")
+
     message(paste0("finish ", kdef_emotions[emo]))
 }
-
-
 
 # Stack All emotions. Can UCA find features unique to Disgust?
 # jk we only have to use two emotions and see if it makes a diff emotion go away
