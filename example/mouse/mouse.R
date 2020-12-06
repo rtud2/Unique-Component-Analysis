@@ -1,5 +1,4 @@
 rm(list = ls())
-
 library(ggplot2)
 library(tidyverse)
 library(geigen)
@@ -323,8 +322,8 @@ ggplot(data = plot_memantine_saline)+
   theme_bw()
   
 
-#### Target: (S/C) Saline Trisomic+Normal target ####
-# Background: normal (C/S) mice with Saline and Memantine
+#### Target: (S/C) (Not Shocked) Saline Trisomic+Normal target ####
+# Background: normal (C/S) (Shocked) mice with Saline and Memantine
 target_data <- data.matrix(mouse_dt[Treatment == "Saline" & Behavior == "S/C",lapply(.SD, scale), .SDcols = -c("MouseID","Genotype","Treatment","Behavior","class")])
 target_data_labs <- mouse_dt[Treatment == "Saline" & Behavior == "S/C", .SD, .SDcols = c("Genotype")]
 
@@ -355,10 +354,11 @@ ggplot(data = plot_normal_saline)+
   geom_point(aes(x = UC1, y = UC2, color = Label), alpha = 0.5)+
   facet_wrap(~Method, scale = "free")+
   theme_bw()
+#edit this title
 ggsave("Unshocked_Sal_Tri_Normal_vs_Shocked_Mem_Sal_Normal.png", width = 11, height = 8, units = "in")
 
 
-# Background: normal (S/C) mice with Saline and Memantine
+# Background: normal (S/C) (Not Shocked) mice with Saline and Memantine
 bg1 <- data.matrix(mouse_dt[Treatment == "Memantine" & Behavior == "S/C" & Genotype == "Control", lapply(.SD, scale), .SDcols = -c("MouseID","Genotype","Treatment","Behavior","class")])
 bg2 <- data.matrix(mouse_dt[Treatment == "Saline" & Behavior == "S/C" & Genotype == "Control", lapply(.SD, scale), .SDcols = -c("MouseID","Genotype","Treatment","Behavior","class")])
 
@@ -387,10 +387,76 @@ ggplot(data = plot_normal_saline)+
   geom_point(aes(x = UC1, y = UC2, color = Label), alpha = 0.5)+
   facet_wrap(~Method, scale = "free")+
   theme_bw()
+#edit this title
 ggsave("Unshocked_Sal_Tri_Normal_vs_unshocked_Mem_Sal_Normal.png", width = 11, height = 8, units = "in")
 
 
+#### Target: (C/S) (Shocked) Saline Trisomic+Normal target ####
+# Background: normal (S/C) (Unshocked) mice with Saline and Memantine
+target_data <- data.matrix(mouse_dt[Treatment == "Saline" & Behavior == "C/S",lapply(.SD, scale), .SDcols = -c("MouseID","Genotype","Treatment","Behavior","class")])
+target_data_labs <- mouse_dt[Treatment == "Saline" & Behavior == "C/S", .SD, .SDcols = c("Genotype")]
 
+bg1 <- data.matrix(mouse_dt[Treatment == "Memantine" & Behavior == "S/C" & Genotype == "Control", lapply(.SD, scale), .SDcols = -c("MouseID","Genotype","Treatment","Behavior","class")])
+bg2 <- data.matrix(mouse_dt[Treatment == "Saline" & Behavior == "S/C" & Genotype == "Control", lapply(.SD, scale), .SDcols = -c("MouseID","Genotype","Treatment","Behavior","class")])
+
+bg12 <- mouse_dt[Behavior == "S/C" & Genotype == "Control"]
+bg12 <- data.matrix(bg12[, lapply(.SD, scale),.SDcols = -c("MouseID","Genotype","Treatment","Behavior","class")])
+
+target_cov <- cov(target_data)
+bg1_cov <- cov(bg1)
+bg2_cov <- cov(bg2)
+bg_stack_cov <- cov(bg12)
+
+uca_bg1 <- uca(A = target_cov, B = bg1_cov, method = "cov")$vectors
+uca_bg2 <- uca(A = target_cov, B = bg2_cov, method = "cov")$vectors
+uca_stack <- uca(A = target_cov, B = bg_stack_cov, method = "cov")$vectors
+uca_split <- uca(A = target_cov, B = list(bg1_cov, bg2_cov), method = "cov")$vectors
+
+plot_normal_saline <- rbind(
+  data.table(target_data %*% uca_bg1, "Memantine-S/C-Control", target_data_labs),
+  data.table(target_data %*% pos_corr(uca_bg2, uca_bg1), "Saline-S/C-Control", target_data_labs),
+  data.table(target_data %*% pos_corr(uca_stack, uca_bg1), "Pooled", target_data_labs),
+  data.table(target_data %*% pos_corr(uca_split, uca_bg1), "Split", target_data_labs))
+setnames(plot_normal_saline, c("UC1","UC2","Method","Label"))
+plot_normal_saline[, Method:=factor(Method, levels = c("Memantine-S/C-Control", "Saline-S/C-Control", "Pooled", "Split"))]
+
+ggplot(data = plot_normal_saline)+
+  geom_point(aes(x = UC1, y = UC2, color = Label), alpha = 0.5)+
+  facet_wrap(~Method, scale = "free")+
+  theme_bw()
+ggsave("Shocked_Sal_Tri_Normal_vs_Unshocked_Mem_Sal_Normal.png", width = 11, height = 8, units = "in")
+
+
+# Background: normal (C/S) (Shocked) mice with Saline and Memantine
+bg1 <- data.matrix(mouse_dt[Treatment == "Memantine" & Behavior == "C/S" & Genotype == "Control", lapply(.SD, scale), .SDcols = -c("MouseID","Genotype","Treatment","Behavior","class")])
+bg2 <- data.matrix(mouse_dt[Treatment == "Saline" & Behavior == "C/S" & Genotype == "Control", lapply(.SD, scale), .SDcols = -c("MouseID","Genotype","Treatment","Behavior","class")])
+
+bg12 <- mouse_dt[Behavior == "C/S" & Genotype == "Control"]
+bg12 <- data.matrix(bg12[, lapply(.SD, scale),.SDcols = -c("MouseID","Genotype","Treatment","Behavior","class")])
+
+target_cov <- cov(target_data)
+bg1_cov <- cov(bg1)
+bg2_cov <- cov(bg2)
+bg_stack_cov <- cov(bg12)
+
+uca_bg1 <- uca(A = target_cov, B = bg1_cov, method = "cov")$vectors
+uca_bg2 <- uca(A = target_cov, B = bg2_cov, method = "cov")$vectors
+uca_stack <- uca(A = target_cov, B = bg_stack_cov, method = "cov")$vectors
+uca_split <- uca(A = target_cov, B = list(bg1_cov, bg2_cov), method = "cov")$vectors
+
+plot_normal_saline <- rbind(
+  data.table(target_data %*% uca_bg1, "Memantine-C/S-Control", target_data_labs),
+  data.table(target_data %*% pos_corr(uca_bg2, uca_bg1), "Saline-C/S-Control", target_data_labs),
+  data.table(target_data %*% pos_corr(uca_stack, uca_bg1), "Pooled", target_data_labs),
+  data.table(target_data %*% pos_corr(uca_split, uca_bg1), "Split", target_data_labs))
+setnames(plot_normal_saline, c("UC1","UC2","Method","Label"))
+plot_normal_saline[, Method:=factor(Method, levels = c("Memantine-C/S-Control", "Saline-C/S-Control", "Pooled", "Split"))]
+
+ggplot(data = plot_normal_saline)+
+  geom_point(aes(x = UC1, y = UC2, color = Label), alpha = 0.5)+
+  facet_wrap(~Method, scale = "free")+
+  theme_bw()
+ggsave("Shocked_Sal_Tri_Normal_vs_Shocked_Mem_Sal_Normal.png", width = 11, height = 8, units = "in")
 
 
 
