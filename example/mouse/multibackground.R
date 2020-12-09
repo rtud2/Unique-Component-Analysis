@@ -24,8 +24,8 @@ bg = filter(mouse, Behavior == "C/S", Treatment %in% c("Saline")) %>%
 B = scale(filter(bg, Genotype == "Control") %>% select(-Genotype))
 
 # target: Saline Context-Shock
-cs_gentype = "Ts65Dn"
-#cs_gentype = "Control"
+#cs_gentype = "Ts65Dn"
+cs_gentype = "Control"
 target_data <- data.matrix(mouse_dt[Treatment == "Saline" & Behavior == "C/S",lapply(.SD, scale), .SDcols = -c("MouseID","Genotype","Treatment","Behavior","class")])
 target_data_labs <-mouse_dt[Treatment == "Saline" & Behavior == "C/S", .SD, .SDcols = c("Genotype")]
 
@@ -133,21 +133,27 @@ cpca_pp <- eigen(solve(bg_stack_cov) %*% target_cov)$vectors[,1:2]
 
 plot_memantine_saline <- rbind(
   data.table(target_data %*% pc, paste0("PCA"), target_data_labs),
-  data.table(target_data %*% uca_bg1, paste0("UCA (Memantine-S/C-",cs_gentype,")"), target_data_labs),
-  data.table(target_data %*% uca_bg2, paste0("UCA (Memantine-C/S-",cs_gentype,")"), target_data_labs),
-  data.table(target_data %*% uca_bg3, paste0("UCA (Saline-S/C-",cs_gentype,")"), target_data_labs),
-  data.table(target_data %*% cpca_pp, "cPCA++ (Stack All)", target_data_labs),
+  data.table(target_data %*% uca_bg1, paste0("Mem-S/C-",cs_gentype), target_data_labs),
+  data.table(target_data %*% uca_bg2, paste0("Mem-C/S-",cs_gentype), target_data_labs),
+  data.table(target_data %*% uca_bg3, paste0("Saline-S/C-",cs_gentype), target_data_labs),
+  data.table(target_data %*% cpca_pp, "cPCA++ (Pooled)", target_data_labs),
 #  data.table(rpc_bg123, "rPCA (Stack All)", target_data_labs),
-  data.table(target_data %*% uca_stack, "UCA (Stack All)", target_data_labs),
-  data.table(target_data %*% uca_split, "UCA (Split All)", target_data_labs))
+  data.table(target_data %*% uca_stack, "UCA (Pooled)", target_data_labs),
+  data.table(target_data %*% uca_split, "UCA (Split)", target_data_labs))
 setnames(plot_memantine_saline, c("UC1","UC2","Method","Label"))
 plot_memantine_saline[, Method := factor(Method, levels = unique(Method))]
 
 mouse_split_stack <- ggplot(data = plot_memantine_saline)+
-  geom_point(aes(x = UC1, y = UC2, color = Label), alpha = 0.5)+
+  geom_point(aes(x = UC1, y = UC2, color = Label), alpha = 0.4)+
   labs(x = "Component 1", y = "Component 2")+
   facet_wrap(~Method, scale = "free", nrow = 2)+
   theme_bw(base_size = 14)+
-  theme(legend.position = "bottom")
+  theme(legend.position = "bottom",
+        strip.text = element_text(size = 15),
+        axis.title = element_text(size = 15),
+        axis.text = element_text(size = 13), 
+        legend.text = element_text(size = 13),
+        legend.title = element_text(size = 13)
+        )
 
 ggsave(paste0("Mouse_split_stack_",cs_gentype,".png"), mouse_split_stack, width = 11, height = 8, units = "in")

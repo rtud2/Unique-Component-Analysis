@@ -96,7 +96,7 @@ df = data.frame(pc1 = c(uca_res[,1], pca[,1], cpca1[,1], cpca3[,1], cpca5[,1], c
                            rep("cPCA alpha = 100", n),
                            rep("cPCApp", n)),
                            levels = c("cPCA alpha = 0.5", "cPCA alpha = 1", "cPCA alpha = 5", "cPCA alpha = 10", "cPCA alpha = 100", "PCA", "cPCApp","UCA"),
-                           labels = c(TeX("cPCA $\\alpha =0.5$"), TeX("cPCA $\\alpha =1$"),TeX("cPCA $\\alpha =5$"), TeX("cPCA $\\alpha =10$") , TeX("cPCA $\\alpha =100$"),  "PCA", TeX("cPCA$++$"),"UCA") ),
+                           labels = c(TeX("cPCA $\\lambda =0.5$"), TeX("cPCA $\\lambda =1$"),TeX("cPCA $\\lambda =5$"), TeX("cPCA $\\lambda =10$") , TeX("cPCA $\\lambda =100$"),  "PCA", TeX("cPCA$++$"),"UCA") ),
                            Classes = rep(classes, 8))
 
 # new_lab <- as_labeller(c(`cPCA alpha = 0.5` = bquote("cPCA"~alpha==~"0.5"),
@@ -105,8 +105,8 @@ df = data.frame(pc1 = c(uca_res[,1], pca[,1], cpca1[,1], cpca3[,1], cpca5[,1], c
 #                          `cPCA alpha = 10` = bquote("cPCA"~alpha==~"10"),
 #                          `PCA` = "PCA", `rPCA`= "rPCA", `cPCA++` = "cPCA++",`UCA` = "UCA"), label_bquote)
 
-mouse_comparison <- ggplot(df, aes(x = pc1, y = pc2, color = Classes), alpha = 0.8) +
-  geom_point() +
+mouse_comparison <- ggplot(df, aes(x = pc1, y = pc2, color = Classes)) +
+  geom_point(alpha = 0.4) +
   facet_wrap(~ Method, scale = "free", nrow = 2, labeller = label_parsed)+
   labs(x = "Component 1", y = "Component 2")+
   theme_bw()+
