@@ -1,10 +1,10 @@
 rm(list = ls())
 # Sys.setenv(MKL_DEBUG_CPU_TYPE=5)#, MKL_VERBOSE=1) #intel MKL settings. latter to hack amd processors (use Openblas on ubuntu)
-#setwd("~/Desktop/Residual-Dimension-Reduction")
+setwd("~/Desktop/Residual-Dimension-Reduction")
 #setwd("/mnt/d/Residual-Dimension-Reduction")
 #setwd("D:/Residual-Dimension-Reduction/")
 #install.packages("uca_0.13.zip", repos = NULL, type="source")
-#install.packages("uca_0.13.tar.gz", type="source", repos = NULL) 
+#install.packages("../../uca_0.13.tar.gz", type="source", repos = NULL) 
 libraries <- c("data.table", "MASS", "ggplot2", "splines", "gridExtra", "uca", "imager", "future", "RSpectra", "microbenchmark", "Rfast")
 invisible(lapply(libraries, library, character.only = T))
 #plan(tweak(multicore, workers = 8L))
@@ -715,6 +715,7 @@ res_list <- lapply(seq_along(female_emotion_list), function(emo){
 
 # Saving the data so i dont have to re-run this everytime dave asks me to tweak a figure
 saveRDS(res_list, "example/Faces/One_Background_Removed.rds")
+# res_list <- readRDS("example/Faces/One_Background_Removed/One_Background_Removed.rds")
 
 #Plotting the images
 for(emo in seq_along(res_list)){
@@ -736,7 +737,7 @@ for(emo in seq_along(res_list)){
     
     ggsave(paste0("example/Faces/One_Background_Removed/all_", kdef_emotions[emo], "_removed.png"),
        tmp_eigenfaces,
-       width = 11, height = 8, units = "in")
+       width = 8, height = 11, units = "in")
 
     message(paste0("finish ", kdef_emotions[emo]))
 }
@@ -769,4 +770,14 @@ dis_ans_faces$alpha <- rep(c("Split", "Stack"), each = 17E3)
 plotEigenfaces2(dis_ans_faces, "")   
 ggsave(paste0("example/Faces/dis_ans_faces.png"),  width = 11, height = 8, units = "in")
 
+# Plot Eigenface of each emotion for comparison
+kdef_emotions <- c("Surprise", "Happy", "Sad", "Neutral", "Disgust", "Angry")
 
+raw_eigenfaces <- lapply(final_female_emotion_list, function(emo){
+           tmp_vectors <- eigs_sym(cov(emo), k = 5, "LA")$vectors
+           toEigenfaces(-tmp_vectors, 50, 68, "")
+                               })
+
+raw_eigenfaces_combined <- data.table(do.call(rbind, raw_eigenfaces))[, alpha := rep(kdef_emotions, each = 17E3)]
+plotEigenfaces2(raw_eigenfaces_combined, "")
+ggsave(paste0("example/Faces/final_sess_eigenfaces.png"),  width = 8, height = 11, units = "in")

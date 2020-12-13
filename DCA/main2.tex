@@ -103,16 +103,23 @@ To remedy this, we contrast trisomic mice because of the additional gene express
 \subsection{\label{sec:faces}Discovering eigenfaces of emotion}
 \begin{figure}[!th]
   \centering
-  \includegraphics[width = 0.78\textwidth]{figure/F_Surprise_Angry_Disgust_1.png}
-  \caption{Eigenfaces of Surprise (SUS), Angry (ANS), and Disgust (DIS) emotions from the Female Actors from KDEF \cite{Calvo2008}. ``Emotion'' row contains final session DIS eigenfaces. PCA eigenfaces describe general emotional faces of SUS, ANS, and DIS, whereas UCA with only SUS background exhibits features of both ANS and DIS. UCA with only ANS as background exhibits features of both SUS and DIS. Combining backgrounds SUS and ANS in the Split manner better highlight the nasolabial fold and the eyebrows, features unique to DIS, but not as prominent in SUS or ANS. Combining SUS and ANS in the Stacking manner using UCA does not achieve similar results.}
+  \includegraphics[width = 0.78\textwidth]{figure/final_sess_eigenfaces.png}
+  \caption{Top five eigenfaces of Female Actors from KDEF \cite{Calvo2008} for each emotion}
+  \label{fig:Faces_by_emotion}
+\end{figure}
+\begin{figure}[!th]
+  \centering
+  \includegraphics[height = 0.78\textwidth]{figure/all_Sad_removed.png}
+  \caption{Top five eigenfaces of Female Actors from KDEF \cite{Calvo2008} after removing all other Emotions except for Sad.}
   \label{fig:Faces}
 \end{figure}
 \begin{figure}[!th]
   \centering
-  \includegraphics[width = 0.9\textwidth]{figure/F_Surprise_Angry_Disgust_projected.png}
-  \caption{Eigenfaces projected onto the first two components found by PCA, cPCA++, UCA using Surprise (SUS) as the background, UCA using Angry (ANS) faces as the background, UCA using both Surprise and Angry as the background treated separately (Split), UCA using the joint covariance of Surprise and Split (Stack) as the background. UCA with Split background is capable of separating final session emotions whereas UCA with a single practice session background and both UCA and cPCA++ with stacked practice session backgrounds cannot produce the same separation.}
+  \includegraphics[width = 0.78\textwidth]{figure/all_projected_Sad_removed.png}
+  \caption{Eigenfaces of Female Actors from KDEF \cite{Calvo2008} projected onto two dimensions after removing all other Emotions except for Sad.}
   \label{fig:Face_Projections}
 \end{figure}
+\textbf{EDIT THE TEXT}
 We exemplify advantages of the multiple background capabilities of UCA using the Karolinska Directed Emotional Faces (KDEF) \cite{Calvo2008}, which captured images of 7 emotions, 5 different perspectives, from 70 amateur actors in either a practice or final session.
 Here we construct an example demonstrating that using UCA with multiple backgrounds is superior to using a single background. 
 This is similar to a real world use-case of UCA where researchers may have targeted variation of interest, but also various control groups which may be used to remove known variability.
