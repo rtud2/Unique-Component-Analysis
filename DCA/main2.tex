@@ -104,17 +104,6 @@ From this, we see that UCA using unshocked trisomic mice as background does not 
 \subsection{\label{sec:faces}Discovering eigenfaces of emotion}
 
 We exemplify advantages of the multiple background capabilities of UCA using the Karolinska Directed Emotional Faces (KDEF) \cite{Calvo2008}, which captured images of 7 emotions, 5 different perspectives, from 70 amateur actors in either a practice or final session.
-Here we construct a demonstration showing that using UCA with multiple backgrounds is superior to using a single background. 
-For illustrative purposes, we focus on  uncover variation unique to the afraid emotion from the final session pictures. Here, the target data is all final session pictures from each of the 7 emotions. Since the target data contains 6 other emotions which are not easily separable with PCA, we hope to remove theese unwanted sources with UCA.  
-
-We see that in Figure \ref{fig:faces-mean}, which shows the mean face of each emotion, that the afraid emotion is characterized by eyebrows raised, eyes widened, nostrils opened, and mouth ajar. Features of afraid are most similar to that of surprise, where they differ only on height of eyebrows, nostril size, and nasolabial folds.
-
-In Figure \ref{fig:faces-eigenfaces}, we look at the top five eigenfaces produced by PCA and UCA under two conditions, ``Pooled'' and ``Split''.
-We define UCA with a pooled background as UCA with a single joint background representing all emotions aside afraid from the pracitice session, whereas define UCA with the split background as UCA with six separate backgrounds from the practice session. PCA eigenfaces generally represent faces of all the emotions and does not highlighting features specific to any individual emotion. Eigenface produced using UCA with a pooled background show perhaps that the right eyebrow and upper lips are unique, though it is difficult to discern. On the other hand, eigenfaces produced using UCA with a split background, highlight eyebrows, eyes, nostrils, and nasolabial folds, which is especially clear in the second eigenface.
-
-To better see the differences between the eigenfaces, we project the faces onto the first two components found and color the points by emotional class in figure \ref{fig:faces-mean}.
-We see emotions are not seperable with PCA and UCA with pooled backgrounds whereas the emotions are much more separable under the split condition. Based on the first two components, we see that Afraid shares variablity with angry, surprise, and sad, but differs from disgust and happy.
-
 \begin{figure}[ht]
 \centering
 \tabskip=0pt
@@ -151,6 +140,17 @@ We see emotions are not seperable with PCA and UCA with pooled backgrounds where
 }
 \caption{ (a) Faces projected onto the first two components found by PCA, UCA with a pooled background, and UCA with backgrounds split (b) Average Faces for Each Emotion (c) Top 5 Eigenfaces of Female Emotions by found by PCA, UCA with a pooled background, and UCA with split backgrounds, ie. one background for each emotion}
 \end{figure}
+Here we construct a demonstration showing that using UCA with multiple backgrounds is superior to using a single background. 
+For illustrative purposes, we focus on  uncover variation unique to the afraid emotion from the final session pictures. Here, the target data is all final session pictures from each of the 7 emotions. Since the target data contains 6 other emotions which are not easily separable with PCA, we hope to remove theese unwanted sources with UCA.  
+
+We see that in Figure \ref{fig:faces-mean}, which shows the mean face of each emotion, that the afraid emotion is characterized by eyebrows raised, eyes widened, nostrils opened, and mouth ajar. Features of afraid are most similar to that of surprise, where they differ only on height of eyebrows, nostril size, and nasolabial folds.
+
+In Figure \ref{fig:faces-eigenfaces}, we look at the top five eigenfaces produced by PCA and UCA under two conditions, ``Pooled'' and ``Split''.
+We define UCA with a pooled background as UCA with a single joint background representing all emotions aside afraid from the pracitice session, whereas define UCA with the split background as UCA with six separate backgrounds from the practice session. PCA eigenfaces generally represent faces of all the emotions and does not highlighting features specific to any individual emotion. Eigenface produced using UCA with a pooled background show perhaps that the right eyebrow and upper lips are unique, though it is difficult to discern. On the other hand, eigenfaces produced using UCA with a split background, highlight eyebrows, eyes, nostrils, and nasolabial folds, which is especially clear in the second eigenface.
+
+To better see the differences between the eigenfaces, we project the faces onto the first two components found and color the points by emotional class in figure \ref{fig:faces-mean}.
+We see emotions are not seperable with PCA and UCA with pooled backgrounds whereas the emotions are much more separable under the split condition. Based on the first two components, we see that Afraid shares variablity with angry, surprise, and sad, but differs from disgust and happy.
+
 %concluding sentence
 
 % \begin{figure}[!ht]
@@ -405,13 +405,13 @@ Datasets that have been used to evaluate UCA in this paper are publicly availabl
 \bibliographystyle{plain}
 \bibliography{mybib}
 
-\section{Appendix}
-\begin{figure}[!ht]
-  \centering
-  \includegraphics[width = 0.8\textwidth]{figure/Mouse_stack_cpc_rpcTs65Dn.png}
-  \caption{Mouse Protein Expression Dataset}
-  \label{fig:mouse_stack_cpca}
-\end{figure}
+ % \section{Appendix}
+ % \begin{figure}[!ht]
+ %   \centering
+ %   \includegraphics[width = 0.8\textwidth]{figure/Mouse_stack_cpc_rpcTs65Dn.png}
+ %   \caption{Mouse Protein Expression Dataset}
+ %   \label{fig:mouse_stack_cpca}
+ % \end{figure}
 
 % \begin{figure}[!ht]
 %   \centering
