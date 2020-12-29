@@ -1,0 +1,107 @@
+\begin{thebibliography}{10}
+
+\bibitem{Abid}
+Abubakar Abid, Martin~J. Zhang, Vivek~K. Bagaria, and James Zou.
+\newblock Exploring patterns enriched in a dataset with contrastive principal
+  component analysis.
+\newblock {\em Nature Communications}, 9:2134, 05 2018.
+
+\bibitem{cautoencoder}
+Abubakar Abid and James Zou.
+\newblock Contrastive variational autoencoder enhances salient features, 2019.
+
+\bibitem{Ahmed}
+Md.~Mahiuddin Ahmed, A.~Ranjitha Dhanasekaran, Aaron Block, Suhong Tong,
+  Alberto C.~S. Costa, Melissa Stasko, and Katheleen~J. Gardiner.
+\newblock Protein dynamics associated with failed and rescued learning in the
+  ts65dn mouse model of down syndrome.
+\newblock {\em PLOS ONE}, 10(3):1--25, 03 2015.
+
+\bibitem{Boileau}
+Philippe Boileau, Nima~S Hejazi, and Sandrine Dudoit.
+\newblock {Exploring high-dimensional biological data with sparse contrastive
+  principal component analysis}.
+\newblock {\em Bioinformatics}, 36(11):3422--3430, 03 2020.
+
+\bibitem{byrd1995limited}
+Richard~H Byrd, Peihuang Lu, Jorge Nocedal, and Ciyou Zhu.
+\newblock A limited memory algorithm for bound constrained optimization.
+\newblock {\em SIAM Journal on scientific computing}, 16(5):1190--1208, 1995.
+
+\bibitem{Calvo2008}
+Manuel~G. Calvo and Daniel Lundqvist.
+\newblock Facial expressions of emotion (kdef): Identification under different
+  display-duration conditions.
+\newblock {\em Behavior Research Methods}, 40(1):109--115, Feb 2008.
+
+\bibitem{ica}
+Pierre Comon.
+\newblock Independent component analysis, a new concept?
+\newblock {\em Signal Processing}, 36(3):287 -- 314, 1994.
+\newblock Higher Order Statistics.
+
+\bibitem{rcpparmadillo}
+Dirk Eddelbuettel and Conrad Sanderson.
+\newblock Rcpparmadillo: Accelerating r with high-performance c++ linear
+  algebra.
+\newblock {\em Computational Statistics and Data Analysis}, 71:1054--1063,
+  March 2014.
+
+\bibitem{pp}
+J.~H. {Friedman} and J.~W. {Tukey}.
+\newblock A projection pursuit algorithm for exploratory data analysis.
+\newblock {\em IEEE Transactions on Computers}, C-23(9):881--890, 1974.
+
+\bibitem{pca}
+Karl~Pearson F.R.S.
+\newblock Liii. on lines and planes of closest fit to systems of points in
+  space.
+\newblock {\em The London, Edinburgh, and Dublin Philosophical Magazine and
+  Journal of Science}, 2(11):559--572, 1901.
+
+\bibitem{Golub}
+Gene Golub, Knut Solna, and Paul Van~Dooren.
+\newblock Computing the svd of a general matrix product/quotient.
+\newblock {\em SIAM Journal on Matrix Analysis and Applications}, 22(1):1--19,
+  2000.
+
+\bibitem{Higuera}
+Clara Higuera, Katheleen~J. Gardiner, and Krzysztof~J. Cios.
+\newblock Self-organizing feature maps identify proteins critical to learning
+  in a mouse model of down syndrome.
+\newblock {\em PLOS ONE}, 10(6):1--28, 06 2015.
+
+\bibitem{Lee1999}
+Daniel~D. Lee and H.~Sebastian Seung.
+\newblock Learning the parts of objects by non-negative matrix factorization.
+\newblock {\em Nature}, 401(6755):788--791, Oct 1999.
+
+\bibitem{microbenchmark}
+Olaf Mersmann.
+\newblock {\em microbenchmark: Accurate Timing Functions}, 2019.
+\newblock R package version 1.4-7.
+
+\bibitem{Rspectra}
+Yixuan Qiu and Jiali Mei.
+\newblock {\em RSpectra: Solvers for Large-Scale Eigenvalue and SVD Problems},
+  2019.
+\newblock R package version 0.16-0.
+
+\bibitem{baseR}
+{R Core Team}.
+\newblock {\em R: A Language and Environment for Statistical Computing}.
+\newblock R Foundation for Statistical Computing, Vienna, Austria, 2020.
+
+\bibitem{Salloum}
+Ronald Salloum and C.{-}C.~Jay Kuo.
+\newblock Efficient image splicing localization via contrastive feature
+  extraction.
+\newblock {\em CoRR}, abs/1901.07172, 2019.
+
+\bibitem{severson2019unsupervised}
+Kristen~A Severson, Soumya Ghosh, and Kenney Ng.
+\newblock Unsupervised learning with contrastive latent variable models.
+\newblock In {\em Proceedings of the AAAI Conference on Artificial
+  Intelligence}, volume~33, pages 4862--4869, 2019.
+
+\end{thebibliography}
