@@ -11,6 +11,12 @@
 \usepackage[ruled,vlined]{algorithm2e}
 \usepackage{subcaption}
 
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=magenta,      
+    urlcolor=cyan,
+}
 %\setlength{\parskip}{1em}
 \title{Capturing patterns of variation unique to a specific dataset}
 \author[1]{Robin Tu}
@@ -207,19 +213,22 @@ We have released the code for UCA as an R package, along with documentation and 
 % \textbf{BE CONSISTENT WITH CAPITALIZATION, etc.} checked: Lagrang[e|ian] Multiplier eigendecomposition algorithm 
 
 \subsection{Contrastive principal components analysis}
-We first briefly review cPCA \cite{Abid}. Let $A$ denoted the $p\times p$ sample covariance matrix constucted from target data $X_{n_x \times p}$ and $B$ denote the $p\times p$ sample background covariance constructed from background data $Y_{n_y \times p}$. The goal of cPCA is to find the directions of variability, $v \in \mathbb{R}^p$, which account for large variation in the target data $Y$ and small variation in the background data $X$ where $\|v\|_2 = 1$. Specifically, for some parameter $\lambda$ , cPCA seeks the eigenvectors $v$ solving
-\[\text{arg}\max_{v \in \mathbb{R}^p}{\left(v^TAv - \lambda v^TBv\right)} = \text{arg}\max_{v \in \mathbb{R}^p}{v^T\left(A - \lambda B\right)v}.\]
+We first briefly review cPCA \cite{Abid}. Let $A$ denoted the $p\times p$ sample covariance matrix constucted from target data $X_{n_x \times p}$ and $B$ denote the $p\times p$ sample background covariance constructed from background data $Y_{n_y \times p}$. For some parameter $\lambda$, cPCA seeks the eigenvectors, $v_\lambda \in \mathbb{R}^p$, which account for large variation in the target data $Y$ and small variation in the background data $X$ where $\|v\|_2 = 1$. Specifically:  
+\[v_\lambda = \text{arg}\max_{v \in \mathbb{R}^p}{\left(v^TAv - \lambda v^TBv\right)} = \text{arg}\max_{v \in \mathbb{R}^p}{v^T\left(A - \lambda B\right)v}.\]
 For a given $\lambda$, the direction is simply the eigenvector of the weighted difference between covariance matrices where $v$ maximize the variation in $A$ while constraining variation in $B$.
 
-The tuning parameter $\lambda$ measures how much to penalize the background data covariance. When $\lambda = 0$, background variation isn't accounted for, thus the cPCA is reduced to PCA. As $\lambda$ increases, the relative background variation becomes more dominant, causing $v_\lambda$ \textbf{What's $v_\lambda$? Need to define it} to focus on directions which minimize background variation rather than maximizing the target. For very large values of $\lambda$, $v_\lambda$ is equivalent to PCA after projecting the target data onto the nullspace of the background data.  The authors of cPCA suggested that $\lambda$ be chosen using spectral clustering via a parameter sweep of logarithmically spaced candidate values.
+The tuning parameter $\lambda$ measures how much to penalize the background data covariance. When $\lambda = 0$, background variation isn't accounted for, thus the cPCA is reduced to PCA. As $\lambda$ increases, the relative background variation becomes more dominant, causing $v_\lambda$ to focus on directions which minimize background variation rather than maximizing the target. For very large values of $\lambda$, $v_\lambda$ is equivalent to PCA after projecting the target data onto the nullspace of the background data.  The authors of cPCA suggested that $\lambda$ be chosen using spectral clustering via a parameter sweep of logarithmically spaced candidate values.
+
+\subsection{cPCA++}
+\textbf{Why does cPCA++ enforce $v^\top B v = 1$? We should explain.}
+\textbf{How is this possible? Need to explain. Basically we need to explain how cPCA++ works before we explain UCA.}
 
 \subsection{Unique Component Analysis}
 We introduce the Unique Component Analysis (UCA) framework to identify the optimal contrastive parameter, $\lambda$, and the resulting directions of variation using the duality of lagrangians.
 By adding the additional constraints of $v^T v = 1$ and $v^T Bv = 1$ we arrive at an objective method to choose $\lambda$.
 These constraints are motivated by similar constraints in generalized eigenvalue problems, e.g. PCA where $Av = \lambda Iv$ enforces $v^T v = 1$, cPCA++ where $Av = \lambda B v$ which enforces $v^T Bv = 1$. % allowing the principal components to be identifiable.
-\textbf{Why does cPCA++ enforce $v^\top B v = 1$? We should explain.}
 Constraining $v^T v = 1$ while $v^T Bv$ is unconstrained may result in eigenvectors that explain large amounts of variability in the target but also explain large amounts of variability in the background.
-However, constraining $v^T Bv = 1$ while leaving $v^T v$ unconstrained results in eigenvectors that are not norm 1 and explain near zero variability in the target. \textbf{How is this possible? Need to explain. Basically we need to explain how cPCA++ works before we explain UCA.}
+However, constraining $v^T Bv = 1$ while leaving $v^T v$ unconstrained results in eigenvectors that are not norm 1 and explain near zero variability in the target. 
 
 UCA combines both of these constraints together and can be expressed as a primal optimization problem:
 \begin{align}
@@ -324,8 +333,10 @@ to solve for $j^{th}$ of the $m$ Lagrange multipliers, we use Algorithm \ref{alg
   \label{fig:computational_perf}
 \end{figure}
 
-\textbf{First need to explain what the problem is when we have high-dimensional data. Actually first need to explain what high-dimensional data means.}
-To extend our method to high-dimensional data, we avoid the traditional eigendecomposition method of finding eigenvalue/eigenvectors of the covariance matrix. Just like how singular-value decomposition (SVD) of the data matrix can be used to find the top eigenvalue/eigenvectors of its covariance, we introduce the Product SVD method to exploit the structure of how the contrastive covariance matrices are formed and employ SVD of a product of matrices to quickly find our top eigenvalue.  Breaking the problem down in this way considerably speeds up our L-BFGS-B algorithm, and allows us to run UCA even in the high-dimensional setting.
+% \textbf{First need to explain what the problem is when we have high-dimensional data. Actually first need to explain what high-dimensional data means.}
+Under the high-dimensional situation, where the number of variables $p$ far exceeds the number of samples $n$, constructing the covariance matrix and using eigendecomposition to find the top eigenvectors becomes computationally expensive. To avoid the intermediatary of creating and storing a large $p \times p$ covariance matrix, singular-value decomposition (SVD) of the data matrix is frequently used to find the top eigenvalue/eigenvectors of its covariance.
+To extend our method to high-dimensional data, we analogously avoid the traditional eigendecomposition method of finding eigenvalue/eigenvectors of the covariance matrix that current methods employ.
+We introduce the Product SVD method to exploit the structure of how the contrastive covariance matrices are formed and employ SVD of a product of matrices to quickly find our top eigenvalue.  Breaking the problem down in this way considerably speeds up our L-BFGS-B algorithm, and allows us to run UCA even in the high-dimensional setting.
 
 For a single background, let the $p \times p$ covariance matrices $A$ be the target covariance matrix and $B$ be the background covariance matrix. $A$ and $B$ are formed from corresponding centered $n_y \times p$ target data matrix $Y$,   and centered $n_x \times p$ background data matrix $X$.  We can write the difference of the covariance matrices $A - \lambda B$ as a product of a $p \times (n_y + n_x)$ dimensional left matrix , $L$, and a $(n_y + n_x) \times p$ dimensional right matrix, $R$ as seen in equation \ref{eq:7}:
 \begin{align}
@@ -374,16 +385,16 @@ Figure \ref{fig:computational_perf} show box plots of time (in seconds) versus t
 
 All computations in this paper were done with R 3.6.3 \cite{baseR} on an AMD Ryzen 1700X 3.7 gHz processor and 64GB 3000 mhz DDR4 RAM, utilizing the Intel MKL libraries. 
 
-\textbf{I think you should explicitly write out the URLs in addition to links, that's what I usually see people doing.}
+%\textbf{I think you should explicitly write out the URLs in addition to links, that's what I usually see people doing.}
 
 % these subsections are just copies of cPCA paper...
 % \subsection{Theoretical Guarantees}
 % \subsection{Choosing Background Data}
 \subsection{Code Availability}
-We have released a R implementation of \href{https://urldefense.com/v3/__https://github.com/rtud2/Residual-Dimension-Reduction/tree/master/uca*7D*7BUCA__;JSU!!DZ3fjg!sGIYM1o_8SSJW1QbOZ62mPidAZTlpAuO5P4v-6IHek6bOPrBOHX6LTxlOlrh0Zk90pI$  on GitHub}. We have implemented both Product SVD on the data matrix and eigendecomposition on the contrastive covariance matrix and allow the background to take either a single background or a list of backgrounds. The GitHub repository also includes R markdown and datasets that reproduce most of the figures in this paper and in the Supplementary.
+We have released a R implementation of \url{https://github.com/rtud2/Residual-Dimension-Reduction} on GitHub. We have implemented both Product SVD on the data matrix and eigendecomposition on the contrastive covariance matrix and allow the background to take either a single background or a list of backgrounds. The GitHub repository also includes R markdown and datasets that reproduce most of the figures in this paper and in the Supplementary.
 
 \subsection{Data availability}
-Datasets that have been used to evaluate UCA in this paper are publicly available from the authors of the original studies. The mouse proteomics data are available from the \href{https://urldefense.com/v3/__https://archive.ics.uci.edu/ml/datasets/Mice*Protein*Expression*7D*7BUCI__;KyslJQ!!DZ3fjg!sGIYM1o_8SSJW1QbOZ62mPidAZTlpAuO5P4v-6IHek6bOPrBOHX6LTxlOlrhjXCSUAo$  Machine Learning Repository} \cite{Higuera} and the Karolinska Directed Emotional Faces (KDEF) are available from the \href{https://urldefense.com/v3/__https://kdef.se/*7D*7BKDEF__;JSU!!DZ3fjg!sGIYM1o_8SSJW1QbOZ62mPidAZTlpAuO5P4v-6IHek6bOPrBOHX6LTxlOlrhF2-OqmU$ } website  \cite{Calvo2008}.
+Datasets that have been used to evaluate UCA in this paper are publicly available from the authors of the original studies. The mouse proteomics data are available from the UC Irvine Machine Learning Repository \url{https://archive.ics.uci.edu/ml/datasets/Mice+Protein+Expression}\cite{Higuera} and the Karolinska Directed Emotional Faces (KDEF) are available from \url{https://www.kdef.se/}\cite{Calvo2008}.
 
 
 \bibliographystyle{plain}
