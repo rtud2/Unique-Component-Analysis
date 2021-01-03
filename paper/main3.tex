@@ -146,9 +146,13 @@ We focus on uncovering variation unique to the ``afraid'' emotion using all fina
     \end{subfigure}%
   }\cr
 }
-\caption{\textbf{The faces in (b) look too squashed. Can you come up with a different arrangement of the subfigures? Also since some of the colors in the PCA are too similar, I had another idea, do you think we can do shapes as well? So like the ``bad'' emotions (anger, digust, etc.) get different shapes?}
+\caption{
   Results of analysis of KDEF faces. (a) Faces projected onto the first two components found by PCA, UCA with a pooled background, and UCA using multiple backgrounds. (b) Each emotion averaged over all female actors. (c) Top 5 eigenfaces of female emotions produced by different analyses.}
 \end{figure}
+
+%\textbf{The faces in (b) look too squashed. Can you come up with a different arrangement of the subfigures? Also since some of the colors in the PCA are too similar, I had another idea, do you think we can do shapes as well? So like the ``bad'' emotions (anger, digust, etc.) get different shapes?}
+% Solution: make PCA faces in (b) two rows.
+% Rebuttal on PCA plot, can we leave it? it's supposed to look messy cause it's PCA
 
 Figure \ref{fig:faces-projected} projects the target data onto the first two directions of variation calculated using each method. The emotions are entirely intermixed when projected onto components produced by PCA and by UCA using a single pooled background. In contrast, the emotions are much more separable when using UCA with multiple separate backgrounds. In particular, ``afraid'' faces are very separate from the ``disgust'' and ``happy'' faces. This indicates that UCA with multiple backgrounds can identify patterns of variation that can distinguish ``afraid'' from the other emotions.
 
@@ -217,13 +221,36 @@ For a given $\lambda$, the direction is simply the eigenvector of the weighted d
 The tuning parameter $\lambda$ measures how much to penalize the background data covariance. When $\lambda = 0$, background variation isn't accounted for, thus the cPCA is reduced to PCA. As $\lambda$ increases, the relative background variation becomes more dominant, causing $v_\lambda$ to focus on directions which minimize background variation rather than maximizing the target. For very large values of $\lambda$, $v_\lambda$ is equivalent to PCA after projecting the target data onto the nullspace of the background data.  The authors of cPCA suggested that $\lambda$ be chosen using spectral clustering via a parameter sweep of logarithmically spaced candidate values.
 
 \subsection{cPCA++}
-\textbf{Why does cPCA++ enforce $v^\top B v = 1$? We should explain.}
-\textbf{How is this possible? Need to explain. Basically we need to explain how cPCA++ works before we explain UCA.}
+%\textbf{Why does cPCA++ enforce $v^\top B v = 1$? We should explain.} It's not enforced, but 
+%\textbf{How is this possible? Need to explain. Basically we need to explain how cPCA++ works before we explain UCA.}
+Salloum and Kuo  \cite{Salloum} arrived at a tuning free method, cPCA++, where they seek to maximize the ratio, rather than the difference, of the variance explained in the target to the variance explained in the background.
+%motivated by image splicing localization, classifying whether a pixel belonged to the original image or an image splice. Using a generalized likelihood ratio test framework to test whether a pixel belonged to foreground or background, they arrived at a Rayleigh Quotient of target variation divided by background variation.
+Using similar notation as above where $A$ denotes the target sample covariance matrix and $B$ denotes the background sample covariance matrix, cPCA++ seeks to maximize the Rayleigh quotient:
+\[v = \text{arg}\max_{v\in \mathbb{R}^p} \frac{v^T A v}{v^T B v}\]
+If we define $\lambda_{\text{max}} = \max_{v\in \mathbb{R}^p} \frac{v^T A v}{v^T B v}$, the maximum of the Rayleigh quotient, we see that $\left(v^T B v\right) \lambda_{\text{max}} = v^T A v$. 
+Such vectors $v$ have identical directions to solving the following primal problem and differ only by a scaling constant, c:
+\[
+\max_{v \in \mathbb{R}^p} v^\top A v \mbox{ subject to } v^\top B v = c.
+\]
+where $c = 1$ is a common identifiability constraint.
+Although this solution appears tuning free, the matrix inversion requires positive definiteness of $B$. If $B$ is rank deficient, a choice of $\epsilon$ may be added to the diagonal terms to induce regularization.
+%which does not require iterating through candidate contrastive parameters. This method uses a matrix inversion of a $p \times p$ background covariance matrix, which may be rank deficient, requiring the addition of some $\epsilon > 0$ onto the diagonal. The addition of $\epsilon$ onto the diagonal of the background matrix induces regularization depending on the choice of $\epsilon$, making this approach not exactly without tuning parameters.
+%The resulting eigenvectors can be shown to diagonalize the background matrix, ie $v^T Bv =1$, however, the eigenvectors are no longer orthonormal, ie $v^T v = I_p$. 
+  %\item cPCA++: \cite{Salloum}
+    %\begin{enumerate}
+        %\item "No tuning" parameter: it's still there in the matrix inversion with the choice of $\epsilon$. note: by eigen decomp $B = VDV^{-1}$, then $(B+cI)^{-1} = (VDV^{-1} + VcIV^{-1})^{-1} = V(D+cI)^{-1}V^{-1}$ is similar to lasso
+        %\item approach from a a Generalized Likelihood Ratio Test framework and arrived at a tuning free solution to cPCA using the Rayleigh Quotient.
+        %\item  requires matrix inversion of $p\times p$ covariance matrix, which requires positive definiteness of the background covariance matrix.  If rank deficient they add $\epsilon$ to the diagonal of the background covariance matrix.
+        %\item no constraints on  $v^T B v$ when solving the optimization $max_{v}{v^TB^{-1}Av}$ will find a solution where $v^T B v \approx 0$ and $v^T A v$ is not very large, but the rayleigh quotient still blows up. This means a suboptimal direction 
+        %\item adding $\epsilon$ to the diagonal is sort of cheating because it adds regularization. it forces $v^T B v > \epsilon $. choosing $\epsilon$ is also a tuning parameter
+        %\item the eigenvectors $v$ are no longer orthogonal, therefore directions found are correlated. Forget trying to 
+        %\item no intuitive extension to multiple data
+    %\end{enumerate}
 
 \subsection{Unique Component Analysis}
 We introduce the Unique Component Analysis (UCA) framework to identify the optimal contrastive parameter, $\lambda$, and the resulting directions of variation using the duality of lagrangians.
 By adding the additional constraints of $v^T v = 1$ and $v^T Bv = 1$ we arrive at an objective method to choose $\lambda$.
-These constraints are motivated by similar constraints in generalized eigenvalue problems, e.g. PCA where $Av = \lambda Iv$ enforces $v^T v = 1$, cPCA++ where $Av = \lambda B v$ which enforces $v^T Bv = 1$. % allowing the principal components to be identifiable.
+These constraints are motivated by similar identifiablity constraints in generalized eigenvalue problems, e.g. PCA where $Av = \lambda Iv$ enforces $v^T v = 1$, cPCA++ where $Av = \lambda B v$ which enforces $v^T Bv = 1$. % allowing the principal components to be identifiable.
 Constraining $v^T v = 1$ while $v^T Bv$ is unconstrained may result in eigenvectors that explain large amounts of variability in the target but also explain large amounts of variability in the background.
 However, constraining $v^T Bv = 1$ while leaving $v^T v$ unconstrained results in eigenvectors that are not norm 1 and explain near zero variability in the target. 
 
@@ -423,11 +450,10 @@ Datasets that have been used to evaluate UCA in this paper are publicly availabl
 
 
 %%% TO DO %%%
-% format like Nature communications
-% Change captions for mouse and finish mouse results section.
-% add caption to KDEF image
-% write introduction
-% updated results on speed performance in methods section
+%\textbf{The faces in (b) look too squashed. Can you come up with a different arrangement of the subfigures? Also since some of the colors in the PCA are too similar, I had another idea, do you think we can do shapes as well? So like the ``bad'' emotions (anger, digust, etc.) get different shapes?}
+    % Solution: make PCA faces in (b) two rows.
+    % Rebuttal on PCA plot, can we leave it? it's supposed to look messy cause it's PCA
+%Strong Duality in UCA: KKT Conditions?
 
 %%% Things to think about %%%
 % an interpretation for $\lambda$
@@ -435,7 +461,3 @@ Datasets that have been used to evaluate UCA in this paper are publicly availabl
 % if you scale the constraint does the estimated v just a scaled version?
 % I.e. does it just live in the same space? Maybe the direction wouldn't change
 
-%%% Local Variables:
-%%% mode: latex
-%%% TeX-master: t
-%%% End:
