@@ -112,14 +112,14 @@ We further illustrate the advantages of contrasting multiple background datasets
 
 We focus on uncovering variation unique to the ``afraid'' emotion using all final session pictures from every emotion from female actors. Since this target contains six other emotions, standard PCA will not provide variation unique to ``afraid''. Instead, we leverage images from the practice session to serve as background data. We construct six separate backgrounds, corresponding to the six other emotions, and contrast out their variation using UCA. For comparison, we also pooled these images together into a single background dataset and performed UCA using the pooled background.
 
-\begin{figure}[ht]
+\begin{figure}[th]
 \centering
 \tabskip=0pt
 \valign{#\cr
   \hbox{%
     \begin{subfigure}[b]{.51\textwidth}
     \centering
-    \includegraphics[width=\textwidth]{figure/Afraid_projected_1_2_removed.png}
+    \includegraphics[height = 13.5cm,width=\textwidth]{figure/Afraid_projected_1_2_removed.png}
     \caption{}
     \label{fig:faces-projected}
 %Faces projected onto the first two components found by PCA, UCA with a pooled background, and UCA with backgrounds split
@@ -129,7 +129,8 @@ We focus on uncovering variation unique to the ``afraid'' emotion using all fina
   \hbox{%
     \begin{subfigure}{.48\textwidth}
     \centering
-    \includegraphics[height=4.0cm,width=\textwidth]{figure/mean_emotions.png}
+    %\includegraphics[height=4.0cm,width=\textwidth]{figure/mean_emotions.png}
+    \includegraphics[height=5.0cm,width=\textwidth]{figure/mean_emotions_2rows.png}
     \caption{}
     \label{fig:faces-mean}
     %Average Faces for Each Emotion
@@ -138,7 +139,7 @@ We focus on uncovering variation unique to the ``afraid'' emotion using all fina
   \hbox{%
     \begin{subfigure}{.48\textwidth}
     \centering
-    \includegraphics[height=8.25cm,width=\textwidth]{figure/all_Afraid_removed.png}
+    \includegraphics[height=8.0cm,width=\textwidth]{figure/all_Afraid_removed.png}
     \caption{}
     \label{fig:faces-eigenfaces}
     %Top 5 Eigenfaces of Female Emotions by found by PCA, UCA with a pooled background, and UCA with backgrounds split
@@ -450,8 +451,7 @@ Datasets that have been used to evaluate UCA in this paper are publicly availabl
 
 
 %%% TO DO %%%
-%\textbf{The faces in (b) look too squashed. Can you come up with a different arrangement of the subfigures? Also since some of the colors in the PCA are too similar, I had another idea, do you think we can do shapes as well? So like the ``bad'' emotions (anger, digust, etc.) get different shapes?}
-    % Solution: make PCA faces in (b) two rows.
+%\textbf{since some of the colors in the PCA are too similar, I had another idea, do you think we can do shapes as well? So like the ``bad'' emotions (anger, digust, etc.) get different shapes?}
     % Rebuttal on PCA plot, can we leave it? it's supposed to look messy cause it's PCA
 %Strong Duality in UCA: KKT Conditions?
 
