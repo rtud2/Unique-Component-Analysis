@@ -17,6 +17,7 @@
     filecolor=magenta,      
     urlcolor=cyan,
 }
+
 %\setlength{\parskip}{1em}
 \title{Capturing patterns of variation unique to a specific dataset}
 \author[1]{Robin Tu}
@@ -36,7 +37,7 @@
 Capturing patterns of variation present in a dataset is an important step in exploratory data analysis and unsupervised learning. Popular methods include principal component analysis (PCA) \cite{pca}, nonnegative matrix factorization \cite{Lee1999}, projection pursuit \cite{pp}, and independent component analysis \cite{ica}. Frequently, however, many of the identified patterns may actually arise from systematic or technical variation, for example batch effects, that are not of substantive interest.
 
 New approaches are necessary for capturing meaningful patterns of variation. A popular approach is to contrast a target dataset of interest with a carefully chosen background dataset that represents unwanted or uninteresting variation. Patterns of variation unique to the target, and not present in the background, are more likely to be substantively meaningful.
-For example, in Section \ref{sec:mouse}, we analyze proteomics data from of normal and trisomic mice that have undergone shock therapy and/or drug therapy. One goal is to identify patterns uniquely associated with normal mice. However, the dominant modes of variation in the dataset arise from the shock treatment and the trisomic gene, which are not of interest. Therefore, we contrast the data with a background dataset of proteomics data from shock-treated and drug-treated trisomic mice. As a result, the remaining patterns of variation unique to the target dataset reveal features specific to normal mice.
+For example, in Section \ref{sec:mouse}, we analyze proteomics data from of normal and trisomic mice that have undergone Context Shock treatment and/or drug therapy. One goal is to identify patterns uniquely associated with normal mice. However, the dominant modes of variation in the dataset arise from the Context Shock treatment and the trisomic gene, which are not of interest. Therefore, we contrast the data with a background dataset of proteomics data from Context Shock-treated and drug-treated trisomic mice. As a result, the remaining patterns of variation unique to the target dataset reveal features specific to normal mice.
 %For example, in Section \ref{sec:faces}, we analyze images of the faces of actors expressing different emotions. Our goal is to identify features uniquely associated with expression of fear (labeled as afraid). However, the dominant modes of variation in the dataset correspond to general variation in facial features that are not meaningful for the emotion of interest. Therefore, we contrast the data with a background dataset of images of other emotions that are not of interest. As a result, the remaining patterns of variation unique to the target dataset reveal features specific to afraid.
 
 This approach was first introduced by Abid et al. \cite{Abid}, who proposed contrastive principal components analysis (cPCA). While standard PCA identifies directions of variation that explain the most variation in the target dataset, cPCA seeks directions that explain more variation in the target than in the background. The most important patterns are those corresponding to the largest gap between the two datasets. Salloum and Kuo \cite{Salloum} later introduced cPCA++, which maximizes the ratio, rather than the difference, of the variance explained by the target and background. Boileau et al. \cite{Boileau} described sparse cPCA, which seeks maxmially contrastive patterns of variation that can be characterized using a parsimonious set of features. Other types of contrastive implementations include latent models \cite{severson2019unsupervised} and autoencoders \cite{cautoencoder}.
@@ -68,18 +69,16 @@ Not only can UCA contrast a target dataset against multiple backgrounds, but it 
 \begin{figure}[th!]
   \centering
   \includegraphics[width = 0.8\textwidth]{figure/Mouse_Data.png}
-  \caption{Mouse Protein Expression: Down Syndrome (Ts65Dn) separability of saline injected mice which were not subject to shock therapy. Down Syndrome and control mice were unseparable using PCA alone but is easily separable by cPCA at all values of the contrastive parameter $\lambda$. The mice are also easily separable by cPCA++ and UCA.}
+  \caption{Mouse Protein Expression: Down Syndrome (Ts65Dn) separability of saline injected mice which were shocked before getting environmental context (Shock Context). Both normal and trisomic mice receiving Shock Context treatment do not associate novel environments with adverse stimulus. Down Syndrome and control mice were unseparable using PCA alone but is easily separable by cPCA at all values of the contrastive parameter $\lambda$. The mice are also easily separable by cPCA++ and UCA.}
   \label{fig:Mouse}
 \end{figure}
 
 % \textbf{ I THINK YOUR ORIGINAL WRITEUP WAS BACKWARDS AND FLIPPED SHOCKED VS UNSHOCKED. ALSO, IS THE TOTAL SAMPLE SIZE OF 1080 CORRECT?}
 % nope not flipped. and yes, total samples they say on the UCI database was 1080, and each sample could be treated as if they were independent even tho some measurements were repeated on the same mice. 
 
-We applied UCA to mouse proteomics data, which were also used by Abid et al. \cite{Abid} to illustrate cPCA performance. The study measured levels of 76 proteins in 1080 normal and trisomic (Down Syndrome) mice receiving various combinations of therapy (shock vs. no shock) and drug (memantine vs. saline) \cite{Ahmed, Higuera, Abid}. The goal of the experiment was to assess whether memantine improved learning ability in trisomic mice and to identify subsets of protein that may be involved in this process.
+We applied UCA to mouse proteomics data, which were also used by Abid et al. \cite{Abid} to illustrate cPCA performance. The study measured levels of 76 proteins in 1080 normal and trisomic (Down Syndrome) mice receiving various combinations of learning therapies (Context Shock vs. Shock Context) and drug (memantine vs. saline) \cite{Ahmed, Higuera, Abid}. Normal mice exposed to Context Shock will first be exposed to novel context then shocked, and learn to associate novel contexts with adverse stimulus; trisomic mice will not learn this association. Under the Shock Context treatment, mice are first shocked than exposed to novel context, resulting in normal and trisomic mice not associating the environment with adverse stimulus. The goal of the experiment was to assess whether memantine improved learning ability in trisomic mice and to identify subsets of protein that may be involved in this process.
 
-\textbf{Just confirming that the text description of the analysis no longer flips shock and unshock?}
-
-We first replicate the analysis by Abid et al. \cite{Abid}. We want to extract patterns of variation in protein levels that can help discriminate normal from trisomic mice. Our target dataset consisted of protein data from unshocked mice given saline. However, natural variation, arising from factors such as age and gender, may dominant this dataset and obscure the variation of interest due to trisomy. To remove this natural variation, we contrasted the target data with a background dataset consisting of normal mice who had been given saline but had also been shocked. As natural variation is likely present in both the target and the background, patterns that explaining variation in the target but not the background may be more likely to related to trisomy.
+We first replicate the analysis by Abid et al. \cite{Abid}. We want to extract patterns of variation in protein levels that can help discriminate normal from trisomic mice. Our target dataset consisted of protein data from Shock Context mice given saline. However, natural variation, arising from factors such as age and gender, may dominant this dataset and obscure the variation of interest due to trisomy. To remove this natural variation, we contrasted the target data with a background dataset consisting of normal Context Shocked mice who had been given saline. As natural variation is likely present in both the target and the background, patterns that explaining variation in the target but not the background may be more likely to related to trisomy.
 
 Figure \ref{fig:Mouse} shows the data projected to the first two components identified by PCA, cPCA, cPCA++, and UCA. Normal and trisomic mice are not well-separated in the PCA results, showing that dominant variation in the target data indeed does not stem from trisomy. In contrast, the two mouse groups are much more clearly separated in the cPCA results. While this separation is noticeable for each of the tuning parameter values we tried, the actual projected data can vary considerably, and the optimal tuning parameter value remains unclear.
 cPCA++, which does not require specifying tuning parameter here because the number of samples exceeds the number of features, shows better separation than PCA but does not perform as well as cPCA. UCA performs as well as cPCA but without requiring a tuning parameter.
@@ -87,11 +86,11 @@ cPCA++, which does not require specifying tuning parameter here because the numb
 \begin{figure}[th!]
   \centering
   \includegraphics[width = 0.9\textwidth]{figure/Mouse_split_stack_Ts65Dn.png}
-  \caption{Mouse Protein Expression: Separability of normal and trisomic mice that were shocked injected with saline. Background datasets: unshocked trisomic mice injected with memantine (Mem-S/C-Ts65Dn), shocked trisomic mice injected with memantine (Mem-C/S-Ts65Dn), and unshocked trisomic mice injected with saline (Saline-S/C-Ts65Dn). Pooled: all background datasets are pooled into one background. Split: UCA using multiple separate individual backgrounds.}
+  \caption{Mouse Protein Expression: Separability of normal and trisomic Context Shocked mice injected with saline. Background datasets: Shock Contex trisomic mice injected with memantine (Mem-S/C-Ts65Dn), Context Shock trisomic mice injected with memantine (Mem-C/S-Ts65Dn), and Shock Context trisomic mice injected with saline (Saline-S/C-Ts65Dn). Pooled: all background datasets are pooled into one background. Split: UCA using multiple separate individual backgrounds.}
   \label{fig:MouseSplitStack}
 \end{figure}
 
-We next repeat the same analysis, but this time using shocked mice given saline as our target dataset. Abid et al. \cite{Abid} did not consider this analysis, where separating normal and trisomic shocked mice proves to be a much more challenging problem. Figure \ref{fig:MouseSplitStack} shows that normal and trisomic mice are again not well-separated by the first two components learned by PCA.
+We next repeat the same analysis, but this time using Context Shocked mice given saline as our target dataset. Abid et al. \cite{Abid} did not consider this analysis, where separating normal and trisomic Context Shocked mice proves to be a much more challenging problem. Figure \ref{fig:MouseSplitStack} shows that normal and trisomic mice are again not well-separated by the first two components learned by PCA.
 Here we extract patterns of variation unique to normal mice and so applied UCA using three trisomic mouse datasets as backgrounds.
 
 The results show that a single background dataset alone cannot separate normal and trisomic mice well. Pooling the three individual backgrounds together achieves slightly better separability compared to some of the individual backgrounds. However, natively constrasting multiple backgrounds simultaneously without pooling allows our proposed UCA to remove variability specific to each background and results in the best separability.
@@ -101,8 +100,6 @@ The results show that a single background dataset alone cannot separate normal a
 
 
 % We also note that the choice of background is crucial and that not some backgrounds are unsuitable... using control instead leads to bad results?
-
-
 
 % We show that our results match the cPCA results
 % We show that cPCA depends on tuning parameter
@@ -391,7 +388,7 @@ All computations in this paper were done with R 3.6.3 \cite{baseR} on an AMD Ryz
 % \subsection{Theoretical Guarantees}
 % \subsection{Choosing Background Data}
 \subsection{Code Availability}
-We have released a R implementation of \url{https://github.com/rtud2/Residual-Dimension-Reduction} on GitHub. We have implemented both Product SVD on the data matrix and eigendecomposition on the contrastive covariance matrix and allow the background to take either a single background or a list of backgrounds. The GitHub repository also includes R markdown and datasets that reproduce most of the figures in this paper and in the Supplementary.
+We have released a R implementation of \href{https://github.com/rtud2/Residual-Dimension-Reduction}{https://github.com/rtud2/Residual-Dimension-Reduction}. We have implemented both Product SVD on the data matrix and eigendecomposition on the contrastive covariance matrix and allow the background to take either a single background or a list of backgrounds. The GitHub repository also includes R markdown and datasets that reproduce most of the figures in this paper and in the Supplementary.
 
 \subsection{Data availability}
 Datasets that have been used to evaluate UCA in this paper are publicly available from the authors of the original studies. The mouse proteomics data are available from the UC Irvine Machine Learning Repository \url{https://archive.ics.uci.edu/ml/datasets/Mice+Protein+Expression}\cite{Higuera} and the Karolinska Directed Emotional Faces (KDEF) are available from \url{https://www.kdef.se/}\cite{Calvo2008}.
