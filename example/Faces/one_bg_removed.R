@@ -72,9 +72,9 @@ for (emo in seq_along(kdef_emotions)) {
 }
 
 # Saving the data so i dont have to re-run this everytime dave asks me to tweak a figure
-# res_list <- lapply(seq_along(kdef_emotions), function(emo){
-#                        readRDS(paste0("example/Faces/One_Background_Removed/", kdef_emotions[emo], "removed.rds"))
-#     })
+ res_list <- lapply(seq_along(kdef_emotions), function(emo){
+                        readRDS(paste0("example/Faces/One_Background_Removed/RDS/", kdef_emotions[emo], "removed.rds"))
+     })
 
 csrsc1 <- c( "#ff852b", "#9f009a", "#90d78e", "#ff5ea1", "#885200", "#90afff", "#7a4527" )
 #Plotting the images
@@ -89,9 +89,13 @@ for (emo in seq_along(res_list)) {
     theme_bw() +
     theme(legend.position = "bottom",
           strip.text = element_text(size = 12),
-          axis.title = element_text(size = 12),
-          legend.text = element_text(size = 10),
-          axis.text = element_text(size = 9),
+          plot.margin = margin(0, 0, 0, 0, "cm"),
+          panel.spacing = unit(0, "line"),
+          axis.title = element_text(size = 9),
+          legend.text = element_text(size = 8, margin = margin(l = -0.25,unit = "cm")),
+          legend.key.size = unit(.5, "cm"), 
+          legend.margin=margin(-.25, 0, 0, 0, unit="cm"),
+          axis.text = element_text(size = 8),
           legend.title = element_blank()) +
     guides(colour = guide_legend(nrow = 2)) +
     scale_color_manual(values = csrsc1) +
@@ -99,16 +103,17 @@ for (emo in seq_along(res_list)) {
     
     ggsave(paste0("example/Faces/One_Background_Removed/", kdef_emotions[emo], "_projected_1_2_removed.png"),
        tmp_projected_plot,
-       width = 4, height = 6, units = "in")
+       width = 8.25, height = 9, units = "cm")
 
-    tmp_eigenfaces <- plotEigenfaces2(all_emotion_faces, "") +
+    tmp_eigenfaces <- plotEigenfaces2(all_emotion_faces, NULL) +
         theme(legend.position = "none",
+              plot.margin = margin(0, 0, 0, 0, "cm"),
         strip.text = element_text(size = 12)
 )
     
     ggsave(paste0("example/Faces/One_Background_Removed/all_", kdef_emotions[emo], "_removed.png"),
        tmp_eigenfaces,
-       width = 6, height = 4, units = "in")
+       width = 8.25, height = 9, units = "cm")
 
     message(paste0("finish ", kdef_emotions[emo]))
 }
@@ -120,11 +125,12 @@ final_mean_faces_plot[, Emotions := kdef_emotions[Eigenface]]
 
 final_mean_faces_plot_out <- ggplot(final_mean_faces_plot) +
     geom_raster(aes(x, y, fill = value)) +
-    facet_grid(~Emotions) +
+    facet_wrap(~Emotions, nrow = 1) +
     scale_x_continuous(expand = c(0,0)) +
     scale_y_continuous(expand = c(0,0),trans = scales::reverse_trans()) +
     scale_fill_gradient(low = "black", high = "white") +
     theme(strip.text = element_text(size = 12),
+          plot.margin = margin(0, 0, 0, 0, "cm"),
           axis.title = element_blank(),
           legend.position = "none",
           axis.ticks = element_blank(),
@@ -132,4 +138,4 @@ final_mean_faces_plot_out <- ggplot(final_mean_faces_plot) +
 
 ggsave("example/Faces/One_Background_Removed/mean_emotions.png",
         final_mean_faces_plot_out,
-       width = 6, height = 4, units = "in", dpi = 300)
+       width = 16.5, height = 3.1, units = "cm", dpi = 300)

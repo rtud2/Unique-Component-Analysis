@@ -112,49 +112,110 @@ We further illustrate the advantages of contrasting multiple background datasets
 
 We focus on uncovering variation unique to the ``afraid'' emotion using all final session pictures from every emotion from female actors. Since this target contains six other emotions, standard PCA will not provide variation unique to ``afraid''. Instead, we leverage images from the practice session to serve as background data. We construct six separate backgrounds, corresponding to the six other emotions, and contrast out their variation using UCA. For comparison, we also pooled these images together into a single background dataset and performed UCA using the pooled background.
 
-\begin{figure}[th]
-\centering
-\tabskip=0pt
-\valign{#\cr
-  \hbox{%
-    \begin{subfigure}[b]{.51\textwidth}
-    \centering
-    \includegraphics[height = 13.5cm,width=\textwidth]{figure/Afraid_projected_1_2_removed.png}
-    \caption{}
-    \label{fig:faces-projected}
-%Faces projected onto the first two components found by PCA, UCA with a pooled background, and UCA with backgrounds split
-    \end{subfigure}%
-  }\cr
-  \noalign{\hfill}
-  \hbox{%
-    \begin{subfigure}{.48\textwidth}
-    \centering
-    %\includegraphics[height=4.0cm,width=\textwidth]{figure/mean_emotions.png}
-    \includegraphics[height=5.0cm,width=\textwidth]{figure/mean_emotions_2rows.png}
-    \caption{}
-    \label{fig:faces-mean}
-    %Average Faces for Each Emotion
-    \end{subfigure}%
-  }\vfill
-  \hbox{%
-    \begin{subfigure}{.48\textwidth}
-    \centering
-    \includegraphics[height=8.0cm,width=\textwidth]{figure/all_Afraid_removed.png}
-    \caption{}
-    \label{fig:faces-eigenfaces}
-    %Top 5 Eigenfaces of Female Emotions by found by PCA, UCA with a pooled background, and UCA with backgrounds split
-    %\caption{Top five eigenfaces of Female Actors from KDEF \cite{Calvo2008}}
-    \end{subfigure}%
-  }\cr
-}
-\caption{
-  Results of analysis of KDEF faces. (a) Faces projected onto the first two components found by PCA, UCA with a pooled background, and UCA using multiple backgrounds. (b) Each emotion averaged over all female actors. (c) Top 5 eigenfaces of female emotions produced by different analyses.}
-\end{figure}
+% \begin{figure}[th]
+% \centering
+% \tabskip=0pt
+% \valign{#\cr
+%   \hbox{%
+%     \begin{subfigure}[b]{.51\textwidth}
+%     \centering
+%     \includegraphics[height = 13.5cm,width=\textwidth]{figure/Afraid_projected_1_2_removed.png}
+%     \caption{}
+%     \label{fig:faces-projected}
+% %Faces projected onto the first two components found by PCA, UCA with a pooled background, and UCA with backgrounds split
+%     \end{subfigure}%
+%   }\cr
+%   \noalign{\hfill}
+%   \hbox{%
+%     \begin{subfigure}{.48\textwidth}
+%     \centering
+%     %\includegraphics[height=4.0cm,width=\textwidth]{figure/mean_emotions.png}
+%     \includegraphics[height=5.0cm,width=\textwidth]{figure/mean_emotions_2rows.png}
+%     \caption{}
+%     \label{fig:faces-mean}
+%     %Average Faces for Each Emotion
+%     \end{subfigure}%
+%   }\vfill
+%   \hbox{%
+%     \begin{subfigure}{.48\textwidth}
+%     \centering
+%     \includegraphics[height=8.0cm,width=\textwidth]{figure/all_Afraid_removed.png}
+%     \caption{}
+%     \label{fig:faces-eigenfaces}
+%     %Top 5 Eigenfaces of Female Emotions by found by PCA, UCA with a pooled background, and UCA with backgrounds split
+%     %\caption{Top five eigenfaces of Female Actors from KDEF \cite{Calvo2008}}
+%     \end{subfigure}%
+%   }\cr
+% }
+% \caption{
+%   Results of analysis of KDEF faces. (a) Faces projected onto the first two components found by PCA, UCA with a pooled background, and UCA using multiple backgrounds. (b) Each emotion averaged over all female actors. (c) Top 5 eigenfaces of female emotions produced by different analyses.}
+% \end{figure}
 
 %\textbf{The faces in (b) look too squashed. Can you come up with a different arrangement of the subfigures? Also since some of the colors in the PCA are too similar, I had another idea, do you think we can do shapes as well? So like the ``bad'' emotions (anger, digust, etc.) get different shapes?}
 % Solution: make PCA faces in (b) two rows.
 % Rebuttal on PCA plot, can we leave it? it's supposed to look messy cause it's PCA
 
+\begin{figure}
+    \begin{subfigure}{\linewidth}
+    \centering
+    \includegraphics[height=3.0cm,width=\textwidth]{figure/mean_emotions.png}
+    \caption{}
+    \label{fig:faces-mean}
+    %Average Faces for Each Emotion
+    \end{subfigure}\\[1ex]
+    \begin{subfigure}{.49\linewidth}
+    \centering
+    \includegraphics[height = 9.0cm,width=\textwidth]{figure/Afraid_projected_1_2_removed.png}
+    \caption{}
+    \label{fig:faces-projected}
+    \end{subfigure}
+    \begin{subfigure}{.49\linewidth}
+    \centering
+    \includegraphics[height = 9.0cm,width=\textwidth]{figure/all_Afraid_removed.png}
+    \caption{}
+   \label{fig:faces-eigenfaces}
+    \end{subfigure}
+\caption{Results of analysis of KDEF faces.  (a) Each emotion averaged over all female actors. (b) Faces projected onto the first two components found by PCA, UCA with a pooled background, and UCA using multiple backgrounds. (c) Top 5 eigenfaces of female emotions produced by different analyses.}
+\end{figure}
+
+% \begin{figure}[th]
+% \centering
+% \tabskip=0pt
+%   \hbox{%
+%     \begin{subfigure}{\textwidth}
+%     \centering
+%     %\includegraphics[height=4.0cm,width=\textwidth]{figure/mean_emotions.png}
+%     \includegraphics[height=4.0cm,width=\textwidth]{figure/mean_emotions.png}
+%     \caption{}
+%     \label{fig:faces-mean}
+%     %Average Faces for Each Emotion
+%     \end{subfigure}%
+%   } %\vfill
+% \valign{#\cr
+%   \hbox{%
+%     \begin{subfigure}[b]{.49\textwidth}
+%     \centering
+%     \includegraphics[height = 8.5cm,width=\textwidth]{figure/Afraid_projected_1_2_removed.png}
+%     \caption{}
+%     \label{fig:faces-projected}
+% %Faces projected onto the first two components found by PCA, UCA with a pooled background, and UCA with backgrounds split
+%     \end{subfigure}%
+%   }\cr
+%   \noalign{\hfill}
+%   \hbox{%
+%     \begin{subfigure}{.49\textwidth}
+%     \centering
+%     \includegraphics[height=8.5cm,width=\textwidth]{figure/all_Afraid_removed.png}
+%     \caption{}
+%     \label{fig:faces-eigenfaces}
+%     %Top 5 Eigenfaces of Female Emotions by found by PCA, UCA with a pooled background, and UCA with backgrounds split
+%     %\caption{Top five eigenfaces of Female Actors from KDEF \cite{Calvo2008}}
+%     \end{subfigure}%
+%   }\cr
+% }
+% \caption{
+%   Results of analysis of KDEF faces.  (a) Each emotion averaged over all female actors. (b) Faces projected onto the first two components found by PCA, UCA with a pooled background, and UCA using multiple backgrounds. (c) Top 5 eigenfaces of female emotions produced by different analyses.}
+% \end{figure}
 Figure \ref{fig:faces-projected} projects the target data onto the first two directions of variation calculated using each method. The emotions are entirely intermixed when projected onto components produced by PCA and by UCA using a single pooled background. In contrast, the emotions are much more separable when using UCA with multiple separate backgrounds. In particular, ``afraid'' faces are very separate from the ``disgust'' and ``happy'' faces. This indicates that UCA with multiple backgrounds can identify patterns of variation that can distinguish ``afraid'' from the other emotions.
 
 Figure \ref{fig:faces-eigenfaces} shows visualizes the top five directions of variation produced by each method as faces. These are called eigenfaces, and this visualization technique is useful for interpreting the top components as facial features \cite{turk1991eigenfaces}. PCA eigenfaces generally represent features common to all the emotions. UCA eigenfaces using a pooled background seem to highlight the eyebrows and upper lips, though it is difficult to discern. On the other hand, eigenfaces produced using UCA using multiple separate backgrounds highlight eyebrows, eyes, nostrils, and nasolabial folds. These are especially clear in the second eigenface and accord with intuition about which features would likely be most useful in distinguishing ``afraid'' from other emotions.
@@ -197,11 +258,12 @@ We showed in analyses of mouse proteomics data and facial image data that UCA pe
 % However, using the multiple background framework provided by UCA achieves even better results than stacking individual background datasets. 
 % Lastly, we demonstrate that under the split framework unique to UCA, we can better separate each emotional face in the final session using the first two components, which cannot be accomplished with pooling multiple background data.  Other face combinations show either similar or better separation when treating backgrounds separately, rather than stacking them to form a joint covariance matrix.
 % We hope that by providing a scalable, tuning-free, multibackground solution to the contrastive problem, UCA will play a pivotal role in isolating target variability in many scientific applications to come.
-
-We have released the code for UCA as an R package, along with documentation and examples. Like cPCA, the choice of background still plays a pivotal role in the directions found by UCA. % UCA only finds the optimal contrastive parameter using Lagrange Multipliers and does not remedy a poor background choice.
+Like cPCA, the choice of background still plays a pivotal role in the directions found by UCA. 
+We have released the code for UCA as an R package, along with documentation and examples exhibited in this paper. 
+% UCA only finds the optimal contrastive parameter using Lagrange multipliers and does not remedy a poor background choice.
 
 \textbf{Conclusion seems too short, do you have anything else to add? What does the original cPCA paper have in their discussion?}
-
+%
 
 %Needs to be expanded upon to act as your conclusion, sort of tapers off.
 
@@ -212,76 +274,76 @@ We have released the code for UCA as an R package, along with documentation and 
 \section{Method}
 
 % changes alpha to lambda.\textbf{DO YOU WANT TO CALL THIS ALPHA OR LAMBDA? NEED TO STAY CONSISTENT BETWEEN FIGURES, FIGURE CAPTIONS, AND TEXT}
-% \textbf{BE CONSISTENT WITH CAPITALIZATION, etc.} checked: Lagrang[e|ian] Multiplier eigendecomposition algorithm 
+% \textbf{BE CONSISTENT WITH CAPITALIZATION, etc.} checked: Lagrang[e|ian] multiplier eigendecomposition algorithm 
 
 \subsection{Contrastive principal components analysis}
 We first briefly review cPCA \cite{Abid}. Let $A$ denoted the $p\times p$ sample covariance matrix constucted from target data $X_{n_x \times p}$ and $B$ denote the $p\times p$ sample background covariance constructed from background data $Y_{n_y \times p}$. For some parameter $\lambda$, cPCA seeks the eigenvectors, $v_\lambda \in \mathbb{R}^p$, which account for large variation in the target data $Y$ and small variation in the background data $X$ where $\|v\|_2 = 1$. Specifically:  
-\[v_\lambda = \text{arg}\max_{v \in \mathbb{R}^p}{\left(v^TAv - \lambda v^TBv\right)} = \text{arg}\max_{v \in \mathbb{R}^p}{v^T\left(A - \lambda B\right)v}.\]
-For a given $\lambda$, the direction is simply the eigenvector of the weighted difference between covariance matrices where $v$ maximize the variation in $A$ while constraining variation in $B$.
+\[v_\lambda = \text{arg}\max_{v \in \mathbb{R}^p}{\left(v^TAv - \lambda v^TBv\right)} \mbox{ subject to } v^\top  v = 1 \]
 
+For a given $\lambda$, the direction is simply the eigenvector of the weighted difference between covariance matrices where $v$ maximize the variation in $A$ while constraining variation in $B$.
 The tuning parameter $\lambda$ measures how much to penalize the background data covariance. When $\lambda = 0$, background variation isn't accounted for, thus the cPCA is reduced to PCA. As $\lambda$ increases, the relative background variation becomes more dominant, causing $v_\lambda$ to focus on directions which minimize background variation rather than maximizing the target. For very large values of $\lambda$, $v_\lambda$ is equivalent to PCA after projecting the target data onto the nullspace of the background data.  The authors of cPCA suggested that $\lambda$ be chosen using spectral clustering via a parameter sweep of logarithmically spaced candidate values.
+
+We can rewrite the cPCA problem as a Rayleigh quotient
+\[v_\lambda = \text{arg}\max_{v \in \mathbb{R}^p}{\frac{v^T\left(A - \lambda B\right)v}{v^T I v}}\]
+
+and observe that the variability in $X$ and $Y$ are measured relative to the identity matrix.
 
 \subsection{cPCA++}
 %\textbf{Why does cPCA++ enforce $v^\top B v = 1$? We should explain.} It's not enforced, but 
 %\textbf{How is this possible? Need to explain. Basically we need to explain how cPCA++ works before we explain UCA.}
-Salloum and Kuo  \cite{Salloum} arrived at a tuning free method, cPCA++, where they seek to maximize the ratio, rather than the difference, of the variance explained in the target to the variance explained in the background.
+Salloum and Kuo  \cite{Salloum} arrived at a tuning free contrastive method, cPCA++, where they seek to maximize the ratio, rather than the difference, of the variance explained in the target to the variance explained in the background.
 %motivated by image splicing localization, classifying whether a pixel belonged to the original image or an image splice. Using a generalized likelihood ratio test framework to test whether a pixel belonged to foreground or background, they arrived at a Rayleigh Quotient of target variation divided by background variation.
 Using similar notation as above where $A$ denotes the target sample covariance matrix and $B$ denotes the background sample covariance matrix, cPCA++ seeks to maximize the Rayleigh quotient:
 \[v = \text{arg}\max_{v\in \mathbb{R}^p} \frac{v^T A v}{v^T B v}\]
-If we define $\lambda_{\text{max}} = \max_{v\in \mathbb{R}^p} \frac{v^T A v}{v^T B v}$, the maximum of the Rayleigh quotient, we see that $\left(v^T B v\right) \lambda_{\text{max}} = v^T A v$. 
-Such vectors $v$ have identical directions to solving the following primal problem and differ only by a scaling constant, c:
-\[
-\max_{v \in \mathbb{R}^p} v^\top A v \mbox{ subject to } v^\top B v = c.
-\]
-where $c = 1$ is a common identifiability constraint.
-Although this solution appears tuning free, the matrix inversion requires positive definiteness of $B$. If $B$ is rank deficient, a choice of $\epsilon$ may be added to the diagonal terms to induce regularization.
+% Rather than maximize the difference between the covariance matrices, relative to the identity matrix, they chose to maximize the quadratic term of $A$ relative to $B$.
+% If we define $\lambda_{\text{max}} = \max_{v\in \mathbb{R}^p} \frac{v^T A v}{v^T B v}$, the maximum of the Rayleigh quotient, we see that $\left(v^T B v\right) \lambda_{\text{max}} = v^T A v$. 
+% Such vectors $v$ have identical directions to solving the following primal problem and differ only by a scaling constant, c:
+% \[
+% \max_{v \in \mathbb{R}^p} v^\top A v \mbox{ subject to } v^\top B v = c.
+% \]
+% where $c = 1$ is a common identifiability constraint.
+While maximizing the relative variability between $A$ and $B$ is tuning free, the solution involves a matrix inversion, which may not be feasible in high-dimensional applications like genomics where the inverse may not exist. Furthermore, there is no clear path to extend this problem to multiple backgrounds.
+For clarity, We rewrite the cPCA++ objective function to it's primal form\cite{ghojogh2019eigenvalue}:
+\[\max_{v \in \mathbb{R}^p}{v^T A v}  \mbox{ subject to } v^T B v = 1\]
+
+
+%If $B$ is rank deficient, a choice of $\epsilon$ may be added to the diagonal terms to induce regularization.
 %which does not require iterating through candidate contrastive parameters. This method uses a matrix inversion of a $p \times p$ background covariance matrix, which may be rank deficient, requiring the addition of some $\epsilon > 0$ onto the diagonal. The addition of $\epsilon$ onto the diagonal of the background matrix induces regularization depending on the choice of $\epsilon$, making this approach not exactly without tuning parameters.
-%The resulting eigenvectors can be shown to diagonalize the background matrix, ie $v^T Bv =1$, however, the eigenvectors are no longer orthonormal, ie $v^T v = I_p$. 
-  %\item cPCA++: \cite{Salloum}
-    %\begin{enumerate}
-        %\item "No tuning" parameter: it's still there in the matrix inversion with the choice of $\epsilon$. note: by eigen decomp $B = VDV^{-1}$, then $(B+cI)^{-1} = (VDV^{-1} + VcIV^{-1})^{-1} = V(D+cI)^{-1}V^{-1}$ is similar to lasso
-        %\item approach from a a Generalized Likelihood Ratio Test framework and arrived at a tuning free solution to cPCA using the Rayleigh Quotient.
-        %\item  requires matrix inversion of $p\times p$ covariance matrix, which requires positive definiteness of the background covariance matrix.  If rank deficient they add $\epsilon$ to the diagonal of the background covariance matrix.
-        %\item no constraints on  $v^T B v$ when solving the optimization $max_{v}{v^TB^{-1}Av}$ will find a solution where $v^T B v \approx 0$ and $v^T A v$ is not very large, but the rayleigh quotient still blows up. This means a suboptimal direction 
-        %\item adding $\epsilon$ to the diagonal is sort of cheating because it adds regularization. it forces $v^T B v > \epsilon $. choosing $\epsilon$ is also a tuning parameter
-        %\item the eigenvectors $v$ are no longer orthogonal, therefore directions found are correlated. Forget trying to 
-        %\item no intuitive extension to multiple data
-    %\end{enumerate}
 
 \subsection{Unique Component Analysis}
-We introduce the Unique Component Analysis (UCA) framework to identify the optimal contrastive parameter, $\lambda$, and the resulting directions of variation using the duality of lagrangians.
-By adding the additional constraints of $v^T v = 1$ and $v^T Bv = 1$ we arrive at an objective method to choose $\lambda$.
-These constraints are motivated by similar identifiablity constraints in generalized eigenvalue problems, e.g. PCA where $Av = \lambda Iv$ enforces $v^T v = 1$, cPCA++ where $Av = \lambda B v$ which enforces $v^T Bv = 1$. % allowing the principal components to be identifiable.
-Constraining $v^T v = 1$ while $v^T Bv$ is unconstrained may result in eigenvectors that explain large amounts of variability in the target but also explain large amounts of variability in the background.
-However, constraining $v^T Bv = 1$ while leaving $v^T v$ unconstrained results in eigenvectors that are not norm 1 and explain near zero variability in the target. 
-
-UCA combines both of these constraints together and can be expressed as a primal optimization problem:
+We introduce the Unique Component Analysis (UCA) framework which combines both cPCA and cPCA++ to objectively solve for the contrastive parameter, $\lambda$ and resulting directions of variation using lagrangians. UCA works by joining the constraints of $v^T v = 1$ from cPCA and $v^T Bv = 1$ from cPCA++. For a single background covariance matrix UCA solves the primal problem: 
+% These constraints are motivated by similar identifiablity constraints in generalized eigenvalue problems, e.g. PCA where $Av = \lambda Iv$ enforces $v^T v = 1$, cPCA++ where $Av = \lambda B v$ which enforces $v^T Bv = 1$. % allowing the principal components to be identifiable.
+% Constraining $v^T v = 1$ while $v^T Bv$ is unconstrained may result in eigenvectors that explain large amounts of variability in the target but also explain large amounts of variability in the background.
+% However, constraining $v^T Bv = 1$ while leaving $v^T v$ unconstrained results in eigenvectors that are not norm 1 and explain near zero variability in the target. 
+% UCA combines both of these constraints together and can be expressed as a primal optimization problem:
 \begin{align}
   &\max_{v\in \mathbb{R}^p}{v^TAv} \label{eq:1} \\ \text{subject to }&\; v^{T}v=1,\;\; v^TBv \leq 1 \nonumber
 \end{align}
-We can solve \ref{eq:1} using weak duality of Lagrangians, $\mathcal{L}$ :
+We note that strong duality holds because our primal problem is quadratic and the constraints satisfy Slater's condition\cite{boyd2004convex}: covariance matrix $B$ is positive semi-definite, thus for all $v$, $v^T B v \geq 0$, implying existance of $v$ such that $v^T B v \leq 1$. 
+With strong duality, we solve \ref{eq:1} by maximizing the dual function, $g(\lambda)$ of the Lagrangians $\mathcal{L}$:
 \begin{align}
-  \max_{\lambda \geq 0}{\max_{v\in \mathbb{R}^{P}}{\mathcal{L}}}\left(v,\lambda\right) &= \max_{\lambda \geq 0}{\max_{v\in \mathbb{R}^{P}}{\left( v^TAv - \lambda\left(v^TBv - 1\right)\right)}} \nonumber\\
-                                                                                       &= \max_{\lambda \geq 0}{\max_{v\in \mathbb{R}^{P}}{\left(v^T\left(A - \lambda B\right)v + \lambda\right)}}\nonumber\\
-                                                                                       &= \max_{\lambda \geq 0}{\left(\lambda_{\text{max}}\left(A - \lambda B\right) + \lambda\right)} \label{eq:2}
+    \max_{\lambda \geq 0}{g(\lambda)} &= \max_{\lambda \geq 0}{\max_{v\in \mathbb{R}^{P}}{\mathcal{L}}}\left(v,\lambda\right) \nonumber\\
+                                        &= \max_{\lambda \geq 0}{\max_{v\in \mathbb{R}^{P}}{\left( v^TAv - \lambda\left(v^TBv - 1\right)\right)}} \nonumber\\
+                                        &= \max_{\lambda \geq 0}{\max_{v\in \mathbb{R}^{P}}{\left(v^T\left(A - \lambda B\right)v + \lambda\right)}}\nonumber\\
+                                        &= \max_{\lambda \geq 0}{\left(\lambda_{\text{max}}\left(A - \lambda B\right) + \lambda\right)} \nonumber\\
+                                        &= \max_{\lambda \geq 0}{\left(v_{\lambda}^T\left(A - \lambda B\right) v_{\lambda}+ \lambda\right)} \label{eq:2}
 \end{align}
-where $\lambda$ is the Lagrange multiplier associated with the constraint $v^TBv \leq 1$ and $\lambda_{max}(A - \lambda B)$ is the largest eigenvalue associated with $A - \lambda B$. Although we have two constraints, we get $v^T v = I$ through eigendecomposition. % This is slightly different from cPCA++, where $v^{T}v$ is not necessarily orthonormal.
-\textbf{This section contains some errors. You're proposing to solve the primal problem by appealing to weak duality. But I think weak duality is not enough to guarantee that solving the dual problem can help you solve the primal problem. You need strong duality. Does strong duality hold?}
+where $\lambda$ is the Lagrange multiplier associated with the constraint $v^T Bv \leq 1$, $\lambda_{\max}(A - \lambda B)$ is the largest eigenvalue associated with $A - \lambda B$, and $v_{\lambda}$ is the corresponding eigenvector. Although the primal problem has two constraints, $v^T v = I$ is enforced through eigendecomposition when solving for the largest eigenvalue $\lambda_{\text{max}}$. % This is slightly different from cPCA++, where $v^{T}v$ is not necessarily orthonormal.
 
-\textbf{Also, it's not immediately clear where you used a eigendecomposition. An eigendecomposition is a factorization of a matrix $M = V \Sigma V^\top$, but I don't see a matrix factorization here. I think you can be more precise about what exactly you did.}
-
-To solve \eqref{eq:2}, we can take the derivative of the Lagrangian $\mathcal{L}$ with respect to $\lambda$ \textbf{This is not true, you are not taking a derivative of $\mathcal{L}(u, v)$, you're taking a derivative of $\max_v \mathcal{L}(u, v)$, which is way different and much harder} and set the derivative equal to zero: 
+Since the dual function is concave and a solution necessarily exists, we maximize the dual function \eqref{eq:2} by taking the derivative with respect to $\lambda$ and set the derivative equal to zero: 
 
 \begin{align}
-  \frac{\partial}{\partial\lambda} \max_{v\in \mathbb{R}^{P}}\mathcal{L}\left(v,\lambda\right) &= \frac{\partial}{\partial\lambda}\left(\lambda_{max}\left(A-\lambda B\right)  + \lambda\right) \nonumber \\ 
-                                                                                               &= \frac{\partial}{\partial\lambda}\left(v_{\lambda}^{T}\left(A- \lambda B\right)v_{\lambda} +\lambda \right) \nonumber\\
-                                                                                               &\Leftrightarrow \frac{\partial}{\partial\lambda}\left( -\lambda v_{\lambda}^{T} Bv_{\lambda} +\lambda \right) \nonumber\\
-                                                                                               &= 1-v_{\lambda}^{T}B v_{\lambda} = 0 \label{eq:3}
+    \frac{\partial}{\partial\lambda} g(\lambda) &= \frac{\partial}{\partial\lambda} \left(v_{\lambda}^T\left(A - \lambda B\right) v_{\lambda}+ \lambda\right)\nonumber \\ 
+                                                &\Leftrightarrow \frac{\partial}{\partial\lambda}\left( -\lambda \left(v_{\lambda}^{T} Bv_{\lambda}\right) + \lambda \right) \nonumber\\
+                                                &= 1-v_\lambda^{T}B v_{\lambda} = 0 \label{eq:3}
 \end{align}
-where $v_\lambda$ is the eigenvector associated with the largest eigenvalue for particular $\lambda$.
 
-We use an iterative algorithm (L-BFGS-B) \cite{byrd1995limited} to optimize between finding the Lagrange Multiplier $\lambda$, and finding the associated eigenvectors $v_\lambda$, stopping when equation \ref{eq:3} is satisfied. \textbf{How do you know that this interation between $\lambda$ and $v_\lambda$ will converge, and if it converges, how do you know it will converge to a global rather than local optimum?} With the optimal Lagrange Multiplier, eigenvector $v_\lambda$ maximizes equation \ref{eq:1}. Thus our constraints allows for a natural way to pick the contrastive parameter $\lambda$ in cPCA. % Similar to the constrastive parameter, the Lagrange Multiplier can't be less than zero, and allows us to use box constrained optimization methods. 
-
+%\textbf{Also, it's not immediately clear where you used a eigendecomposition. An eigendecomposition is a factorization of a matrix $M = V \Sigma V^\top$, but I don't see a matrix factorization here. I think you can be more precise about what exactly you did.}
+We use an iterative algorithm (L-BFGS-B) \cite{byrd1995limited} to search for Lagrange multiplier $\lambda$ such that the associated eigenvectors $v_\lambda$ satisfies equation \ref{eq:3}. The resulting $v_\lambda$ also solves the primal problem due to strong duality.
+We see that combining the two constraints allows us a natural way to solve for the contrastive parameter $\lambda$ in cPCA when only one background is used.
+% \textbf{How do you know that this interation between $\lambda$ and $v_\lambda$ will converge, and if it converges, how do you know it will converge to a global rather than local optimum?}
+% Similar to the constrastive parameter, the Lagrange multiplier can't be less than zero, and allows us to use box constrained optimization methods. 
+% How do you know this converges? Can we rely on the concavity of the dual function to say that this is a global optimum since no duality gap?
 % comment on uniquness or is this obvious?
 
 %% is it worth mentioning if A, B are the same, lambda = 1? connections to likelihood ratio test?
@@ -289,24 +351,21 @@ We use an iterative algorithm (L-BFGS-B) \cite{byrd1995limited} to optimize betw
 
 % \textbf{NO NEED TO SEPARATE SINGLE AND MULTIPLE BACKGROUNDS INTO TWO SECTIONS. MOTIVATE THE OPTIMIZATION PROBLEM FOR ONE BACKGROUND, THEN EXTEND TO MULTIPLE, THEN PROVIDE GENERAL ALGORITHM THAT WORKS FOR SINGLE OR MULTIPLE.}
 
-
-Similarly, for multiple backgrounds, again let the $A$ be the target $p \times p$ covariance matrix and $ B_1, \ldots, B_m$ be the $m$ background $p \times p$ covariance matrices constructed from a $n_y \times p$ dimensional Y data matrix and corresponding $(n_{x_1} \times p), \ldots, (n_{x_m}\times p)$ dimensional $X_1, \ldots, X_m$ background data matrices.
-
+Similarly, for multiple backgrounds, again let the $A$ be the target $p \times p$ covariance matrix and $ B_1, \ldots, B_m$ now be the $m$ background $p \times p$ covariance matrices constructed from a $n_y \times p$ dimensional Y data matrix and corresponding $(n_{x_1} \times p), \ldots, (n_{x_m}\times p)$ dimensional $X_1, \ldots, X_m$ background data matrices.
 % One way to incorporate $m$ background would be to use the framework in the single background setting and stack multiple background datasets before calculate the background covariance matrix, creating a weighted average of the covariance matrices. This is sub-optimal since the background covariance matrix with the most samples may not accounts for the all the background noise, therefore potentially washing out background noise from the other smaller background datasets. 
-
 % A more natural way to incorporate $m$ background datasets in a more generalized framework would be to append the background matrices like so:
 % \[\max_{v\in \mathbb{R}^p}{v^T\left(A - \sum^{m}_{j=1}{\lambda_jB_j}\right)v}\]
-
 % However, a parameter sweep for each $\lambda_j$ corresponding to background data $B_j$ would be computationally expensive.
 % We can easily extend our single background covariance method to address the $m$ background covariance scenario by adding additional constraints to Lagrangian,
-We add additional constraints $ v^TB_jv\leq 1$ to our optimization problem \ref{eq:1} for each background $j = 1, \ldots, m$. Specifically, the primal problem becomes
+We add additional constraints $ v^TB_jv\leq 1$ to our optimization problem for each background $j = 1, \ldots, m$. Specifically, for multiple backgrounds, the primal problem becomes
 \begin{align}
   &\max_{v\in \mathbb{R}^p}{v^TAv} \label{eq:4}\\ 
   \text{subject to }&\; v^{T}v=1,\;\; v^TB_1 v \leq 1, \ldots, v^T B_m v\leq 1 \nonumber
 \end{align}
-The corresponding dual problem is
+Maximizing the corresponding dual function $g(\lambda_1, \ldots, \lambda_m)$:
 \begin{align}
-  \max_{\lambda_1,\ldots,\lambda_m \geq 0}{\max_{v\in \mathbb{R}^{P}}{\mathcal{L}\left(v, \lambda_1, \ldots, \lambda_m\right)}}%&=\max_{\lambda_1,\ldots,\lambda_m \geq 0}{\max_{v\in \mathbb{R}^{P}}{\left(v^TAv - \lambda_1\left(v^TB_1v - 1\right)-\ldots -\lambda_m\left(v^TB_mv - 1\right)\right)}}\nonumber \\
+    \max_{\lambda_1,\ldots,\lambda_m \geq 0}{g(\lambda_1, \ldots, \lambda_m)} &= \max_{\lambda_1,\ldots,\lambda_m \geq 0}{\max_{v\in \mathbb{R}^{P}}{\mathcal{L}\left(v, \lambda_1, \ldots, \lambda_m\right)}} \nonumber \\
+  %&=\max_{\lambda_1,\ldots,\lambda_m \geq 0}{\max_{v\in \mathbb{R}^{P}}{\left(v^TAv - \lambda_1\left(v^TB_1v - 1\right)-\ldots -\lambda_m\left(v^TB_mv - 1\right)\right)}}\nonumber \\
                                                                                                                                 &=\max_{\lambda_1,\ldots,\lambda_m \geq 0}{\max_{v\in \mathbb{R}^{P}}{\left(v^T\left(A - \sum^{m}_{j = 1}{\lambda_j B_j}\right)v + \sum^{m}_{j=1}{\lambda_j}\right)}} \nonumber\\
                                                                                                                                 &=\max_{\lambda_1,\ldots,\lambda_m \geq 0}{\left(\lambda_{\text{max}}\left(A - \sum^{m}_{j = 1}{\lambda_j B_j}\right) + \sum^{m}_{j=1}{\lambda_j}\right)} \label{eq:5}
 \end{align}
@@ -338,7 +397,7 @@ to solve for $j^{th}$ of the $m$ Lagrange multipliers, we use Algorithm \ref{alg
       % with corresponding eigenvector, $v_{\lambda_{j}^{(q+1)}}$, satisfying:
       % \[1 -v_{\lambda_{j}^{(q+1)}}^{T} B_j v_{\lambda_{j}^{(q+1)}} = 0\]
     }
-    After iterating through $m$ Lagrange Multipliers, calculate value of Lagrangian
+    After iterating through $m$ Lagrange multipliers, calculate value of Lagrangian
     \[l^{(q+1)} = \lambda_{max}\left(A-\sum^{m}_{j=1}\lambda_{j}^{(q+1)}B_j\right)+ \sum^{m}_{j=1}\lambda_{j}^{(q+1)}\]\
   }
   Compute \[C_{\lambda_1, \ldots, \lambda_m} = A - \sum^{m}_{j = 1}{\lambda_j B_j}\]
@@ -347,7 +406,7 @@ to solve for $j^{th}$ of the $m$ Lagrange multipliers, we use Algorithm \ref{alg
 \end{algorithm}
 
 
-% The advantage to the Lagrangian method in the multiple background setting is that rather than constructing an aggregated covariance matrix by stacking data, which arbitrarily weighs covariance matrices by their sample size, our method objectively constructs weights which satisfy the constraint $ v^TB_jv\leq 1$ for each $m$ background covariance matrix. If multiple backgrounds contain the same information, constructing the covariance matrix by stacking data will change the covariance by a factor less than 1, e.g. for two backgrounds, the covariance changes by $\frac{2}{2n - 1}$.  If only one covariance matrix will constrain the Lagrangian, the corresponding Lagrange Multiplier will be non-zero and Lagrange Multipliers corresponding to all other redundant constraints on the Lagrangian are set to zero.  
+% The advantage to the Lagrangian method in the multiple background setting is that rather than constructing an aggregated covariance matrix by stacking data, which arbitrarily weighs covariance matrices by their sample size, our method objectively constructs weights which satisfy the constraint $ v^TB_jv\leq 1$ for each $m$ background covariance matrix. If multiple backgrounds contain the same information, constructing the covariance matrix by stacking data will change the covariance by a factor less than 1, e.g. for two backgrounds, the covariance changes by $\frac{2}{2n - 1}$.  If only one covariance matrix will constrain the Lagrangian, the corresponding Lagrange multiplier will be non-zero and Lagrange multipliers corresponding to all other redundant constraints on the Lagrangian are set to zero.  
 
 \subsection{Extension to High Dimensional Data:}
 
@@ -452,7 +511,7 @@ Datasets that have been used to evaluate UCA in this paper are publicly availabl
 
 %%% TO DO %%%
 %\textbf{since some of the colors in the PCA are too similar, I had another idea, do you think we can do shapes as well? So like the ``bad'' emotions (anger, digust, etc.) get different shapes?}
-    % Rebuttal on PCA plot, can we leave it? it's supposed to look messy cause it's PCA
+% fix label scaling in figures
 %Strong Duality in UCA: KKT Conditions?
 
 %%% Things to think about %%%
