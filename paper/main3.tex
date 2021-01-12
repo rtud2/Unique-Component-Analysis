@@ -220,14 +220,24 @@ We showed in analyses of mouse proteomics data and facial image data that UCA pe
 % However, using the multiple background framework provided by UCA achieves even better results than stacking individual background datasets. 
 % Lastly, we demonstrate that under the split framework unique to UCA, we can better separate each emotional face in the final session using the first two components, which cannot be accomplished with pooling multiple background data.  Other face combinations show either similar or better separation when treating backgrounds separately, rather than stacking them to form a joint covariance matrix.
 % We hope that by providing a scalable, tuning-free, multibackground solution to the contrastive problem, UCA will play a pivotal role in isolating target variability in many scientific applications to come.
-Like cPCA, the choice of background still plays a pivotal role in the directions found by UCA. 
+
+UCA is computationally fast and easily extensible to high-dimensional data because it does not require constructing nor storing a large covariance matrices (see Methods). Further, no additional post-hoc clustering method is necessary to choose the appropriate tuning parameter.
+
+Like cPCA, the choice of background(s) still play a pivotal role in the directions found by UCA.
+For background data that is already accounted for by other background data, the algorithm will ignore similar information and only weigh additional new information. In the event of identical backgrounds, only one background will be considered.
+This can be avoided apriori by stacking data from the same experiments and creating a joint background. 
+
+Similar to regression, switching target and background covariance matrices will not result in the same solution.
+UCA finds variation in the target data not present in the background data.
+
+%   - switching 
 
 %   - backgounds help identify features that are important in the background. Imagine separating black from white where black is background. not white is a feature unique to background as well as black.
 %   - Target 
 We have released the code for UCA as an R package, along with documentation and examples exhibited in this paper. 
 % UCA only finds the optimal contrastive parameter using Lagrange multipliers and does not remedy a poor background choice.
 
-\textbf{Conclusion seems too short, do you have anything else to add? What does the original cPCA paper have in their discussion?}
+% \textbf{Conclusion seems too short, do you have anything else to add? What does the original cPCA paper have in their discussion?}
 %
 %%% This is the discussion section in cPCA. %%%%%%
 % In many data science settings, we are interested in visualizing and exploring patterns that are enriched in one dataset relative to other data. We have presented cPCA as a general tool for performing such contrastive exploration, and we have illustrated its usefulness in a diverse range of applications. The main advantages of cPCA are its generality and ease of use. Computing a particular cPCA takes essentially the same amount of time as computing a regular PCA. This computational efficiency enables cPCA to be useful for interactive data exploration, where each operation should ideally be almost immediate. As such, any settings where PCA is applied on related datasets, cPCA can also be applied. In the Supplementary Note 3 and Supplementary Fig. 8, we show how cPCA can be kernelized to uncover nonlinear contrastive patterns in datasets.
@@ -251,7 +261,7 @@ We first briefly review cPCA \cite{Abid}. Let $A$ denoted the $p\times p$ sample
 \[v_\lambda = \text{arg}\max_{v \in \mathbb{R}^p}{\left(v^TAv - \lambda v^TBv\right)} \mbox{ subject to } v^\top  v = 1 \]
 
 For a given $\lambda$, the direction is simply the eigenvector of the weighted difference between covariance matrices where $v$ maximize the variation in $A$ while constraining variation in $B$.
-The tuning parameter $\lambda$ measures how much to penalize the background data covariance. When $\lambda = 0$, background variation isn't accounted for, thus the cPCA is reduced to PCA. As $\lambda$ increases, the relative background variation becomes more dominant, causing $v_\lambda$ to focus on directions which minimize background variation rather than maximizing the target. For very large values of $\lambda$, $v_\lambda$ is equivalent to PCA after projecting the target data onto the nullspace of the background data.  The authors of cPCA suggested that $\lambda$ be chosen using spectral clustering via a parameter sweep of logarithmically spaced candidate values.
+The tuning parameter $\lambda$ measures how much to penalize the background data covariance. When $\lambda = 0$, background variation is not considered, therefore cPCA reduces to PCA. As $\lambda$ increases, the relative background variation becomes more dominant, causing $v_\lambda$ to focus on directions which minimize background variation rather than maximizing the target. For very large values of $\lambda$, $v_\lambda$ is equivalent to PCA after projecting the target data onto the nullspace of the background data.  The authors of cPCA suggested that $\lambda$ be chosen using spectral clustering via a parameter sweep of logarithmically spaced candidate values.
 
 We can rewrite the cPCA problem as a Rayleigh quotient
 \[v_\lambda = \text{arg}\max_{v \in \mathbb{R}^p}{\frac{v^T\left(A - \lambda B\right)v}{v^T I v}}\]
@@ -291,10 +301,10 @@ We introduce the Unique Component Analysis (UCA) framework which combines both c
 \end{align}
 Since our primal problem is quadratic, strong duality requires satisfying Slater's condition\cite{boyd2004convex} (See Appendix B1).
 To achieve strong duality, we require the smallest eigenvalue of $B$ to be less than 1, $\lambda_{\min}\left(B\right) = \min_{v}\frac{v^T B v}{v^T v}< 1$.
-For covariance matrices formed from standardized data matrices, \[tr(B) = \sum_{i = 1}^{p} \lambda_i = n\]
-As eigenvalues are ordered, this implies $\lambda_{\min}(B)\leq 1$, with equality if $B = I_p$.
+This requirement follows naturally for covariance matrices formed from standardized data due to the ordering of eigenvalues and:
+\[tr(B) = \sum_{i = 1}^{p} \lambda_i = n\]
+implies $\lambda_{\min}(B)\leq 1$, with equality if $B = I_p$.
 For covariance matrices formed from unstandardized data, our assumption is the same as $dim(B) < p$, the dimensionality of $B$ is smaller than $p$. 
-
 % covariance matrix $B$ is positive semi-definite, thus for all $v$, $v^T B v \geq 0$, implying existance of $v$ such that $v^T B v \leq 1$. 
 With strong duality, we solve \ref{eq:1} by maximizing the dual function, $g(\lambda)$ of the Lagrangians $\mathcal{L}$:
 \begin{align}
