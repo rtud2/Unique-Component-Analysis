@@ -178,44 +178,6 @@ We focus on uncovering variation unique to the ``afraid'' emotion using all fina
 \caption{Results of analysis of KDEF faces.  (a) Each emotion averaged over all female actors. (b) Faces projected onto the first two components found by PCA, UCA with a pooled background, and UCA using multiple backgrounds. (c) Top 5 eigenfaces of female emotions produced by different analyses.}
 \end{figure}
 
-% \begin{figure}[th]
-% \centering
-% \tabskip=0pt
-%   \hbox{%
-%     \begin{subfigure}{\textwidth}
-%     \centering
-%     %\includegraphics[height=4.0cm,width=\textwidth]{figure/mean_emotions.png}
-%     \includegraphics[height=4.0cm,width=\textwidth]{figure/mean_emotions.png}
-%     \caption{}
-%     \label{fig:faces-mean}
-%     %Average Faces for Each Emotion
-%     \end{subfigure}%
-%   } %\vfill
-% \valign{#\cr
-%   \hbox{%
-%     \begin{subfigure}[b]{.49\textwidth}
-%     \centering
-%     \includegraphics[height = 8.5cm,width=\textwidth]{figure/Afraid_projected_1_2_removed.png}
-%     \caption{}
-%     \label{fig:faces-projected}
-% %Faces projected onto the first two components found by PCA, UCA with a pooled background, and UCA with backgrounds split
-%     \end{subfigure}%
-%   }\cr
-%   \noalign{\hfill}
-%   \hbox{%
-%     \begin{subfigure}{.49\textwidth}
-%     \centering
-%     \includegraphics[height=8.5cm,width=\textwidth]{figure/all_Afraid_removed.png}
-%     \caption{}
-%     \label{fig:faces-eigenfaces}
-%     %Top 5 Eigenfaces of Female Emotions by found by PCA, UCA with a pooled background, and UCA with backgrounds split
-%     %\caption{Top five eigenfaces of Female Actors from KDEF \cite{Calvo2008}}
-%     \end{subfigure}%
-%   }\cr
-% }
-% \caption{
-%   Results of analysis of KDEF faces.  (a) Each emotion averaged over all female actors. (b) Faces projected onto the first two components found by PCA, UCA with a pooled background, and UCA using multiple backgrounds. (c) Top 5 eigenfaces of female emotions produced by different analyses.}
-% \end{figure}
 Figure \ref{fig:faces-projected} projects the target data onto the first two directions of variation calculated using each method. The emotions are entirely intermixed when projected onto components produced by PCA and by UCA using a single pooled background. In contrast, the emotions are much more separable when using UCA with multiple separate backgrounds. In particular, ``afraid'' faces are very separate from the ``disgust'' and ``happy'' faces. This indicates that UCA with multiple backgrounds can identify patterns of variation that can distinguish ``afraid'' from the other emotions.
 
 Figure \ref{fig:faces-eigenfaces} shows visualizes the top five directions of variation produced by each method as faces. These are called eigenfaces, and this visualization technique is useful for interpreting the top components as facial features \cite{turk1991eigenfaces}. PCA eigenfaces generally represent features common to all the emotions. UCA eigenfaces using a pooled background seem to highlight the eyebrows and upper lips, though it is difficult to discern. On the other hand, eigenfaces produced using UCA using multiple separate backgrounds highlight eyebrows, eyes, nostrils, and nasolabial folds. These are especially clear in the second eigenface and accord with intuition about which features would likely be most useful in distinguishing ``afraid'' from other emotions.
@@ -251,7 +213,7 @@ Figure \ref{fig:faces-eigenfaces} shows visualizes the top five directions of va
 
 \section{Discussion}
 In many data analytics settings, we are interested in removing uninteresting variation that contaminate the data of interest.
-Here we proposed UCA, a tuning-free contrastive learning method that can accommodate multiple background datasets. % To do this, we first solved the tuning parameter problem which plague current methods. UCA does not require user input in selecting the best contrastive parameter; rather it works by maximizing the target data variability subject to keeping the variability in each background small using weak duality of Lagrangians. 
+Here we proposed UCA, a tuning-free contrastive learning method that can accommodate multiple background datasets and have shown its usefulness in several examples. % To do this, we first solved the tuning parameter problem which plague current methods. UCA does not require user input in selecting the best contrastive parameter; rather it works by maximizing the target data variability subject to keeping the variability in each background small using weak duality of Lagrangians. 
 % Moreover, we reformulate the contrastive problem to avoid creating several $p \times p$ covariance matrices, enabling us to perform contrastive analysis in high-dimensions.
 We showed in analyses of mouse proteomics data and facial image data that UCA performs as well as cPCA when used with a single background dataset but can have dramatically better performance when used with multiple separate backgrounds.% is consistent with existing methods in the easily separable case within the mouse proteomics data. We then present a less separable case with the same mouse proteomics data, in which cPCA and cPCA++ fail to do an adequate job in separating Down Syndrome and control mice for any choice of tuning parameter, where applicable.
 % We show that simply stacking individual background datasets can leverage multiple backgrounds to improve the single background separation between Down Syndrome and control mice.
@@ -259,13 +221,21 @@ We showed in analyses of mouse proteomics data and facial image data that UCA pe
 % Lastly, we demonstrate that under the split framework unique to UCA, we can better separate each emotional face in the final session using the first two components, which cannot be accomplished with pooling multiple background data.  Other face combinations show either similar or better separation when treating backgrounds separately, rather than stacking them to form a joint covariance matrix.
 % We hope that by providing a scalable, tuning-free, multibackground solution to the contrastive problem, UCA will play a pivotal role in isolating target variability in many scientific applications to come.
 Like cPCA, the choice of background still plays a pivotal role in the directions found by UCA. 
+
+%   - backgounds help identify features that are important in the background. Imagine separating black from white where black is background. not white is a feature unique to background as well as black.
+%   - Target 
 We have released the code for UCA as an R package, along with documentation and examples exhibited in this paper. 
 % UCA only finds the optimal contrastive parameter using Lagrange multipliers and does not remedy a poor background choice.
 
 \textbf{Conclusion seems too short, do you have anything else to add? What does the original cPCA paper have in their discussion?}
 %
-
-%Needs to be expanded upon to act as your conclusion, sort of tapers off.
+%%% This is the discussion section in cPCA. %%%%%%
+% In many data science settings, we are interested in visualizing and exploring patterns that are enriched in one dataset relative to other data. We have presented cPCA as a general tool for performing such contrastive exploration, and we have illustrated its usefulness in a diverse range of applications. The main advantages of cPCA are its generality and ease of use. Computing a particular cPCA takes essentially the same amount of time as computing a regular PCA. This computational efficiency enables cPCA to be useful for interactive data exploration, where each operation should ideally be almost immediate. As such, any settings where PCA is applied on related datasets, cPCA can also be applied. In the Supplementary Note 3 and Supplementary Fig. 8, we show how cPCA can be kernelized to uncover nonlinear contrastive patterns in datasets.
+% 
+% The only free parameter of contrastive PCA is the contrast strength α. In our default algorithm, we developed an automatic scheme based on clusterings of subspaces for selecting the most informative values of α (see Methods). All of the experiments performed for this paper use the automatically generated α values, and we believe this default will be sufficient in many applications of cPCA. The user may also input specific values for α if more fine-grained exploration is desired.
+% 
+% cPCA, like regular PCA and other dimensionality reduction methods, does not give p-values or other statistical significance quantifications. The patterns discovered through cPCA need to be validated through hypothesis testing or additional analysis using relevant domain knowledge. We have released the code for cPCA as a python package along with documentation and examples.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
 % cPCA++ isn't all that impressive
@@ -319,7 +289,13 @@ We introduce the Unique Component Analysis (UCA) framework which combines both c
 \begin{align}
   &\max_{v\in \mathbb{R}^p}{v^TAv} \label{eq:1} \\ \text{subject to }&\; v^{T}v=1,\;\; v^TBv \leq 1 \nonumber
 \end{align}
-We note that strong duality holds because our primal problem is quadratic and the constraints satisfy Slater's condition\cite{boyd2004convex}: covariance matrix $B$ is positive semi-definite, thus for all $v$, $v^T B v \geq 0$, implying existance of $v$ such that $v^T B v \leq 1$. 
+Since our primal problem is quadratic, strong duality requires satisfying Slater's condition\cite{boyd2004convex} (See Appendix B1).
+To achieve strong duality, we require the smallest eigenvalue of $B$ to be less than 1, $\lambda_{\min}\left(B\right) = \min_{v}\frac{v^T B v}{v^T v}< 1$.
+For covariance matrices formed from standardized data matrices, \[tr(B) = \sum_{i = 1}^{p} \lambda_i = n\]
+As eigenvalues are ordered, this implies $\lambda_{\min}(B)\leq 1$, with equality if $B = I_p$.
+For covariance matrices formed from unstandardized data, our assumption is the same as $dim(B) < p$, the dimensionality of $B$ is smaller than $p$. 
+
+% covariance matrix $B$ is positive semi-definite, thus for all $v$, $v^T B v \geq 0$, implying existance of $v$ such that $v^T B v \leq 1$. 
 With strong duality, we solve \ref{eq:1} by maximizing the dual function, $g(\lambda)$ of the Lagrangians $\mathcal{L}$:
 \begin{align}
     \max_{\lambda \geq 0}{g(\lambda)} &= \max_{\lambda \geq 0}{\max_{v\in \mathbb{R}^{P}}{\mathcal{L}}}\left(v,\lambda\right) \nonumber\\
@@ -339,7 +315,8 @@ Since the dual function is concave and a solution necessarily exists, we maximiz
 \end{align}
 
 %\textbf{Also, it's not immediately clear where you used a eigendecomposition. An eigendecomposition is a factorization of a matrix $M = V \Sigma V^\top$, but I don't see a matrix factorization here. I think you can be more precise about what exactly you did.}
-We use an iterative algorithm (L-BFGS-B) \cite{byrd1995limited} to search for Lagrange multiplier $\lambda$ such that the associated eigenvectors $v_\lambda$ satisfies equation \ref{eq:3}. The resulting $v_\lambda$ also solves the primal problem due to strong duality.
+We use an iterative algorithm (L-BFGS-B) \cite{byrd1995limited} to search for Lagrange multiplier $\lambda$ such that the associated eigenvectors $v_\lambda$ satisfies equation \ref{eq:3}.
+Due to strong duality, the resulting $v_\lambda$ also solves the primal problem.
 We see that combining the two constraints allows us a natural way to solve for the contrastive parameter $\lambda$ in cPCA when only one background is used.
 % \textbf{How do you know that this interation between $\lambda$ and $v_\lambda$ will converge, and if it converges, how do you know it will converge to a global rather than local optimum?}
 % Similar to the constrastive parameter, the Lagrange multiplier can't be less than zero, and allows us to use box constrained optimization methods. 
@@ -377,8 +354,8 @@ For background $j \in 1,...,m$, we can solve for the $j$th Lagrange multiplier i
                                                                                                                         &\Leftrightarrow \frac{\partial}{\partial \lambda_j}\left(-\lambda_j v_{\lambda}^T  B_j v_{\lambda} +\lambda_j \right)\nonumber \\ 
                                                                                                                         &= 1-v_{\lambda_j}^{T}B_j v_{\lambda_j} = 0 \label{eq:6}
 \end{align}
-
-To solve this multiple background dataset problem we propose a coordinate descent algorithm that utilizes the single background dataset L-BFGS-B \cite{byrd1995limited} algorithm iteratively. \textbf{Again, how do you know that this coordinate descent algorithm will converge to a global optimum?}
+%\textbf{Again, how do you know that this coordinate descent algorithm will converge to a global optimum?}
+To solve this multiple background dataset problem we propose a coordinate descent algorithm that utilizes the single background dataset L-BFGS-B \cite{byrd1995limited} algorithm iteratively. 
 For $m$ background datasets, on the $q^{th}$ iteration, let $A_{(j)}^*$ be the variation in $A$ after excluding background variation that is not $B_j$:
 \[A_{(j)}^{*} = A - \sum_{ i = 1 }^{j-1}\lambda_{i}^{(q+1)}B_i - \sum_{i =j+1}^{m}\lambda_{i}^{(q)}B_i \] \
 to solve for $j^{th}$ of the $m$ Lagrange multipliers, we use Algorithm \ref{alg:uca-multiple}.
@@ -511,12 +488,12 @@ Datasets that have been used to evaluate UCA in this paper are publicly availabl
 
 %%% TO DO %%%
 %\textbf{since some of the colors in the PCA are too similar, I had another idea, do you think we can do shapes as well? So like the ``bad'' emotions (anger, digust, etc.) get different shapes?}
-% fix label scaling in figures
-%Strong Duality in UCA: KKT Conditions?
+% Discussion rewrite
+% structure of methods argument
 
 %%% Things to think about %%%
 % an interpretation for $\lambda$
-% are our solutions unique? why force v^T Bv  = 1, not 0.25 or 2. does the result give us the same eigenvectors but scaled eigenvalues?
+% are our solutions unique? why force v^T Bv  = 1, not 0.25 or 2. does the result give us the same eigenvectors but scaled eigenvalues? 
 % if you scale the constraint does the estimated v just a scaled version?
 % I.e. does it just live in the same space? Maybe the direction wouldn't change
 
