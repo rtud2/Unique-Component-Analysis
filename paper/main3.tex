@@ -213,29 +213,26 @@ Figure \ref{fig:faces-eigenfaces} shows visualizes the top five directions of va
 
 \section{Discussion}
 In many data analytics settings, we are interested in removing uninteresting variation that contaminate the data of interest.
-Here we proposed UCA, a tuning-free contrastive learning method that can accommodate multiple background datasets and have shown its usefulness in several examples. % To do this, we first solved the tuning parameter problem which plague current methods. UCA does not require user input in selecting the best contrastive parameter; rather it works by maximizing the target data variability subject to keeping the variability in each background small using weak duality of Lagrangians. 
+Here we proposed UCA, a tuning-free contrastive learning method that simplifies cPCA while also substantially improving it by accommodating multiple background datasets. We demonstrate UCA's usefulness and superiority in several examples. % To do this, we first solved the tuning parameter problem which plague current methods. UCA does not require user input in selecting the best contrastive parameter; rather it works by maximizing the target data variability subject to keeping the variability in each background small using weak duality of Lagrangians. 
 % Moreover, we reformulate the contrastive problem to avoid creating several $p \times p$ covariance matrices, enabling us to perform contrastive analysis in high-dimensions.
 We showed in analyses of mouse proteomics data and facial image data that UCA performs as well as cPCA when used with a single background dataset but can have dramatically better performance when used with multiple separate backgrounds.% is consistent with existing methods in the easily separable case within the mouse proteomics data. We then present a less separable case with the same mouse proteomics data, in which cPCA and cPCA++ fail to do an adequate job in separating Down Syndrome and control mice for any choice of tuning parameter, where applicable.
 % We show that simply stacking individual background datasets can leverage multiple backgrounds to improve the single background separation between Down Syndrome and control mice.
 % However, using the multiple background framework provided by UCA achieves even better results than stacking individual background datasets. 
 % Lastly, we demonstrate that under the split framework unique to UCA, we can better separate each emotional face in the final session using the first two components, which cannot be accomplished with pooling multiple background data.  Other face combinations show either similar or better separation when treating backgrounds separately, rather than stacking them to form a joint covariance matrix.
 % We hope that by providing a scalable, tuning-free, multibackground solution to the contrastive problem, UCA will play a pivotal role in isolating target variability in many scientific applications to come.
-
 UCA is computationally fast and easily extensible to high-dimensional data because it does not require constructing nor storing a large covariance matrices (see Methods). Further, no additional post-hoc clustering method is necessary to choose the appropriate tuning parameter.
 
 Like cPCA, the choice of background(s) still play a pivotal role in the directions found by UCA.
 For background data that is already accounted for by other background data, the algorithm will ignore similar information and only weigh additional new information. In the event of identical backgrounds, only one background will be considered.
 This can be avoided apriori by stacking data from the same experiments and creating a joint background. 
 
-Similar to regression, switching target and background covariance matrices will not result in the same solution.
-UCA finds variation in the target data not present in the background data.
-
-%   - switching 
-
+While the goal of UCA is not always to find separability between groups, UCA emphasizes finding variation in the target data scarcely seen in the background data. Therefore switching background data to it's compliment may not result in the same target data separation. 
+For example, if our target data consists of all facial emotions in section \ref{sec:faces}, and our background consisted of negative emotions (Afraid, Angry, Disgust, Sad), we hope to see less variability in negative emotions and preserve variability in non-negative emotions (Happy, Surprise, Neutral).
+Conversely, using non-negative emotions as the background instead would preserve the variability in negative emotions, and decrease the variability in non-negative emotions. What is scarcely seen in one set of background changes in the complement, resulting in different directions of variation. 
+For maximal data seperation, we recommend using groups with larger variation as the background(s).
+% not sure how to massage this point into the discussion...seems out of place
 %   - backgounds help identify features that are important in the background. Imagine separating black from white where black is background. not white is a feature unique to background as well as black.
-%   - Target 
 We have released the code for UCA as an R package, along with documentation and examples exhibited in this paper. 
-% UCA only finds the optimal contrastive parameter using Lagrange multipliers and does not remedy a poor background choice.
 
 % \textbf{Conclusion seems too short, do you have anything else to add? What does the original cPCA paper have in their discussion?}
 %
