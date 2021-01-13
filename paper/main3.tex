@@ -175,7 +175,7 @@ We focus on uncovering variation unique to the ``afraid'' emotion using all fina
     \caption{}
    \label{fig:faces-eigenfaces}
     \end{subfigure}
-\caption{Results of analysis of KDEF faces.  (a) Each emotion averaged over all female actors. (b) Faces projected onto the first two components found by PCA, UCA with a pooled background, and UCA using multiple backgrounds. (c) Top 5 eigenfaces of female emotions produced by different analyses.}
+    \caption{Analysis of KDEF faces. (a) Each emotion averaged over all female actors. (b) Faces projected onto the first two components of PCA, UCA with a pooled background, and UCA using multiple backgrounds. Shapes distinguish negative (triangle) and non-negative (circle) emotions. (c) Top 5 eigenfaces of female emotions produced by different analyses.}
 \end{figure}
 
 Figure \ref{fig:faces-projected} projects the target data onto the first two directions of variation calculated using each method. The emotions are entirely intermixed when projected onto components produced by PCA and by UCA using a single pooled background. In contrast, the emotions are much more separable when using UCA with multiple separate backgrounds. In particular, ``afraid'' faces are very separate from the ``disgust'' and ``happy'' faces. This indicates that UCA with multiple backgrounds can identify patterns of variation that can distinguish ``afraid'' from the other emotions.
@@ -230,6 +230,7 @@ While the goal of UCA is not always to find separability between groups, UCA emp
 For example, if our target data consists of all facial emotions in section \ref{sec:faces}, and our background consisted of negative emotions (Afraid, Angry, Disgust, Sad), we hope to see less variability in negative emotions and preserve variability in non-negative emotions (Happy, Surprise, Neutral).
 Conversely, using non-negative emotions as the background instead would preserve the variability in negative emotions, and decrease the variability in non-negative emotions. What is scarcely seen in one set of background changes in the complement, resulting in different directions of variation. 
 For maximal data seperation, we recommend using groups with larger variation as the background(s).
+
 % not sure how to massage this point into the discussion...seems out of place
 %   - backgounds help identify features that are important in the background. Imagine separating black from white where black is background. not white is a feature unique to background as well as black.
 We have released the code for UCA as an R package, along with documentation and examples exhibited in this paper. 
@@ -495,7 +496,6 @@ Datasets that have been used to evaluate UCA in this paper are publicly availabl
 
 %%% TO DO %%%
 %\textbf{since some of the colors in the PCA are too similar, I had another idea, do you think we can do shapes as well? So like the ``bad'' emotions (anger, digust, etc.) get different shapes?}
-% Discussion rewrite
 % structure of methods argument
 
 %%% Things to think about %%%
