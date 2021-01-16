@@ -73,7 +73,7 @@ bisection = function(A, B, limit = 50, maxit = 1E5L, nv = 1, tol = 1E-6){
 #' @param nv number of uca components to estimate
 #' @param max_iter maximum iterations for coordinate descent, if tolerance is not reached. default 1E5
 #' @param tol tolerance for stopping criteria of coordinate descent. default 1E-6
-#' @param algo which algorithm to use. default algo == "bisection". If algo = "optim", L-BFGS-S optimization is used instead. algo== "optim" can improve speed
+#' @param algo which algorithm to use. default algo == "bisection". If algo = "cd", L-BFGS-S optimization is used instead for coordinate descent. algo== "gd" than L-BFGS-S optimizes all lambda's simultaenously (gradient descent). 
 #' @param ... other parameters to pass in to bisection(...)
 #' @return for each background covariance matrix in B, return list of tau (the optimal lagrange multiplier), vectors(eigenvector)
 #'  associated with largest value (eigenvalue)
@@ -96,16 +96,19 @@ bisection.multiple = function(A, B, lambda=NULL, nv = 2L, max_iter = 1E5L, tol =
       score <- sum(bisection_j$values, lambda)
       if( abs(old.score - score) < tol * abs(old.score)) break;
     }
-  }else if(algo == "optim"){
+  }else if(algo == "cd"){
     for(i in 1L:max_iter){
       old.score <- score
       for (j in seq_along(B)){
-        bisection_j <- optim_bfgs(A - Reduce("+", Map("*", lambda[-j], B[-j])), B[[j]], ...) 
+        bisection_j <- optim_cd(A - Reduce("+", Map("*", lambda[-j], B[-j])), B[[j]], ...) 
         lambda[j] = bisection_j$tau
       }
       score <- sum(bisection_j$values, lambda)
       if( abs(old.score - score) < tol * abs(old.score)) break;
     }
+  }else if(algo == "gd"){
+        optim_gd_tmp <- optim_bfgs_gd(A = A, B = B, maxit = max_iter)
+        lambda = optim_gd_tmp$tau
   }else{
     stop(paste("algo",algo," not recognized"))
   }
@@ -126,20 +129,20 @@ bisection.multiple = function(A, B, lambda=NULL, nv = 2L, max_iter = 1E5L, tol =
 #' @param method method used to calculate the uca values and vectors. Use method = 'data' when passing a n*p data matrix. Use method = 'cov' when passing in a covariance matrix 
 #' @param center logical: default False. If False, data matrix A and B will not be centered
 #' @param scale logical: default False. If True, will center and scale, regardless of what center variable is set to
-#' @param algo algorithm to find lagrange multiplier. only takes values "bisection" and "optim". default is "optim" as it's much faster, but bisection exists for backwards compatibility.
+#' @param algo algorithm to find lagrange multiplier. only takes values "bisection", "cd" (coordinate descent), and "gd" (gradient descent). For single background data, "cd" and "gd" are the same. default is "cd", but bisection exists for backwards compatibility. 
 #' @param ... other parameters to pass in to bisection(...) and bisection.multiple(...).  (Default: limit=20, maxit=1E5L, max_iter = 1E5L, tol = 1E-6, algo = "bisection")
 #' @return values(eigenvalues), vectors (eigenvectors), tau (Lagrange Multiplier) associated with unique component analysis
 #' @importFrom RSpectra eigs_sym
 #' @importFrom Rfast transpose
 #' @export
 
-uca = function(A, B, nv = 2, method = "data", center = F, scale = F, algo = "optim", ...){
-  if(!(class(B) %in% c("list","matrix")) ){
+uca = function(A, B, nv = 2, method = "data", center = F, scale = F, algo = "cd", ...){
+  if(sum(class(B) %in% c("list","matrix")) == 0 ){
     stop("B is not a list of matrix, matrices")
   }
   
   if(method == "cov"){
-    
+   # multiple background cov method 
     if(is.list(B) & length(B) > 1){
       if( sum((nrow(A) != nrow(A)), sapply(B , function(z){nrow(z) != ncol(z)})) > 0 ){
         stop("at least one input matrix is not square. make sure you've inputted a covariance matrix")
@@ -152,14 +155,15 @@ uca = function(A, B, nv = 2, method = "data", center = F, scale = F, algo = "opt
 
       
     }else{
+    # single background cov method
       if(is.list(B)) B = B[[1]]
       if((nrow(A) != nrow(B)) | nrow(A) != ncol(A) | nrow(B) != ncol(B)){
         stop("either A or B are not square, or don't have the same dimensions")
       }
       if(algo == "bisection"){
       tmp_res <- bisection(A=A, B=B, nv=nv, ...)
-      }else if(algo == "optim"){
-      tmp_res <- optim_bfgs(A=A, B=B, nv=nv, ...)  
+      }else if(algo == "cd" | algo == "gd"){
+      tmp_res <- optim_cd(A=A, B=B, nv=nv, ...)  
       }else{
         stop(paste("algo", algo,"not regonized \n"))
       }
@@ -187,7 +191,9 @@ uca = function(A, B, nv = 2, method = "data", center = F, scale = F, algo = "opt
         warning("Changing to method = 'cov' will possibly yield faster results.\n")
       }  
     }
-    
+  if( algo == "gd"){
+      stop('algo == "gd" has not been implemented yet for method == "data"')
+  }
     
     # scale data: single background
     if(scale == TRUE){
@@ -222,8 +228,8 @@ uca = function(A, B, nv = 2, method = "data", center = F, scale = F, algo = "opt
       }
       if(algo == "bisection"){
         tmp_res <- bisection2(A=A_divided, B=B_divided, ...)  
-      } else if(algo == "optim"){
-        tmp_res <- optim_bfgs2(A = A_divided, B = B_divided, ...)
+      } else if(algo == "cd"){
+        tmp_res <- optim_cd2(A = A_divided, B = B_divided, ...)
       }else{
         stop(paste("algo", algo,"not regonized \n"))
       }

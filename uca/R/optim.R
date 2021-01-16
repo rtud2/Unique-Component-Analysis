@@ -24,7 +24,7 @@ gr_fun = function(A, B, tau){
    1 - as( crossprod(eigen_calc$vectors, B %*% eigen_calc$vectors), "numeric")
 }
 
-#' optim_bfgs implementaiton, cov method
+#' optim_cd implementaiton, cov method, coordinate descent
 #' 
 #' Use optim-L-BFGS-S to find the optimal Lagrangian for solving unique component analysis (uca) 
 #' @param A Target Covariance Matrix
@@ -34,7 +34,7 @@ gr_fun = function(A, B, tau){
 #' @return the final list of tau (the optimal lagrange multiplier), vector (eigenvector)
 #'  associated with tau, value (eigenvalue), and score (derivative value of the lagrangian)
 
-optim_bfgs = function(A, B, maxit = 5E2L, nv = 1){
+optim_cd = function(A, B, maxit = 5E2L, nv = 1){
   
 optim_with_grad = optim(par = 2,
                         fn = obj_fun,
@@ -50,7 +50,7 @@ tau = optim_with_grad$par
 return(list(values = optim_with_grad$value - tau, tau=tau))
 }
 
-#' optim_bfgs2: optim implementation for the data method
+#' optim_cd2: optim implementation for the data method, coordinate descent
 #' 
 #' compute the UCA for single background using SVD and QR. good for bigger data where loading the covariance matrix is difficult using optim then bisection
 #' @param A a n1xp data matrix
@@ -59,7 +59,7 @@ return(list(values = optim_with_grad$value - tau, tau=tau))
 #' @return list of tau, largest eigenvalue, and score
 #' @importFrom Rfast transpose 
 
-optim_bfgs2 = function(A, B, maxit = 5E2L, nv = 1){
+optim_cd2 = function(A, B, maxit = 5E2L, nv = 1){
   right =  rbind(A, B)
   svd_right <- arma_svd(right)
   t_A = Rfast::transpose(A)
@@ -81,7 +81,7 @@ optim_bfgs2 = function(A, B, maxit = 5E2L, nv = 1){
   return(list(values = optim_with_grad$value - optim_with_grad$par, tau=optim_with_grad$par ))
 }
 
-#' obj_fn_multiple
+#' obj_fn_multiple_cd
 #' 
 #' objective function multiple backgroundsimplementation, data method
 #' @param B background interested in calculating lagrange multiplier for
@@ -94,14 +94,14 @@ optim_bfgs2 = function(A, B, maxit = 5E2L, nv = 1){
 #' @return value of the objective function
 #' @importFrom Rfast transpose 
 #' 
-obj_fn_multiple = function(lambda, B, t_A, t_B, lambda_B, right, svd_right, j){
+obj_fn_multiple_cd = function(lambda, B, t_A, t_B, lambda_B, right, svd_right, j){
   lambda_B[[j]] =  -lambda*t_B[[j]]
   left <- do.call(cbind, c(list(t_A), lambda_B))
   objective_fn <- multiple_score_calc_cpp(left, right, svd_right$u, svd_right$d, B, lambda)
   return( objective_fn$values+lambda)
 }
 
-#' gr_fn_multiple
+#' gr_fn_multiple_cd
 #' 
 #' gradient function multiple backgroundsimplementation, data method
 #' @param B background interested in calculating lagrange multiplier for
@@ -114,14 +114,14 @@ obj_fn_multiple = function(lambda, B, t_A, t_B, lambda_B, right, svd_right, j){
 #' @return value of the gradient fn
 #' @importFrom Rfast transpose 
 
-gr_fn_multiple = function(lambda, B, t_A, t_B, lambda_B, right, svd_right, j){
+gr_fn_multiple_cd = function(lambda, B, t_A, t_B, lambda_B, right, svd_right, j){
   lambda_B[[j]] =  -lambda*t_B[[j]]
   left <- do.call(cbind, c(list(t_A), lambda_B))
   objective_gr <- multiple_score_calc_cpp(left, right, svd_right$u, svd_right$d, B, lambda)
   return( objective_gr$score)
 }
 
-#' optim_bfgs_multiple
+#' optim_cd_multiple
 #' 
 #' objective function multiple backgroundsimplementation, data method
 #' @param B_focus single background interested in calculating lagrange multiplier for
@@ -132,7 +132,7 @@ gr_fn_multiple = function(lambda, B, t_A, t_B, lambda_B, right, svd_right, j){
 #' @param lambda the lagrange multiplier
 #' @return optimum eigenvalue and lagrange multiplier for a single background in the multi. background setting
 #' @importFrom Rfast transpose
-optim_bfgs_multiple = function(B_focus, t_A, t_B, right, svd_right, lambda, j, maxit = 5E2){
+optim_cd_multiple = function(B_focus, t_A, t_B, right, svd_right, lambda, j, maxit = 5E2){
   
   #constants that don't really change if focused on j-th background
   old_right <- Rfast::transpose(do.call(cbind, c(list(t_A),  t_B[-j]))) #for some reason, faster than rbind due to memory allocation.
@@ -152,8 +152,8 @@ optim_bfgs_multiple = function(B_focus, t_A, t_B, right, svd_right, lambda, j, m
     return(f_val);
   }else{
   optim_res <- optim(par = 3,
-        fn = obj_fn_multiple,
-        gr = gr_fn_multiple,
+        fn = obj_fn_multiple_cd,
+        gr = gr_fn_multiple_cd,
         t_A = t_A,
         t_B = t_B,
         lambda_B = lambda_B,
@@ -170,6 +170,48 @@ optim_bfgs_multiple = function(B_focus, t_A, t_B, right, svd_right, lambda, j, m
 return(list(values = optim_res$value - optim_res$par, tau=optim_res$par ))
 }
 
+#' objective function for optim implementation, cov method, gradient descent
+#' 
+#' @param A Target Covariance Matrix
+#' @param B_unlist B unlist of background covariance(s).
+#' @param tau lowerbound for root finding
+#' @return value of objective function 
+#' @importFrom methods as
+#' @importFrom RSpectra eigs_sym
+obj_fun_multiple_gd = function(A, B_unlist, tau) {
+    cov_length <- ncol(A)^2
+    B_obj_global <- lapply(seq_along(tau), function(iters){
+    matrix(B_unlist[ ((iters - 1)*cov_length)  + (1:cov_length)], ncol = ncol(A))
+      })
+    contrastive_mat <- A - Reduce("+", Map("*", tau, B_obj_global))
+    eigen_calc_global <- eigs_sym (contrastive_mat, 1L, "LA")
+    eigen_calc_global$values + sum(tau)
+}
 
 
+#' optim_bfgs implementation, cov method, gradient descent, single OR multiple backgrounds
+#' 
+#' Use optim-L-BFGS-S to find the optimal Lagrangian for solving unique component analysis (uca) using gradient descent
+#' @param A Target Covariance Matrix
+#' @param B List of background Covariance Matrices
+#' @param nv number of eigenvectors to use
+#' @param maxit maxium number of iterations for the algorithm to run
+#' @return the final list of tau (the optimal lagrange multiplier), vector (eigenvector)
+#'  associated with tau, value (eigenvalue), and score (derivative value of the lagrangian)
+
+optim_bfgs_gd = function(A, B, maxit = 5E2L, nv = 1){
+    n_bg <- length(B)
+    gr_dsc_mthd <- optim(par = rep(2, n_bg) ,
+                     fn = obj_fun_multiple_gd,
+                     A = A,
+                     B_unlist = unlist(B),
+                     method = "L-BFGS-B",
+                     lower = rep(0, n_bg),
+                     control = list(maxit = maxit))
+
+if(gr_dsc_mthd$convergence != 0){warning("optim did not converge \n")}
+tau = gr_dsc_mthd$par
+
+return(list(values = gr_dsc_mthd$value - tau, tau=tau))
+}
 
