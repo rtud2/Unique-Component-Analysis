@@ -23,6 +23,11 @@ Philippe Boileau, Nima~S Hejazi, and Sandrine Dudoit.
   principal component analysis}.
 \newblock {\em Bioinformatics}, 36(11):3422--3430, 03 2020.
 
+\bibitem{boyd2004convex}
+Stephen Boyd, Stephen~P Boyd, and Lieven Vandenberghe.
+\newblock {\em Convex optimization}.
+\newblock Cambridge university press, 2004.
+
 \bibitem{byrd1995limited}
 Richard~H Byrd, Peihuang Lu, Jorge Nocedal, and Ciyou Zhu.
 \newblock A limited memory algorithm for bound constrained optimization.
@@ -58,6 +63,11 @@ Karl~Pearson F.R.S.
   space.
 \newblock {\em The London, Edinburgh, and Dublin Philosophical Magazine and
   Journal of Science}, 2(11):559--572, 1901.
+
+\bibitem{ghojogh2019eigenvalue}
+Benyamin Ghojogh, Fakhri Karray, and Mark Crowley.
+\newblock Eigenvalue and generalized eigenvalue problems: Tutorial.
+\newblock {\em arXiv preprint arXiv:1903.11240}, 2019.
 
 \bibitem{Golub}
 Gene Golub, Knut Solna, and Paul Van~Dooren.
