@@ -8,8 +8,6 @@ p = c(seq(from = 100, to = 1000, by = 100),seq(from = 2000, to = 10000, by = 100
 res <- list()
 
 for( i in seq_along(p)){
-  
-
 timing_data <- microbenchmark(data = uca(target, bg, method = "data", nv = 2),
                               cov= uca(cov_target, cov_bg, method = "cov", nv = 2),
                               unit = "s",
@@ -18,9 +16,7 @@ timing_data <- microbenchmark(data = uca(target, bg, method = "data", nv = 2),
   bg <- matrix(rnorm(100*p[i], mean = 0, sd = 1),ncol = p[i])
   target <- matrix(rnorm(100*p[i]),ncol = p[i])+bg
   cov_target <- cov(target)
-  cov_bg <- cov(bg)
-  
-                              }
+  cov_bg <- cov(bg) }
 )
 size <- c("data" = object.size(target), "cov" = object.size(cov_target))
 
@@ -34,31 +30,33 @@ tmp_res[, `:=`(method = timing_data$expr,
 res[[i]] <- tmp_res
 
 res_dt <- do.call(rbind, res)
-#saveRDS(res, "example/res.rds")
-fwrite(res_dt, "example/timing_res.csv")
-res_dt <- fread("timing_res.csv")
-
-current <- ggplot(data = res_dt, aes(x = as.factor(dim), y = (time/10e9), fill = as.factor(method)))+
-                  geom_boxplot(alpha = 0.5)+
-                  labs(x = "Dimension", y = "Time (Sec.)")+
-                  theme_bw(base_size = 20)+
-                  theme(legend.position = "bottom", axis.text.x = element_text(angle = -45))
-
-ggsave(filename = paste0("example/current_",p[i],".png"),plot = current, width = 11, height = 8, units = "in")
+# res_dt <- fread("timing_res.csv")
+# 
+# current <- ggplot(data = res_dt, aes(x = as.factor(dim), y = (time/10e9), fill = as.factor(method)))+
+#                   geom_boxplot(alpha = 0.5)+
+#                   labs(x = "Dimension", y = "Time (Sec.)")+
+#                   theme_bw(base_size = 20)+
+#                   theme(legend.position = "bottom", axis.text.x = element_text(angle = -45))
+# 
+# ggsave(filename = paste0("example/current_",p[i],".png"),plot = current, width = 11, height = 8, units = "in")
 
 message(paste("done with: ", p[i], "\n"))
 }
 
+saveRDS(res, "res.rds")
+
+red_dt <- readRDS("res.rds")
+
 res_dt[, method := factor(method, levels = c("cov","data"), labels = c("Eigendecomposition","Product SVD"))]
 
-final <- ggplot(data = res_dt[dim >=1000], aes(x = as.factor(dim), y = (time/10e9), fill = method))+
-                  geom_boxplot(alpha = 0.5)+
+final <- ggplot(data = res_dt[dim >=1000])+
+                  geom_boxplot(aes(x = as.factor(dim), y = (time/10e9), color = method), alpha = 0.5)+
                   labs(x = "Dimension", y = "Time (Sec.)")+
                   theme_bw(base_size = 20)+
                   scale_fill_discrete(name = "Method")+
                   theme(legend.position = "bottom", axis.text.x = element_text(angle = 0))
 
-ggsave(filename = "final_perf.png",plot = final, width = 11, height = 8, units = "in")
+ggsave(filename = "final_perf_color.png",plot = final, width = 11, height = 8, units = "in")
 
 
 

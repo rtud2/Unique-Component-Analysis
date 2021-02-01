@@ -133,7 +133,6 @@ bisection.multiple = function(A, B, lambda=NULL, nv = 2L, max_iter = 1E5L, tol =
 #' @param ... other parameters to pass in to bisection(...) and bisection.multiple(...).  (Default: limit=20, maxit=1E5L, max_iter = 1E5L, tol = 1E-6, algo = "bisection")
 #' @return values(eigenvalues), vectors (eigenvectors), tau (Lagrange Multiplier) associated with unique component analysis
 #' @importFrom RSpectra eigs_sym
-#' @importFrom Rfast transpose
 #' @export
 
 uca = function(A, B, nv = 2, method = "data", center = F, scale = F, algo = "cd", ...){
@@ -236,7 +235,7 @@ uca = function(A, B, nv = 2, method = "data", center = F, scale = F, algo = "cd"
       
       
       #calculate the svd
-      left <- cbind(Rfast::transpose(A_divided), - tmp_res$tau * Rfast::transpose(B_divided))
+      left <- cbind(t(A_divided), - tmp_res$tau * t(B_divided))
       right <- rbind(A_divided, B_divided)
      
       final_res <- broken_svd_cpp(left, right, nv)

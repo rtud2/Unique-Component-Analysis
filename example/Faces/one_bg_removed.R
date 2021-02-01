@@ -142,3 +142,24 @@ final_mean_faces_plot_out <- ggplot(final_mean_faces_plot) +
 ggsave("example/Faces/One_Background_Removed/mean_emotions.png",
         final_mean_faces_plot_out,
        width = 16.25, height = 3.1, units = "cm", dpi = 300)
+
+
+# afraid 2nd PC density
+afraid_C2_density <- ggplot(data = res_list[[7]][[1]]) +
+    geom_density(aes(x = V2, color = Emotion, fill = Emotion), size = 0.3, alpha = 0.5) +
+    facet_wrap(~Method, ncol = 1) + 
+    labs( x = "Component 2") + 
+    theme_bw() +
+    scale_color_manual(values = csrsc1) +
+    scale_fill_manual(values = csrsc1) +
+    theme(legend.position = "bottom",
+          plot.margin = margin(0, 0, 0, 0, "cm"),
+          panel.spacing = unit(0.1, "line"),
+          legend.text = element_text(size = 8, margin = margin(l = -0.1,unit = "cm")),
+          legend.key.size = unit(.5, "cm"), 
+          legend.margin=margin(-.25, 0, 0, 0, unit="cm"),
+          legend.title = element_blank()) 
+
+ggsave("example/Faces/One_Background_Removed/PC2_density.png",
+        afraid_C2_density,
+        width = 8.25, height = 9, units = "cm")

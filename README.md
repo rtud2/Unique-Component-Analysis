@@ -4,7 +4,7 @@ A technique to carry out contrastive Principal Component Analysis with multiple 
 UCA can be used with multiple background data to remove known variation from multiple sources and implemented to handle high-dimensional data. 
 
 ##  Download
-You may compile directly from source via command line or shell, using the UCA folder with `R CMD build UCA`. Note, The package depends on `Rfast`, `Rcpp`, `RcppArmadillo`, and `RSpectra`, so you will need those installed before you can compile.
+You may compile directly from source via command line or shell, using the UCA folder with `R CMD build UCA`. Note, The package depends on `Rcpp`, `RcppArmadillo`, and `RSpectra`, so you will need those installed before you can compile.
 
  You may also choose to download the pre-compiled files `uca_0.14.zip` for windows or `uca_0.14.tar.gz` for linux machines. To install the precompiled versions,
 
@@ -23,4 +23,4 @@ The KDEF data used in the faces analysis can be downloaded at [](https://www.kde
 The timing folder contains a simulation that demonstrates the speed increase using the Product SVD method, rather than the covariance method, to run `UCA`.
 
 ## Changelogs
-
+2/1/21 - remove dependency on Rfast

@@ -49,13 +49,12 @@ broken_svd_R = function(left, right, nv){
 #' @param maxit maximum iterations
 #' @param tol tolerance for convergence criteria
 #' @return list of tau, largest eigenvalue, and score
-#' @importFrom Rfast transpose
  
 bisection2 = function(A, B, limit = 20L, maxit = 1E5L, tol = 1E-6){
   right <- rbind(A , B)
   svd_right <- arma_svd(right)
-  t_A = Rfast::transpose(A); 
-  t_B = Rfast::transpose(B);
+  t_A = t(A); 
+  t_B = t(B);
   
   svd_right_check <- arma_svd(A)
   
@@ -117,11 +116,10 @@ bisection2 = function(A, B, limit = 20L, maxit = 1E5L, tol = 1E-6){
 #' @param maxit maximum iterations
 #' @param tol tolerance for convergence criteria
 #' @return list of tau, largest eigenvalue, and score
-#' @importFrom Rfast transpose
 magic_eigen_multiple = function(B_focus, t_A, t_B, right, svd_right, lambda, j, limit = 20L, maxit = 1E5, tol = 1E-6){
   
   #constants that don't really change if focused on j-th background
-  old_right <- Rfast::transpose(do.call(cbind, c(list(t_A),  t_B[-j]))) #for some reason, faster than rbind due to memory allocation.
+  old_right <- t(do.call(cbind, c(list(t_A),  t_B[-j]))) #for some reason, faster than rbind due to memory allocation.
   lambda_B <- Map("*", -lambda, t_B)
   old_left <- do.call(cbind, c(list(t_A), lambda_B[-j]))
   svd_right_check <- arma_svd(old_right)
@@ -182,7 +180,6 @@ magic_eigen_multiple = function(B_focus, t_A, t_B, right, svd_right, lambda, j, 
 #' @param max_iter maximum number of iterations before giving up
 #' @param tol convergence criteria for coordinate descent
 #' @return list of tau, largest eigenvalue, and score
-#' @importFrom Rfast transpose
 bisection2.multiple <- function(A, B, lambda=NULL, nv = 2L, max_iter=1E5L, tol = 1E-6, algo = "bisection", ...){
   
   #initialize starting point if one isn't supplied. greedy start
@@ -192,8 +189,8 @@ bisection2.multiple <- function(A, B, lambda=NULL, nv = 2L, max_iter=1E5L, tol =
     lambda = sapply(seq_along(B), function(zz){optim_bfgs2(A, B[[zz]], ...)$tau})
   }
   
-  t_A <- Rfast::transpose(A)
-  t_B <- lapply(B, Rfast::transpose)
+  t_A <- t(A)
+  t_B <- lapply(B, t)
   right <- t(do.call(cbind, c(list(t_A), t_B)))
   svd_right <- arma_svd(right)
   
