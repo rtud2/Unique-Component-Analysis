@@ -18,8 +18,11 @@ Helper functions useful for analyzing image KDEF faces examples.
 
 ## examples
 The example folder has the analysis corresponding to the paper. The mouse folder contains the relevant UCA code for our results in our paper.
-The mouse protein expression dataset can be downloaded at [](https://archive.ics.uci.edu/ml/datasets/Mice+Protein+Expression).
-The KDEF data used in the faces analysis can be downloaded at [](https://www.kdef.se/)
+
+The mouse protein expression dataset can be downloaded at [https://archive.ics.uci.edu/ml/datasets/Mice+Protein+Expression](https://archive.ics.uci.edu/ml/datasets/Mice+Protein+Expression).
+
+The KDEF data used in the faces analysis can be downloaded at [https://www.kdef.se/](https://www.kdef.se/)
+
 The timing folder contains a simulation that demonstrates the speed increase using the Product SVD method, rather than the covariance method, to run `UCA`.
 
 ## Changelogs
