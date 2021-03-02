@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.21 (TeX Live 2020) (preloaded format=pdflatex 2021.1.31)  28 FEB 2021 13:28
+This is pdfTeX, Version 3.14159265-2.6-1.40.21 (TeX Live 2020) (preloaded format=pdflatex 2021.1.31)  2 MAR 2021 15:04
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -8,8 +8,8 @@ entering extended mode
 LaTeX2e <2020-02-02> patch level 5
 L3 programming layer <2020-04-06> (/usr/share/texlive/texmf-dist/tex/latex/base/article.cls
 Document Class: article 2019/12/20 v1.4l Standard LaTeX document class
-(/usr/share/texlive/texmf-dist/tex/latex/base/size12.clo
-File: size12.clo 2019/12/20 v1.4l Standard LaTeX file (size option)
+(/usr/share/texlive/texmf-dist/tex/latex/base/size10.clo
+File: size10.clo 2019/12/20 v1.4l Standard LaTeX file (size option)
 )
 \c@part=\count167
 \c@section=\count168
@@ -342,44 +342,57 @@ Package caption Info: hyperref package is loaded.
 )
 \c@subfigure=\count282
 \c@subtable=\count283
+) (/usr/share/texlive/texmf-dist/tex/latex/titlesec/titlesec.sty
+Package: titlesec 2019/10/16 v2.13 Sectioning titles
+\ttl@box=\box57
+\beforetitleunit=\skip79
+\aftertitleunit=\skip80
+\ttl@plus=\dimen182
+\ttl@minus=\dimen183
+\ttl@toksa=\toks26
+\titlewidth=\dimen184
+\titlewidthlast=\dimen185
+\titlewidthfirst=\dimen186
+) (/usr/share/texlive/texmf-dist/tex/latex/xurl/xurl.sty
+Package: xurl 2020/01/24 v 0.09 modify URL breaks
 )
-Package hyperref Info: Option `colorlinks' set `true' on input line 19.
+Package hyperref Info: Option `colorlinks' set `true' on input line 26.
  (/usr/share/texlive/texmf-dist/tex/latex/l3backend/l3backend-pdfmode.def
 File: l3backend-pdfmode.def 2020-03-12 L3 backend support: PDF mode
 \l__kernel_color_stack_int=\count284
-\l__pdf_internal_box=\box57
+\l__pdf_internal_box=\box58
 ) (./main5.aux)
 \openout1 = `main5.aux'.
 
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 31.
-LaTeX Font Info:    ... okay on input line 31.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 31.
-LaTeX Font Info:    ... okay on input line 31.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 31.
-LaTeX Font Info:    ... okay on input line 31.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 31.
-LaTeX Font Info:    ... okay on input line 31.
-LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 31.
-LaTeX Font Info:    ... okay on input line 31.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 31.
-LaTeX Font Info:    ... okay on input line 31.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 31.
-LaTeX Font Info:    ... okay on input line 31.
-LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 31.
-LaTeX Font Info:    ... okay on input line 31.
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 38.
+LaTeX Font Info:    ... okay on input line 38.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 38.
+LaTeX Font Info:    ... okay on input line 38.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 38.
+LaTeX Font Info:    ... okay on input line 38.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 38.
+LaTeX Font Info:    ... okay on input line 38.
+LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 38.
+LaTeX Font Info:    ... okay on input line 38.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 38.
+LaTeX Font Info:    ... okay on input line 38.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 38.
+LaTeX Font Info:    ... okay on input line 38.
+LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 38.
+LaTeX Font Info:    ... okay on input line 38.
  (/usr/share/texlive/texmf-dist/tex/context/base/mkii/supp-pdf.mkii
 [Loading MPS to PDF converter (version 2006.09.02).]
 \scratchcounter=\count285
-\scratchdimen=\dimen182
-\scratchbox=\box58
+\scratchdimen=\dimen187
+\scratchbox=\box59
 \nofMPsegments=\count286
 \nofMParguments=\count287
-\everyMPshowfont=\toks26
+\everyMPshowfont=\toks27
 \MPscratchCnt=\count288
-\MPscratchDim=\dimen183
+\MPscratchDim=\dimen188
 \MPnumerator=\count289
 \makeMPintoPDFobject=\count290
-\everyMPtoPDFconversion=\toks27
+\everyMPtoPDFconversion=\toks28
 ) (/usr/share/texlive/texmf-dist/tex/latex/epstopdf-pkg/epstopdf-base.sty
 Package: epstopdf-base 2020-01-24 v2.11 Base part for package epstopdf
 Package epstopdf-base Info: Redefining graphics rule for `.eps' on input line 485.
@@ -405,12 +418,12 @@ File: epstopdf-sys.cfg 2010/07/13 v1.3 Configuration of (r)epstopdf for TeX Live
 * \topmargin=-37.0pt
 * \headheight=12.0pt
 * \headsep=25.0pt
-* \topskip=12.0pt
+* \topskip=10.0pt
 * \footskip=30.0pt
-* \marginparwidth=44.0pt
-* \marginparsep=10.0pt
+* \marginparwidth=65.0pt
+* \marginparsep=11.0pt
 * \columnsep=10.0pt
-* \skip\footins=10.8pt plus 4.0pt minus 2.0pt
+* \skip\footins=9.0pt plus 4.0pt minus 2.0pt
 * \hoffset=0.0pt
 * \voffset=0.0pt
 * \mag=1000
@@ -420,7 +433,7 @@ File: epstopdf-sys.cfg 2010/07/13 v1.3 Configuration of (r)epstopdf for TeX Live
 * \@reversemarginfalse
 * (1in=72.27pt=25.4mm, 1cm=28.453pt)
 
-\AtBeginShipoutBox=\box59
+\AtBeginShipoutBox=\box60
 (/usr/share/texlive/texmf-dist/tex/latex/graphics/color.sty
 Package: color 2019/11/23 v1.2a Standard LaTeX Color (DPC)
  (/usr/share/texlive/texmf-dist/tex/latex/graphics-cfg/color.cfg
@@ -428,7 +441,7 @@ File: color.cfg 2016/01/02 v1.6 sample color configuration
 )
 Package color Info: Driver file: pdftex.def on input line 147.
 )
-Package hyperref Info: Link coloring ON on input line 31.
+Package hyperref Info: Link coloring ON on input line 38.
  (/usr/share/texlive/texmf-dist/tex/latex/hyperref/nameref.sty
 Package: nameref 2019/09/16 v2.46 Cross-referencing by name of section
  (/usr/share/texlive/texmf-dist/tex/latex/refcount/refcount.sty
@@ -438,87 +451,236 @@ Package: gettitlestring 2019/12/15 v1.6 Cleanup title references (HO)
 )
 \c@section@level=\count291
 )
-LaTeX Info: Redefining \ref on input line 31.
-LaTeX Info: Redefining \pageref on input line 31.
-LaTeX Info: Redefining \nameref on input line 31.
+LaTeX Info: Redefining \ref on input line 38.
+LaTeX Info: Redefining \pageref on input line 38.
+LaTeX Info: Redefining \nameref on input line 38.
  (./main5.out) (./main5.out)
 \@outlinefile=\write3
 \openout3 = `main5.out'.
 
 Package caption Info: Begin \AtBeginDocument code.
 Package caption Info: End \AtBeginDocument code.
-LaTeX Font Info:    Trying to load font information for U+msa on input line 34.
+LaTeX Font Info:    Trying to load font information for U+msa on input line 41.
  (/usr/share/texlive/texmf-dist/tex/latex/amsfonts/umsa.fd
 File: umsa.fd 2013/01/14 v3.01 AMS symbols A
 )
-LaTeX Font Info:    Trying to load font information for U+msb on input line 34.
+LaTeX Font Info:    Trying to load font information for U+msb on input line 41.
  (/usr/share/texlive/texmf-dist/tex/latex/amsfonts/umsb.fd
 File: umsb.fd 2013/01/14 v3.01 AMS symbols B
-) [1
+)
+Overfull \hbox (1.28038pt too wide) in paragraph at lines 43--44
+\OT1/cmr/m/n/10 un-su-per-vised learn-ing. Pop-u-lar meth-ods in-clude prin-
+ []
 
-{/usr/share/texlive/texmf-dist/fonts/map/pdftex/updmap/pdftex.map}] [2] [3] [4] [5] [6]
-<figure/Mouse_Data.png, id=168, 794.97pt x 578.16pt>
+
+Overfull \hbox (1.3637pt too wide) in paragraph at lines 43--44
+\OT1/cmr/m/n/10 in-de-pen-dent com-po-nent anal-y-sis [[]]. Fre-quently, how-
+ []
+
+
+Overfull \hbox (0.42838pt too wide) in paragraph at lines 45--48
+[]\OT1/cmr/m/n/10 New ap-proaches are nec-es-sary for cap-tur-ing mean-
+ []
+
+
+Overfull \hbox (2.17851pt too wide) in paragraph at lines 45--48
+\OT1/cmr/m/n/10 have un-der-gone Con-text Shock treat-ment and/or drug
+ []
+
+
+Overfull \hbox (2.15057pt too wide) in paragraph at lines 51--54
+[]\OT1/cmr/m/n/10 There are two main is-sues with ex-ist-ing con-trastive
+ []
+
+
+Overfull \hbox (0.30704pt too wide) in paragraph at lines 57--65
+\OT1/cmr/m/n/10 ram-e-ters. UCA finds di-rec-tions of vari-a-tion that max-
+ []
+
+[1{/usr/share/texlive/texmf-dist/fonts/map/pdftex/updmap/pdftex.map}
+
+
+
+]
+Overfull \hbox (15.12181pt too wide) in paragraph at lines 66--67
+\OT1/cmr/m/n/10 demon-strate UCA's su-pe-ri-or-ity over cPCA and cPCA++
+ []
+
+
+Overfull \hbox (11.84395pt too wide) in paragraph at lines 91--100
+\OT1/cmr/m/n/10 To com-pare to cPCA [], we can also write the cPCA++
+ []
+
+
+Overfull \hbox (0.81735pt too wide) in paragraph at lines 116--117
+\OT1/cmr/m/n/10 We in-tro-duce the Unique Com-po-nent Anal-y-sis (UCA)
+ []
+
+[2]
+Overfull \hbox (7.76776pt too wide) detected at line 196
+[]
+ []
+
+
+Overfull \hbox (1.62292pt too wide) in paragraph at lines 240--241
+\OT1/cmr/m/n/10 Under the high-dimensional sit-u-a-tion, where the num-
+ []
+
+[3]
+Overfull \hbox (3.35422pt too wide) in paragraph at lines 267--268
+\OML/cmm/m/it/10 A$ \OT1/cmr/m/n/10 be the tar-get $\OML/cmm/m/it/10 p \OMS/cmsy/m/n/10 ^^B \OML/cmm/m/it/10 p$ \OT1/cmr/m/n/10 co-vari-ance ma-trix and $\OML/cmm/m/it/10 B[]; [] ; B[]$
+ []
+
+
+Overfull \hbox (10.75275pt too wide) detected at line 274
+[]
+ []
+
+
+Overfull \hbox (2.76071pt too wide) in paragraph at lines 277--281
+[]\OT1/cmr/m/n/10 The Prod-uct SVD method is ad-van-ta-geous in high-
+ []
+
+
+Overfull \hbox (7.47534pt too wide) in paragraph at lines 277--281
+\OT1/cmr/m/n/10 background sce-nario, rather than re-con-struct-ing $\OML/cmm/m/it/10 A[] \OT1/cmr/m/n/10 =
+ []
+
+<figure/Mouse_Data.png, id=141, 794.97pt x 578.16pt>
 File: figure/Mouse_Data.png Graphic file (type png)
 <use figure/Mouse_Data.png>
-Package pdftex.def Info: figure/Mouse_Data.png  used on input line 283.
+Package pdftex.def Info: figure/Mouse_Data.png  used on input line 293.
 (pdftex.def)             Requested size: 375.80544pt x 273.3232pt.
- [7]
-<figure/Mouse_split_stack_Ts65Dn.png, id=186, 794.97pt x 578.16pt>
+
+Overfull \hbox (4.182pt too wide) in paragraph at lines 298--299
+\OT1/cmr/m/n/10 grounds. The GitHub repos-i-tory also in-cludes R mark-
+ []
+
+[4]
+<figure/Mouse_split_stack_Ts65Dn.png, id=167, 794.97pt x 578.16pt>
 File: figure/Mouse_split_stack_Ts65Dn.png Graphic file (type png)
 <use figure/Mouse_split_stack_Ts65Dn.png>
-Package pdftex.def Info: figure/Mouse_split_stack_Ts65Dn.png  used on input line 302.
+Package pdftex.def Info: figure/Mouse_split_stack_Ts65Dn.png  used on input line 309.
 (pdftex.def)             Requested size: 422.77664pt x 307.48198pt.
- [8 <./figure/Mouse_Data.png (PNG copy)>] [9 <./figure/Mouse_split_stack_Ts65Dn.png (PNG copy)>]
-<figure/mean_emotions.png, id=201, 462.2871pt x 88.1694pt>
+<figure/mean_emotions.png, id=168, 462.2871pt x 88.1694pt>
 File: figure/mean_emotions.png Graphic file (type png)
 <use figure/mean_emotions.png>
-Package pdftex.def Info: figure/mean_emotions.png  used on input line 330.
+Package pdftex.def Info: figure/mean_emotions.png  used on input line 321.
 (pdftex.def)             Requested size: 469.75502pt x 89.5939pt.
-<figure/Afraid_projected_1_2_removed.png, id=202, 234.6366pt x 255.8358pt>
+<figure/Afraid_projected_1_2_removed.png, id=169, 234.6366pt x 255.8358pt>
 File: figure/Afraid_projected_1_2_removed.png Graphic file (type png)
 <use figure/Afraid_projected_1_2_removed.png>
-Package pdftex.def Info: figure/Afraid_projected_1_2_removed.png  used on input line 337.
+Package pdftex.def Info: figure/Afraid_projected_1_2_removed.png  used on input line 328.
 (pdftex.def)             Requested size: 230.18253pt x 250.99063pt.
-<figure/all_Afraid_removed.png, id=203, 234.6366pt x 255.8358pt>
+<figure/all_Afraid_removed.png, id=170, 234.6366pt x 255.8358pt>
 File: figure/all_Afraid_removed.png Graphic file (type png)
 <use figure/all_Afraid_removed.png>
-Package pdftex.def Info: figure/all_Afraid_removed.png  used on input line 343.
+Package pdftex.def Info: figure/all_Afraid_removed.png  used on input line 334.
 (pdftex.def)             Requested size: 230.18253pt x 250.99063pt.
- [10 <./figure/mean_emotions.png> <./figure/Afraid_projected_1_2_removed.png (PNG copy)> <./figure/all_Afraid_removed.png>]
-<figure/final_perf.png, id=216, 794.97pt x 578.16pt>
+ [5 <./figure/Mouse_Data.png (PNG copy)>]
+Overfull \hbox (0.42845pt too wide) in paragraph at lines 353--354
+\OT1/cmr/m/n/10 achieves slightly bet-ter sep-a-ra-bil-ity com-pared to some
+ []
+
+[6 <./figure/Mouse_split_stack_Ts65Dn.png (PNG copy)>]
+<figure/final_perf.png, id=192, 794.97pt x 578.16pt>
 File: figure/final_perf.png Graphic file (type png)
 <use figure/final_perf.png>
-Package pdftex.def Info: figure/final_perf.png  used on input line 390.
+Package pdftex.def Info: figure/final_perf.png  used on input line 370.
 (pdftex.def)             Requested size: 375.80544pt x 273.3232pt.
- [11] [12 <./figure/final_perf.png (PNG copy)>] [13] (./main5.bbl [14]) [15]
-<figure/PC2_density.png, id=251, 234.6366pt x 255.8358pt>
+
+Overfull \hbox (11.06631pt too wide) in paragraph at lines 374--375
+\OT1/cmr/m/n/10 Karolin-ska Di-rected Emo-tional Faces (KDEF) [[]], which
+ []
+
+
+Overfull \hbox (11.95628pt too wide) in paragraph at lines 380--381
+\OT1/cmr/m/n/10 two di-rec-tions of vari-a-tion cal-cu-lated us-ing each method.
+ []
+
+[7 <./figure/mean_emotions.png> <./figure/Afraid_projected_1_2_removed.png (PNG copy)> <./figure/all_Afraid_removed.png>]
+Overfull \hbox (13.95634pt too wide) in paragraph at lines 416--417
+\OT1/cmr/m/n/10 ple-men-ta-tions of eigen-de-com-po-si-tion in high-dimensions,
+ []
+
+[8 <./figure/final_perf.png (PNG copy)>]
+Overfull \hbox (14.26183pt too wide) in paragraph at lines 422--431
+\OT1/cmr/m/n/10 for-mance when used with mul-ti-ple sep-a-rate back-grounds.
+ []
+
+(./main5.bbl
+Underfull \hbox (badness 10000) in paragraph at lines 14--19
+[]\OT1/cmr/m/n/10 Md. Mahi-ud-din Ahmed, A. Ran-jitha
+ []
+
+
+Underfull \hbox (badness 2065) in paragraph at lines 14--19
+\OT1/cmr/m/n/10 Dhanasekaran, Aaron Block, Suhong Tong,
+ []
+
+
+Underfull \hbox (badness 2221) in paragraph at lines 14--19
+\OT1/cmr/m/n/10 Al-berto C. S. Costa, Melissa Stasko, and
+ []
+
+
+Underfull \hbox (badness 2213) in paragraph at lines 14--19
+\OT1/cmr/m/n/10 Katheleen J. Gar-diner.  Pro-tein dy-nam-ics
+ []
+
+
+Underfull \hbox (badness 5274) in paragraph at lines 49--54
+[]\OT1/cmr/m/n/10 Dirk Ed-del-buet-tel and Con-rad Sander-son.
+ []
+
+
+Underfull \hbox (badness 3895) in paragraph at lines 49--54
+\OT1/cmr/m/n/10 Rcp-par-madillo: Ac-cel-er-at-ing r with high-
+ []
+
+[9]
+Underfull \hbox (badness 2042) in paragraph at lines 68--71
+\OT1/cmr/m/n/10 value prob-lems: Tu-to-rial.  \OT1/cmr/m/it/10 arXiv preprint
+ []
+
+
+Underfull \hbox (badness 1389) in paragraph at lines 79--83
+[]\OT1/cmr/m/n/10 Clara Higuera, Katheleen J. Gar-diner, and
+ []
+
+) [10
+
+]
+<figure/PC2_density.png, id=232, 234.6366pt x 255.8358pt>
 File: figure/PC2_density.png Graphic file (type png)
 <use figure/PC2_density.png>
-Package pdftex.def Info: figure/PC2_density.png  used on input line 442.
+Package pdftex.def Info: figure/PC2_density.png  used on input line 462.
 (pdftex.def)             Requested size: 422.77664pt x 460.99205pt.
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 468.
- [16 <./figure/PC2_density.png (PNG copy)>]
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 468.
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 488.
+ [11
+
+ <./figure/PC2_density.png (PNG copy)>]
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 488.
  (./main5.aux)
-Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 468.
-Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 468.
+Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 488.
+Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 488.
 Package rerunfilecheck Info: File `main5.out' has not changed.
 (rerunfilecheck)             Checksum: 5E3F701DC0D474D0D4C8CD34C341FB16;1046.
-Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 468.
+Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 488.
  ) 
 Here is how much of TeX's memory you used:
- 10065 strings out of 480623
- 155631 string characters out of 5906692
- 447804 words of memory out of 5000000
- 25709 multiletter control sequences out of 15000+600000
- 542226 words of font info for 62 fonts, out of 8000000 for 9000
+ 10364 strings out of 480623
+ 159459 string characters out of 5906692
+ 463983 words of memory out of 5000000
+ 25997 multiletter control sequences out of 15000+600000
+ 542551 words of font info for 63 fonts, out of 8000000 for 9000
  1137 hyphenation exceptions out of 8191
- 48i,24n,46p,1092b,520s stack positions out of 5000i,500n,10000p,200000b,80000s
-</usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx12.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx8.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmex10.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi12.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi6.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi8.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr12.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr17.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr6.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr8.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy8.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmti12.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmtt12.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/symbols/msbm10.pfb>
-Output written on main5.pdf (16 pages, 2704223 bytes).
+ 48i,24n,46p,1092b,518s stack positions out of 5000i,500n,10000p,200000b,80000s
+</usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx10.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx7.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmex10.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi5.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi7.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cmextra/cmmib7.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr12.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr17.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr5.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr7.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr8.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr9.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy7.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmti10.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmtt10.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/symbols/msbm10.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/symbols/msbm7.pfb>
+Output written on main5.pdf (11 pages, 2745839 bytes).
 PDF statistics:
- 329 PDF objects out of 1000 (max. 8388607)
- 282 compressed objects within 3 object streams
- 76 named destinations out of 1000 (max. 500000)
+ 320 PDF objects out of 1000 (max. 8388607)
+ 274 compressed objects within 3 object streams
+ 69 named destinations out of 1000 (max. 500000)
  156 words of extra memory for PDF output out of 10000 (max. 10000000)
 
