@@ -37,6 +37,7 @@
 
 \begin{document}
 \twocolumn
+\date{}
 \maketitle
 \section{Introduction}
 
@@ -290,7 +291,7 @@ All computations in this paper were done with R 3.6.3 \cite{baseR} on an AMD Ryz
 % \subsection{Choosing Background Data}
 \begin{figure*}[th!]
   \centering
-  \includegraphics[width = 0.8\textwidth]{figure/Mouse_Data.png}
+  \includegraphics[width = 0.8\textwidth]{figure/Mouse_Data_bw.png}
   \caption{Mouse Protein Expression: Normal and trisomic (Ts65Dn) mice separability of saline injected mice which were exposed to shock before getting environmental context (Shock Context). Both normal and trisomic mice receiving Shock Context treatment do not associate novel environments with adverse stimulus. Down Syndrome and normal mice were unseparable using PCA alone but are easily separable by cPCA at all values of the contrastive parameter $\lambda$.  The mice are also easily separable by UCA.  However, cPCA++ does not have similar separation performance compared to cPCA and UCA.}
   \label{fig:Mouse}
 \end{figure*}
@@ -306,7 +307,7 @@ Datasets that have been used to evaluate UCA in this paper are publicly availabl
 
 \begin{figure*}[th!]
   \centering
-  \includegraphics[width = 0.9\textwidth]{figure/Mouse_split_stack_Ts65Dn.png}
+  \includegraphics[width = 0.9\textwidth]{figure/Mouse_split_stack_Ts65Dn_bw.png}
   \caption{Mouse Protein Expression: Separability of normal and trisomic Context Shocked mice injected with saline. UCA with a background dataset of Shock Context trisomic mice injected with memantine (Mem-S/C-Ts65Dn), UCA with a background dataset of Context Shock trisomic mice injected with memantine (Mem-C/S-Ts65Dn), and UCA with a background dataset of Shock Context trisomic mice injected with saline (Saline-S/C-Ts65Dn). Pooled: all background datasets (Mem-S/C-Ts65Dn, Mem-C/S-Ts65Dn, Saline-S/C-Ts65Dn) are pooled into one background. Split: UCA using multiple individual backgrounds separately.}
   \label{fig:MouseSplitStack}
 \end{figure*}
@@ -367,7 +368,7 @@ The results show that a single background dataset alone cannot separate normal a
 
 \begin{figure*}[!ht]
   \centering
-  \includegraphics[width = 0.8\textwidth]{figure/final_perf.png}
+  \includegraphics[width = 0.8\textwidth]{figure/final_perf_bw.png}
   \caption{UCA and cPCA implementation using Product SVD vs. eigendecomposition for high-dimensional data: 25 random $100 \times p $ target and background matrices are generated from a standard normal distribution and where $p$, the dimension varied from 1,000 to 10,000 in steps of 1,000. Box plots of time (in seconds) is plotted for both eigendecomposition and the product SVD method. For small $p$, there is a negligible difference between the methods. However, as dimension $p$ increases, the Product SVD is significantly faster.}
   \label{fig:computational_perf}
 \end{figure*}
@@ -412,7 +413,7 @@ Figure \ref{fig:faces-eigenfaces} is a visualization of the top five directions 
 
 
 
-\subsection{\label{sec:product-svd} Product-SVD algorithm simulation results}
+\subsection{\label{sec:product-svd} Product-SVD algorithm simulation}
 To demonstrate the speed improvements of the Product SVD method compared to the current fastest implementations of eigendecomposition in high-dimensions, we conduct a simulation study with 25 sample $100 \times p$ target and background data matrices generated from a standard normal distribution with $p$ varying from 1.000 to 10,000 in steps of 1,000. To ensure a fair comparison, we leverage C++ in both implementations using a custom RcppArmadillo \cite{rcpparmadillo} function for the Product SVD method and the RSpectra package (0.16-0) \cite{Rspectra} for the eigendecomposition method. RSpectra is a package designed for large-scale eigendecompositions based off the C++ Spectra library. We use the microbenchmark package \cite{microbenchmark} to ensure accurate timings. Our benchmark does not take into account the additional cost of forming the $p\times p$ covariance matrices, which would only exacerbate the difference between the two methods in real world applications.
 
 Figure \ref{fig:computational_perf} shows box plots of time (in seconds) versus the dimension, $p$, colored by method, and summarizes the results of the simulation study. As the dimension $p$ increases, the computational time of our Product SVD method increases much slower than the current eigendecomposition implementations. It should be mentioned that for $p < 1000$ the Product SVD method is slower due to overhead of additional computation on small matrices. In general, for low-dimensional settings where $n \geq p$, the Product SVD will be negligibly slower because of the additional QR, SVD, matrix products, and sort computations. 

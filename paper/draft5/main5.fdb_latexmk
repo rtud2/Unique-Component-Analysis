@@ -1,12 +1,12 @@
 # Fdb version 3
-["bibtex main5"] 1614718819 "main5.aux" "main5.bbl" "main5" 1614719054
+["bibtex main5"] 1614724728 "main5.aux" "main5.bbl" "main5" 1614731666
   "/usr/share/texlive/texmf-dist/bibtex/bst/base/plain.bst" 1612289690 20613 bd3fbfa9f64872b81ac57a0dd2ed855f ""
-  "main5.aux" 1614719054 11190 b89f7881970dbb35bb69948d82554b09 "pdflatex"
+  "main5.aux" 1614731666 11174 35c4d8fb89a2654762f719b8131efcff "pdflatex"
   "mybib.bib" 1613675844 24477 87fc7f5172faa62252ba6a6751c0f846 ""
   (generated)
-  "main5.blg"
   "main5.bbl"
-["pdflatex"] 1614719053 "main5.tex" "main5.pdf" "main5" 1614719054
+  "main5.blg"
+["pdflatex"] 1614731665 "main5.tex" "main5.pdf" "main5" 1614731666
   "/home/robintu/.texlive2020/texmf-var/web2c/pdftex/pdflatex.fmt" 1612110640 2419826 c0266fb2d011a3c024ed3d099fcbe8ac ""
   "/usr/share/texlive/texmf-dist/fonts/map/fontname/texfonts.map" 1577235249 3524 cb3e574dea2d1052e39280babc910dc8 ""
   "/usr/share/texlive/texmf-dist/fonts/map/pdftex/updmap/pdftex.map" 1604350495 5022041 fedbf65a04995bc2a815b3fd3ce911d3 ""
@@ -130,18 +130,18 @@
   "/usr/share/texlive/texmf-dist/tex/latex/xurl/xurl.sty" 1579902456 4663 6f21789b0cc6c2f8101f8afd431a3cf7 ""
   "/usr/share/texlive/texmf-dist/web2c/texmf.cnf" 1612289693 39615 4ca7b2be4e89b50848d4f0b4d97130bb ""
   "figure/Afraid_projected_1_2_removed.png" 1613675844 240673 4a905b2eb24d1343b780af25fab8d19d ""
-  "figure/Mouse_Data.png" 1613675844 1016111 36d27aa9ac471e7f9d4dc098b781f352 ""
-  "figure/Mouse_split_stack_Ts65Dn.png" 1613675844 868546 2608e7e9171922456dc47dd86fd58dc4 ""
+  "figure/Mouse_Data_bw.png" 1614730919 218360 53f4f514d83dc7fbead3ce32f267c9aa ""
+  "figure/Mouse_split_stack_Ts65Dn_bw.png" 1614731595 193399 74accaaecf0589bfe80d5a3714977372 ""
   "figure/PC2_density.png" 1613675844 109732 00d29b3f146727dd51f6d051593b2225 ""
   "figure/all_Afraid_removed.png" 1613675844 91473 0f383a057b1b171676a8a1a11f2bc5fb ""
-  "figure/final_perf.png" 1613675844 114536 94f03ae2eac11b35fbbfa65a5db4387b ""
+  "figure/final_perf_bw.png" 1614730327 112513 0c5f819bec36dd13ea8fb94773deba59 ""
   "figure/mean_emotions.png" 1613675844 50917 917ae9cbae707d5467193edf8c7fe694 ""
-  "main5.aux" 1614719054 11190 b89f7881970dbb35bb69948d82554b09 "pdflatex"
-  "main5.bbl" 1614718819 4448 e7fec27a0d72f1ca5f93c842a5d958b1 "bibtex main5"
-  "main5.out" 1614719054 1046 5e3f701dc0d474d0d4c8cd34c341fb16 "pdflatex"
-  "main5.tex" 1614719052 62536 b77fa99f562935255179f892bdd70c2d ""
+  "main5.aux" 1614731666 11174 35c4d8fb89a2654762f719b8131efcff "pdflatex"
+  "main5.bbl" 1614724728 4448 e7fec27a0d72f1ca5f93c842a5d958b1 "bibtex main5"
+  "main5.out" 1614731666 1038 d3aa7c311c33e0f63e233a353ab8f2d5 "pdflatex"
+  "main5.tex" 1614731663 62546 3b25c7421d752d153a7a38711369bb5e ""
   (generated)
-  "main5.pdf"
-  "main5.aux"
-  "main5.log"
   "main5.out"
+  "main5.pdf"
+  "main5.log"
+  "main5.aux"

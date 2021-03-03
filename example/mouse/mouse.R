@@ -106,7 +106,8 @@ df = data.frame(pc1 = c(uca_res[,1], pca[,1], cpca1[,1], cpca3[,1], cpca5[,1], c
 #                          `PCA` = "PCA", `rPCA`= "rPCA", `cPCA++` = "cPCA++",`UCA` = "UCA"), label_bquote)
 
 mouse_comparison <- ggplot(df, aes(x = pc1, y = pc2, color = Classes)) +
-  geom_point(alpha = 0.4) +
+  geom_point(aes(shape = Classes), alpha = 0.7) +
+  scale_color_grey()+
   facet_wrap(~ Method, scale = "free", nrow = 2, labeller = label_parsed)+
   labs(x = "Component 1", y = "Component 2")+
   theme_bw()+
@@ -118,7 +119,7 @@ mouse_comparison <- ggplot(df, aes(x = pc1, y = pc2, color = Classes)) +
         legend.title = element_text(size = 13)
         )
 
-ggsave("Mouse_Data.png", mouse_comparison, width = 11, height = 8, units = "in")
+ggsave("Mouse_Data_bw.png", mouse_comparison, width = 11, height = 8, units = "in")
 
 
 

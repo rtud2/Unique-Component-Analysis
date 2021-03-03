@@ -45,18 +45,20 @@ message(paste("done with: ", p[i], "\n"))
 
 saveRDS(res, "res.rds")
 
-red_dt <- readRDS("res.rds")
-
+res_dt <- readRDS("res.rds")
+res_dt <- do.call( rbind, res_dt)
 res_dt[, method := factor(method, levels = c("cov","data"), labels = c("Eigendecomposition","Product SVD"))]
 
-final <- ggplot(data = res_dt[dim >=1000])+
-                  geom_boxplot(aes(x = as.factor(dim), y = (time/10e9), color = method), alpha = 0.5)+
+final <- ggplot(data = res_dt[dim >=1000], aes(x = as.factor(dim), y = (time/10e9), fill = method))+
+                  geom_boxplot(alpha = 0.7)+
+                  stat_summary(fun = median, geom = "line", aes(group = method, linetype = method), show.legend = F, alpha = 0.5)+
                   labs(x = "Dimension", y = "Time (Sec.)")+
                   theme_bw(base_size = 20)+
-                  scale_fill_discrete(name = "Method")+
+                  scale_fill_grey(name = "Method")+
+                  ylim(c(0,7))+
                   theme(legend.position = "bottom", axis.text.x = element_text(angle = 0))
 
-ggsave(filename = "final_perf_color.png",plot = final, width = 11, height = 8, units = "in")
+ggsave(filename = "final_perf_bw.png",plot = final, width = 11, height = 8, units = "in")
 
 
 

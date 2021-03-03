@@ -24,8 +24,8 @@ bg = filter(mouse, Behavior == "C/S", Treatment %in% c("Saline")) %>%
 B = scale(filter(bg, Genotype == "Control") %>% select(-Genotype))
 
 # target: Saline Context-Shock
-#cs_gentype = "Ts65Dn"
-cs_gentype = "Control"
+cs_gentype = "Ts65Dn"
+#cs_gentype = "Control"
 target_data <- data.matrix(mouse_dt[Treatment == "Saline" & Behavior == "C/S",lapply(.SD, scale), .SDcols = -c("MouseID","Genotype","Treatment","Behavior","class")])
 target_data_labs <-mouse_dt[Treatment == "Saline" & Behavior == "C/S", .SD, .SDcols = c("Genotype")]
 
@@ -144,7 +144,8 @@ setnames(plot_memantine_saline, c("UC1","UC2","Method","Label"))
 plot_memantine_saline[, Method := factor(Method, levels = unique(Method))]
 
 mouse_split_stack <- ggplot(data = plot_memantine_saline)+
-  geom_point(aes(x = UC1, y = UC2, color = Label), alpha = 0.4)+
+  geom_point(aes(x = UC1, y = UC2, color = Label, shape = Label), alpha = 0.7)+
+  scale_color_grey()+
   labs(x = "Component 1", y = "Component 2")+
   facet_wrap(~Method, scale = "free", nrow = 2)+
   theme_bw(base_size = 14)+
@@ -156,4 +157,4 @@ mouse_split_stack <- ggplot(data = plot_memantine_saline)+
         legend.title = element_text(size = 13)
         )
 
-ggsave(paste0("Mouse_split_stack_",cs_gentype,".png"), mouse_split_stack, width = 11, height = 8, units = "in")
+ggsave(paste0("Mouse_split_stack_",cs_gentype,"_bw.png"), mouse_split_stack, width = 11, height = 8, units = "in")
