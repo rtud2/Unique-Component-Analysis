@@ -1,3 +1,4 @@
 # ignore paper directory
-paper/
+ paper/
 
+.Rproj.user
