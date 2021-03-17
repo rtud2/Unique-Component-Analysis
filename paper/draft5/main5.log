@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.21 (TeX Live 2020) (preloaded format=pdflatex 2021.1.31)  2 MAR 2021 18:34
+This is pdfTeX, Version 3.14159265-2.6-1.40.21 (TeX Live 2020) (preloaded format=pdflatex 2021.1.31)  12 MAR 2021 12:10
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -460,155 +460,153 @@ LaTeX Info: Redefining \nameref on input line 38.
 
 Package caption Info: Begin \AtBeginDocument code.
 Package caption Info: End \AtBeginDocument code.
-LaTeX Font Info:    Trying to load font information for U+msa on input line 42.
+LaTeX Font Info:    Trying to load font information for U+msa on input line 50.
  (/usr/share/texlive/texmf-dist/tex/latex/amsfonts/umsa.fd
 File: umsa.fd 2013/01/14 v3.01 AMS symbols A
 )
-LaTeX Font Info:    Trying to load font information for U+msb on input line 42.
+LaTeX Font Info:    Trying to load font information for U+msb on input line 50.
  (/usr/share/texlive/texmf-dist/tex/latex/amsfonts/umsb.fd
 File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 )
-Overfull \hbox (1.28038pt too wide) in paragraph at lines 44--45
+Overfull \hbox (1.28038pt too wide) in paragraph at lines 53--54
 \OT1/cmr/m/n/10 un-su-per-vised learn-ing. Pop-u-lar meth-ods in-clude prin-
  []
 
 
-Overfull \hbox (1.3637pt too wide) in paragraph at lines 44--45
+Overfull \hbox (1.3637pt too wide) in paragraph at lines 53--54
 \OT1/cmr/m/n/10 in-de-pen-dent com-po-nent anal-y-sis [[]]. Fre-quently, how-
  []
 
 
-Overfull \hbox (0.42838pt too wide) in paragraph at lines 46--49
+Overfull \hbox (0.42838pt too wide) in paragraph at lines 55--58
 []\OT1/cmr/m/n/10 New ap-proaches are nec-es-sary for cap-tur-ing mean-
  []
 
 
-Overfull \hbox (2.17851pt too wide) in paragraph at lines 46--49
+Overfull \hbox (2.17851pt too wide) in paragraph at lines 55--58
 \OT1/cmr/m/n/10 have un-der-gone Con-text Shock treat-ment and/or drug
  []
 
 
-Overfull \hbox (2.15057pt too wide) in paragraph at lines 52--55
+Overfull \hbox (2.15057pt too wide) in paragraph at lines 61--64
 []\OT1/cmr/m/n/10 There are two main is-sues with ex-ist-ing con-trastive
- []
-
-
-Overfull \hbox (0.30704pt too wide) in paragraph at lines 58--66
-\OT1/cmr/m/n/10 ram-e-ters. UCA finds di-rec-tions of vari-a-tion that max-
  []
 
 [1{/usr/share/texlive/texmf-dist/fonts/map/pdftex/updmap/pdftex.map}
 
 
-
 ]
-Overfull \hbox (15.12181pt too wide) in paragraph at lines 67--68
+Overfull \hbox (0.30704pt too wide) in paragraph at lines 67--75
+\OT1/cmr/m/n/10 ram-e-ters. UCA finds di-rec-tions of vari-a-tion that max-
+ []
+
+
+Overfull \hbox (15.12181pt too wide) in paragraph at lines 76--77
 \OT1/cmr/m/n/10 demon-strate UCA's su-pe-ri-or-ity over cPCA and cPCA++
  []
 
 
-Overfull \hbox (11.84395pt too wide) in paragraph at lines 92--101
+Overfull \hbox (11.84395pt too wide) in paragraph at lines 101--110
 \OT1/cmr/m/n/10 To com-pare to cPCA [], we can also write the cPCA++
  []
 
-
-Overfull \hbox (0.81735pt too wide) in paragraph at lines 117--118
+[2]
+Overfull \hbox (0.81735pt too wide) in paragraph at lines 126--127
 \OT1/cmr/m/n/10 We in-tro-duce the Unique Com-po-nent Anal-y-sis (UCA)
  []
 
-[2]
-Overfull \hbox (7.76776pt too wide) detected at line 197
+
+Overfull \hbox (7.76776pt too wide) detected at line 206
 []
  []
 
-
-Overfull \hbox (1.62292pt too wide) in paragraph at lines 241--242
+[3]
+Overfull \hbox (1.62292pt too wide) in paragraph at lines 250--251
 \OT1/cmr/m/n/10 Under the high-dimensional sit-u-a-tion, where the num-
  []
 
-[3]
-Overfull \hbox (3.35422pt too wide) in paragraph at lines 268--269
+
+Overfull \hbox (3.35422pt too wide) in paragraph at lines 277--278
 \OML/cmm/m/it/10 A$ \OT1/cmr/m/n/10 be the tar-get $\OML/cmm/m/it/10 p \OMS/cmsy/m/n/10 ^^B \OML/cmm/m/it/10 p$ \OT1/cmr/m/n/10 co-vari-ance ma-trix and $\OML/cmm/m/it/10 B[]; [] ; B[]$
  []
 
 
-Overfull \hbox (10.75275pt too wide) detected at line 275
+Overfull \hbox (10.75275pt too wide) detected at line 284
 []
  []
 
 
-Overfull \hbox (2.76071pt too wide) in paragraph at lines 278--282
+Overfull \hbox (2.76071pt too wide) in paragraph at lines 287--291
 []\OT1/cmr/m/n/10 The Prod-uct SVD method is ad-van-ta-geous in high-
  []
 
 
-Overfull \hbox (7.47534pt too wide) in paragraph at lines 278--282
+Overfull \hbox (7.47534pt too wide) in paragraph at lines 287--291
 \OT1/cmr/m/n/10 background sce-nario, rather than re-con-struct-ing $\OML/cmm/m/it/10 A[] \OT1/cmr/m/n/10 =
  []
 
-<figure/Mouse_Data_bw.png, id=141, 794.97pt x 578.16pt>
+[4]
+<figure/Mouse_Data_bw.png, id=161, 794.97pt x 578.16pt>
 File: figure/Mouse_Data_bw.png Graphic file (type png)
 <use figure/Mouse_Data_bw.png>
-Package pdftex.def Info: figure/Mouse_Data_bw.png  used on input line 294.
+Package pdftex.def Info: figure/Mouse_Data_bw.png  used on input line 303.
 (pdftex.def)             Requested size: 375.80544pt x 273.3232pt.
 
-Overfull \hbox (4.182pt too wide) in paragraph at lines 299--300
+Overfull \hbox (4.182pt too wide) in paragraph at lines 308--309
 \OT1/cmr/m/n/10 grounds. The GitHub repos-i-tory also in-cludes R mark-
  []
 
-[4]
-<figure/Mouse_split_stack_Ts65Dn_bw.png, id=167, 794.97pt x 578.16pt>
+<figure/Mouse_split_stack_Ts65Dn_bw.png, id=165, 794.97pt x 578.16pt>
 File: figure/Mouse_split_stack_Ts65Dn_bw.png Graphic file (type png)
 <use figure/Mouse_split_stack_Ts65Dn_bw.png>
-Package pdftex.def Info: figure/Mouse_split_stack_Ts65Dn_bw.png  used on input line 310.
+Package pdftex.def Info: figure/Mouse_split_stack_Ts65Dn_bw.png  used on input line 319.
 (pdftex.def)             Requested size: 422.77664pt x 307.48198pt.
-<figure/mean_emotions.png, id=168, 462.2871pt x 88.1694pt>
+<figure/mean_emotions.png, id=166, 462.2871pt x 88.1694pt>
 File: figure/mean_emotions.png Graphic file (type png)
 <use figure/mean_emotions.png>
-Package pdftex.def Info: figure/mean_emotions.png  used on input line 322.
+Package pdftex.def Info: figure/mean_emotions.png  used on input line 331.
 (pdftex.def)             Requested size: 469.75502pt x 89.5939pt.
-<figure/Afraid_projected_1_2_removed.png, id=169, 234.6366pt x 255.8358pt>
+<figure/Afraid_projected_1_2_removed.png, id=167, 234.6366pt x 255.8358pt>
 File: figure/Afraid_projected_1_2_removed.png Graphic file (type png)
 <use figure/Afraid_projected_1_2_removed.png>
-Package pdftex.def Info: figure/Afraid_projected_1_2_removed.png  used on input line 329.
+Package pdftex.def Info: figure/Afraid_projected_1_2_removed.png  used on input line 338.
 (pdftex.def)             Requested size: 230.18253pt x 250.99063pt.
-<figure/all_Afraid_removed.png, id=170, 234.6366pt x 255.8358pt>
+<figure/all_Afraid_removed.png, id=168, 234.6366pt x 255.8358pt>
 File: figure/all_Afraid_removed.png Graphic file (type png)
 <use figure/all_Afraid_removed.png>
-Package pdftex.def Info: figure/all_Afraid_removed.png  used on input line 335.
+Package pdftex.def Info: figure/all_Afraid_removed.png  used on input line 344.
 (pdftex.def)             Requested size: 230.18253pt x 250.99063pt.
- [5 <./figure/Mouse_Data_bw.png>]
-Overfull \hbox (0.42845pt too wide) in paragraph at lines 354--355
+[5]
+Overfull \hbox (0.42845pt too wide) in paragraph at lines 363--364
 \OT1/cmr/m/n/10 achieves slightly bet-ter sep-a-ra-bil-ity com-pared to some
  []
 
-[6 <./figure/Mouse_split_stack_Ts65Dn_bw.png>]
-<figure/final_perf_bw.png, id=194, 794.97pt x 578.16pt>
+<figure/final_perf_bw.png, id=190, 794.97pt x 578.16pt>
 File: figure/final_perf_bw.png Graphic file (type png)
 <use figure/final_perf_bw.png>
-Package pdftex.def Info: figure/final_perf_bw.png  used on input line 371.
+Package pdftex.def Info: figure/final_perf_bw.png  used on input line 380.
 (pdftex.def)             Requested size: 375.80544pt x 273.3232pt.
 
-Overfull \hbox (11.06631pt too wide) in paragraph at lines 375--376
+Overfull \hbox (11.06631pt too wide) in paragraph at lines 384--385
 \OT1/cmr/m/n/10 Karolin-ska Di-rected Emo-tional Faces (KDEF) [[]], which
  []
 
 
-Overfull \hbox (11.95628pt too wide) in paragraph at lines 381--382
+Overfull \hbox (11.95628pt too wide) in paragraph at lines 390--391
 \OT1/cmr/m/n/10 two di-rec-tions of vari-a-tion cal-cu-lated us-ing each method.
  []
 
-[7 <./figure/mean_emotions.png> <./figure/Afraid_projected_1_2_removed.png (PNG copy)> <./figure/all_Afraid_removed.png>]
-Overfull \hbox (13.95634pt too wide) in paragraph at lines 417--418
+[6 <./figure/Mouse_Data_bw.png>]
+Overfull \hbox (13.95634pt too wide) in paragraph at lines 426--427
 \OT1/cmr/m/n/10 ple-men-ta-tions of eigen-de-com-po-si-tion in high-dimensions,
  []
 
-[8 <./figure/final_perf_bw.png>]
-Overfull \hbox (14.26183pt too wide) in paragraph at lines 423--432
+[7 <./figure/Mouse_split_stack_Ts65Dn_bw.png>]
+Overfull \hbox (14.26183pt too wide) in paragraph at lines 432--441
 \OT1/cmr/m/n/10 for-mance when used with mul-ti-ple sep-a-rate back-grounds.
  []
 
-(./main5.bbl
+[8 <./figure/mean_emotions.png> <./figure/Afraid_projected_1_2_removed.png (PNG copy)> <./figure/all_Afraid_removed.png>] (./main5.bbl
 Underfull \hbox (badness 10000) in paragraph at lines 14--19
 []\OT1/cmr/m/n/10 Md. Mahi-ud-din Ahmed, A. Ran-jitha
  []
@@ -628,7 +626,7 @@ Underfull \hbox (badness 2213) in paragraph at lines 14--19
 \OT1/cmr/m/n/10 Katheleen J. Gar-diner.  Pro-tein dy-nam-ics
  []
 
-
+[9 <./figure/final_perf_bw.png>]
 Underfull \hbox (badness 5274) in paragraph at lines 49--54
 []\OT1/cmr/m/n/10 Dirk Ed-del-buet-tel and Con-rad Sander-son.
  []
@@ -638,7 +636,7 @@ Underfull \hbox (badness 3895) in paragraph at lines 49--54
 \OT1/cmr/m/n/10 Rcp-par-madillo: Ac-cel-er-at-ing r with high-
  []
 
-[9]
+
 Underfull \hbox (badness 2042) in paragraph at lines 68--71
 \OT1/cmr/m/n/10 value prob-lems: Tu-to-rial.  \OT1/cmr/m/it/10 arXiv preprint
  []
@@ -648,39 +646,37 @@ Underfull \hbox (badness 1389) in paragraph at lines 79--83
 []\OT1/cmr/m/n/10 Clara Higuera, Katheleen J. Gar-diner, and
  []
 
-) [10
-
-]
-<figure/PC2_density.png, id=235, 234.6366pt x 255.8358pt>
+) [10]
+<figure/PC2_density.png, id=236, 234.6366pt x 255.8358pt>
 File: figure/PC2_density.png Graphic file (type png)
 <use figure/PC2_density.png>
-Package pdftex.def Info: figure/PC2_density.png  used on input line 463.
+Package pdftex.def Info: figure/PC2_density.png  used on input line 472.
 (pdftex.def)             Requested size: 422.77664pt x 460.99205pt.
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 489.
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 498.
  [11
 
  <./figure/PC2_density.png (PNG copy)>]
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 489.
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 498.
  (./main5.aux)
-Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 489.
-Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 489.
+Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 498.
+Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 498.
 Package rerunfilecheck Info: File `main5.out' has not changed.
 (rerunfilecheck)             Checksum: D3AA7C311C33E0F63E233A353AB8F2D5;1038.
-Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 489.
+Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 498.
  ) 
 Here is how much of TeX's memory you used:
- 10364 strings out of 480623
- 159513 string characters out of 5906692
+ 10367 strings out of 480623
+ 159550 string characters out of 5906692
  462975 words of memory out of 5000000
- 25997 multiletter control sequences out of 15000+600000
- 542551 words of font info for 63 fonts, out of 8000000 for 9000
+ 25999 multiletter control sequences out of 15000+600000
+ 542859 words of font info for 64 fonts, out of 8000000 for 9000
  1137 hyphenation exceptions out of 8191
- 48i,24n,46p,1092b,518s stack positions out of 5000i,500n,10000p,200000b,80000s
-</usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx10.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx7.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmex10.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi5.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi7.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cmextra/cmmib7.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr12.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr17.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr5.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr7.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr8.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr9.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy7.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmti10.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmtt10.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/symbols/msbm10.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/symbols/msbm7.pfb>
-Output written on main5.pdf (11 pages, 1193792 bytes).
+ 48i,24n,46p,1092b,519s stack positions out of 5000i,500n,10000p,200000b,80000s
+</usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx10.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx7.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx9.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmex10.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi5.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi7.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cmextra/cmmib7.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr12.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr17.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr5.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr7.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr8.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr9.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy7.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmti10.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmtt10.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/symbols/msbm10.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/symbols/msbm7.pfb>
+Output written on main5.pdf (11 pages, 1215083 bytes).
 PDF statistics:
- 323 PDF objects out of 1000 (max. 8388607)
- 274 compressed objects within 3 object streams
+ 327 PDF objects out of 1000 (max. 8388607)
+ 277 compressed objects within 3 object streams
  69 named destinations out of 1000 (max. 500000)
  156 words of extra memory for PDF output out of 10000 (max. 10000000)
 

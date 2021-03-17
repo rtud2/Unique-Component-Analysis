@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.21 (TeX Live 2020) (preloaded format=pdflatex 2021.1.31)  15 MAR 2021 20:37
+This is pdfTeX, Version 3.14159265-2.6-1.40.21 (TeX Live 2020) (preloaded format=pdflatex 2021.1.31)  17 MAR 2021 09:16
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -778,13 +778,13 @@ Overfull \hbox (252.0pt too wide) has occurred while \output is active
 Package natbib Warning: There were undefined citations.
 
 
-./main.tex:315: LaTeX Error: \begin{methods} on input line 87 ended by \end{document}.
+./main.tex:313: LaTeX Error: \begin{methods} on input line 87 ended by \end{document}.
 
 See the LaTeX manual or LaTeX Companion for explanation.
 Type  H <return>  for immediate help.
  ...                                              
                                                   
-l.315 \end{document}
+l.313 \end{document}
                     
 Your command was ignored.
 Type  I <command> <return>  to replace it with another command,
@@ -807,7 +807,7 @@ LaTeX Warning: There were undefined references.
 Here is how much of TeX's memory you used:
  7319 strings out of 480623
  106801 string characters out of 5906692
- 381147 words of memory out of 5000000
+ 381146 words of memory out of 5000000
  23072 multiletter control sequences out of 15000+600000
  586373 words of font info for 115 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191

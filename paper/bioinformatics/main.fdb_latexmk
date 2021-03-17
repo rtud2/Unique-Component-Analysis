@@ -1,12 +1,12 @@
 # Fdb version 3
-["bibtex main"] 1615858566 "main.aux" "main.bbl" "main" 1615858673
+["bibtex main"] 1615990587 "main.aux" "main.bbl" "main" 1615990632
   "/usr/share/texlive/texmf-dist/bibtex/bst/base/plain.bst" 1612289690 20613 bd3fbfa9f64872b81ac57a0dd2ed855f ""
-  "main.aux" 1615858607 6609 90e5fdd61317a71763889423649789d1 "pdflatex"
+  "main.aux" 1615990619 6609 90e5fdd61317a71763889423649789d1 "pdflatex"
   "mybib.bib" 1615846910 21279 2f6d2ea3f363152ced0b0f1bad5b5fa3 ""
   (generated)
-  "main.blg"
   "main.bbl"
-["pdflatex"] 1615858673 "main.tex" "main.pdf" "main" 1615858673
+  "main.blg"
+["pdflatex"] 1615990619 "main.tex" "main.pdf" "main" 1615990632
   "/home/robintu/.texlive2020/texmf-var/web2c/pdftex/pdflatex.fmt" 1612110640 2419826 c0266fb2d011a3c024ed3d099fcbe8ac ""
   "/usr/share/texlive/texmf-dist/fonts/enc/dvips/ly1/texnansi.enc" 1276641224 6938 5135be6a8802f13a7faf296d1959a1ab ""
   "/usr/share/texlive/texmf-dist/fonts/map/fontname/texfonts.map" 1577235249 3524 cb3e574dea2d1052e39280babc910dc8 ""
@@ -139,10 +139,10 @@
   "figure/all_Afraid_removed.png" 1613675844 91473 0f383a057b1b171676a8a1a11f2bc5fb ""
   "figure/final_perf_color_line.png" 1615848765 151066 6dcc51f85d6d7592c5006a3aa99ad9ab ""
   "figure/mean_emotions.png" 1613675844 50917 917ae9cbae707d5467193edf8c7fe694 ""
-  "main.aux" 1615858607 6609 90e5fdd61317a71763889423649789d1 "pdflatex"
-  "main.bbl" 1615858566 4278 1d9571f381825f95caba26319d8174f8 "bibtex main"
-  "main.tex" 1615858672 39640 c2664ba3a0d7a87ad2d4ec6cc7552e7a ""
+  "main.aux" 1615990619 6609 90e5fdd61317a71763889423649789d1 "pdflatex"
+  "main.bbl" 1615990587 4278 1d9571f381825f95caba26319d8174f8 "bibtex main"
+  "main.tex" 1615990630 39638 886450ca784393754dd7a437e8edd6f5 ""
   (generated)
-  "main.log"
   "main.pdf"
+  "main.log"
   "main.aux"

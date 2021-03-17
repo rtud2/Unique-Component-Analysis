@@ -36,9 +36,19 @@
 %\date{August 2020}
 
 \begin{document}
-\twocolumn
 \date{}
-\maketitle
+\twocolumn[
+  \begin{@twocolumnfalse}
+    \maketitle
+\begin{abstract}
+
+\noindent\textbf{Motivation: }Statistical analyses of high-throughput sequencing data have re-shaped the biological sciences. In spite of myriad advances, recovering interpretable biological signal from data corrupted by technical noise remains a prevalent open problem. Several classes of procedures, among them classical dimensionality reduction techniques and others incorporating subject-matter knowledge, have provided effective advances. However, no procedure currently satisfies the dual objectives of recovering stable and relevant features simultaneously.\\
+\textbf{Results: }Inspired by recent proposals for making use of control data in the removal of unwanted variation, we propose a variant of principal component analysis (PCA), sparse contrastive PCA that extracts sparse, stable, interpretable and relevant biological signal. The new methodology is compared to competing dimensionality reduction approaches through a simulation study and via analyses of several publicly available protein expression, microarray gene expression and single-cell transcriptome sequencing datasets.\\
+\textbf{Availability and Implementation: } A free and open-source software implementation of the methodology, the UCA R package, is made available via GitHub. Code for all analyses presented in this article is also available via GitHub. \\
+\textbf{Contact: } robintu2@illinois.edu
+\end{abstract}
+  \end{@twocolumnfalse}
+  ]
 \section{Introduction}
 
 Capturing patterns of variation present in a dataset is an important step in exploratory data analysis and unsupervised learning. Popular methods include principal component analysis (PCA) \cite{pca}, nonnegative matrix factorization \cite{Lee1999}, projection pursuit \cite{pp}, and independent component analysis \cite{ica}. Frequently, however, many of the identified patterns may actually arise from systematic or technical variation, for example batch effects, that are not of substantive interest.
