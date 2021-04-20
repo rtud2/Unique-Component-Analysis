@@ -3,6 +3,8 @@
 A technique to carry out contrastive Principal Component Analysis with multiple backgrounds based on Lagrange Multipliers.
 UCA can be used with multiple background data to remove known variation from multiple sources. UCA is implemented in both the traditional manner with covariance matrices (`method = cov`) and the high-dimensional data by operating directly on the data matrix (`method = data`). UCA does not require choosing the tuning parameter.
 
+For mre details, you can read our paper on [arxiv](https://arxiv.org/abs/2104.08157)
+
 ##  Download
 You may compile directly from source via command line or shell, using the UCA folder with `R CMD build UCA`. Note, The package depends on `Rcpp`, `RcppArmadillo`, and `RSpectra`, so you will need those installed before you can compile.
 
