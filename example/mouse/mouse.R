@@ -6,6 +6,7 @@ library(RSpectra)
 library(uca)
 library(latex2exp)
 library(data.table)
+library(pcaMethods)
 source("../../functions/helper_functions.R")
 
 ## ##############################################################
@@ -37,6 +38,12 @@ covB = cov(B)
 covB2 = cov(B2)
 
 uca_res <- X %*% uca(X, B, nv = 2)$vectors
+
+## ##############################################################
+## ppca
+## ##############################################################
+ppca_res <- data.matrix(X) %*% ppca(X, nPcs = 2)@loadings
+
 ## ##############################################################
 ## standard pca
 ## ##############################################################
@@ -83,10 +90,11 @@ cpca5 = pos_corr(cpca5, uca_res)
 cpca7 = pos_corr(cpca7, uca_res)
 cpca100 = pos_corr(cpca100, uca_res)
 cpcapp = pos_corr(cpcapp, uca_res)
+ppca_res = pos_corr(ppca_res, uca_res)
 
 n = nrow(X)
-df = data.frame(pc1 = c(uca_res[,1], pca[,1], cpca1[,1], cpca3[,1], cpca5[,1], cpca7[,1], cpca100[,1], cpcapp[,1]),
-                pc2 = c(uca_res[,2], pca[,2], cpca1[,2], cpca3[,2], cpca5[,2], cpca7[,2], cpca100[,2], cpcapp[,2]),
+df = data.frame(pc1 = c(uca_res[,1], pca[,1], cpca1[,1], cpca3[,1], cpca5[,1], cpca7[,1], cpca100[,1], cpcapp[,1], ppca_res[,1]),
+                pc2 = c(uca_res[,2], pca[,2], cpca1[,2], cpca3[,2], cpca5[,2], cpca7[,2], cpca100[,2], cpcapp[,2], ppca_res[,2]),
                 Method = factor(c(rep("UCA", n),
                            rep("PCA", n),
                            rep("cPCA alpha = 0.5", n),
@@ -94,10 +102,18 @@ df = data.frame(pc1 = c(uca_res[,1], pca[,1], cpca1[,1], cpca3[,1], cpca5[,1], c
                            rep("cPCA alpha = 5", n),
                            rep("cPCA alpha = 10", n),
                            rep("cPCA alpha = 100", n),
-                           rep("cPCApp", n)),
-                           levels = c("cPCA alpha = 0.5", "cPCA alpha = 1", "cPCA alpha = 5", "cPCA alpha = 10", "cPCA alpha = 100", "PCA", "cPCApp","UCA"),
-                           labels = c(TeX("cPCA $\\lambda =0.5$"), TeX("cPCA $\\lambda =1$"),TeX("cPCA $\\lambda =5$"), TeX("cPCA $\\lambda =10$") , TeX("cPCA $\\lambda =100$"),  "PCA", TeX("cPCA$++$"),"UCA") ),
-                           Classes = rep(classes, 8))
+                           rep("cPCApp", n),
+                           rep("PPCA", n)),
+                           levels = c("cPCA alpha = 0.5", "cPCA alpha = 1", "cPCA alpha = 5", "cPCA alpha = 10", "cPCA alpha = 100", "PCA", "PPCA", "cPCApp", "UCA"),
+                           labels = c(TeX("cPCA $\\lambda =0.5$"),
+                                      TeX("cPCA $\\lambda =1$"),
+                                      TeX("cPCA $\\lambda =5$"),
+                                      TeX("cPCA $\\lambda =10$"),
+                                      TeX("cPCA $\\lambda =100$"),
+                                      "PCA",
+                                      "PPCA",
+                                      TeX("cPCA$++$"), "UCA")),
+                           Classes = rep(classes, 9))
 
 # new_lab <- as_labeller(c(`cPCA alpha = 0.5` = bquote("cPCA"~alpha==~"0.5"),
 #                          `cPCA alpha = 1` = bquote("cPCA"~alpha==~"1"),
@@ -120,6 +136,21 @@ mouse_comparison <- ggplot(df, aes(x = pc1, y = pc2, color = Classes)) +
         )
 
 ggsave("Mouse_Data_bw.png", mouse_comparison, width = 11, height = 8, units = "in")
+
+mouse_comparison <- ggplot(df, aes(x = pc1, y = pc2, color = Classes)) +
+  geom_point(aes(shape = Classes), alpha = 0.7) +
+  #scale_color_grey()+
+  facet_wrap(~ Method, scale = "free", nrow = 2, labeller = label_parsed)+
+  labs(x = "Component 1", y = "Component 2")+
+  theme_bw()+
+  theme(legend.position = "bottom",
+        strip.text = element_text(size = 20),
+        axis.title = element_text(size = 15),
+        axis.text = element_text(size = 13), 
+        legend.text = element_text(size = 13),
+        legend.title = element_text(size = 13)
+        )
+ggsave("Mouse_Data_ppca.png", mouse_comparison, width = 11, height = 8, units = "in")
 
 
 
