@@ -2,16 +2,20 @@
 #' @useDynLib uca, .registration = TRUE
 NULL
 
-#' bisection_data
+#' Use bisection to find the optimal lagrange multiplier for a single background
+#' without constructing covariance matrices
 #'
-#' compute the UCA for single background using SVD and QR. good for bigger data where loading the covariance matrix is difficult
-#' 
-#' @param A a n1xp data matrix
-#' @param B a n2xp data matrix
+#' Use bisection method to find the optimal Lagrange multiplier using data
+#' matrices and a single background matrix. This is useful when constructing
+#' the covariance matrix is computationally intensive.
+#' @param A a n1 x p Target data matrix
+#' @param B a n2 x p Background data matrix
 #' @param limit upperbound for the lagrange multiplier.
 #' @param maxit maximum iterations
 #' @param tol tolerance for convergence criteria
-#' @return list of tau, largest eigenvalue, and score
+#' @return list of two elements:
+#'  * tau: the lagrange multiplier
+#'  * score: eigenvalue associated with tau
  
 bisection_data <- function(A, B, limit = 20L, maxit = 1E5L, tol = 1E-6) {
   right <- rbind(A, B)
@@ -31,10 +35,10 @@ bisection_data <- function(A, B, limit = 20L, maxit = 1E5L, tol = 1E-6) {
   og_upper_lim <- f_val[[2]]$tau <- limit
 
   if (f_val[[1]]$score >= 0) {
-    warning("Redundant Constraint: Lagrange Multiplier is negative. Setting lambda to 0 \n")
+    warning("Redundant Constraint: Lagrange Multiplier is negative.
+            Setting lambda to 0 \n")
     return(f_val[[1]]);
   } else {
-    
     for (iter in 1L:maxit) {
       limit <- c(f_val[[1]]$tau, f_val[[2]]$tau)
       if (limit[2] - limit[1] < tol * limit[1]) {
@@ -59,28 +63,33 @@ bisection_data <- function(A, B, limit = 20L, maxit = 1E5L, tol = 1E-6) {
     }
 
     if (round(tau_score$tau) == og_upper_lim) {
-      warning("Lagrange Multiplier is near upperbound. Consider increasing the upperbound.(default is 20)\n")
+      warning("Lagrange Multiplier is near upperbound.
+              Consider increasing the upperbound.(default is 20)\n")
     }
-    return(f_val[[ which.min(abs(c(f_val[[1]]$score, f_val[[2]]$score))) ]])
+    return(f_val[[which.min(abs(c(f_val[[1]]$score, f_val[[2]]$score)))]])
   }
 }
 
-
-#' bisection_data_multiple
+#' Use bisection to find the optimal lagrange multiplier for multiple background
+#' without constructing covariance matrices
 #'
-#' Solve for the optimal lagrange multiplier for the jth background. used only when multiple backgrounds exist.
-#' 
-#' @param B_focus a nxp data matrix of the background we're solving lagrangian for
+#' Use bisection method to find the optimal Lagrange multiplier using data
+#' matrices and multiple background matrices. This is useful when constructing
+#' the covariance matrix is computationally intensive.
+#' @param B_focusn x p data matrix of background matrix to solve lagrangian for
 #' @param t_A precomputed A transpose
 #' @param t_B precomputed B transpose
 #' @param right precomputed right long matrix: rbind(A, B)
 #' @param svd_right precomputed svd of right matrix
-#' @param lambda a j dimensional vector with possible lagrange multipliers for each background data matrix
-#' @param j the specific background you're solving for
-#' @param limit upperbound for the lagrange multiplier.
+#' @param lambda j dimensional vector with candidate lagrange multipliers for
+#' each background data matrix
+#' @param j index of specific background you're solving for
+#' @param limit upperbound for the lagrange multiplier
 #' @param maxit maximum iterations
 #' @param tol tolerance for convergence criteria
-#' @return list of tau, largest eigenvalue, and score
+#' @return list of two elements:
+#'  * tau: the lagrange multiplier
+#'  * score: eigenvalue associated with tau
 bisection_data_multiple <- function(B_focus,
                                     t_A,
                                     t_B,
@@ -107,9 +116,10 @@ bisection_data_multiple <- function(B_focus,
                                     tau = 0,
                                     B = B_focus)
   og_upper_lim <- f_val[[2]]$tau <- limit
- 
+
   if (f_val[[1]]$score >= 0) {
-    warning("Redundant Constraint: Lagrange Multiplier is negative. Setting lambda to 0 \n");
+    warning("Redundant Constraint: Lagrange Multiplier is negative.
+            Setting lambda to 0 \n");
     return(f_val[[1]])
   } else {
     for (iter in 1:maxit) {
@@ -123,12 +133,13 @@ bisection_data_multiple <- function(B_focus,
 
       lambda_B[[j]] <-  -0.5 * sum(limit) * t_B[[j]]
 
-      tau_score <- multiple_score_calc_cpp(left = do.call(cbind, c(list(t_A), lambda_B)),
-                                      right = right,
-                                      right_u = svd_right$u,
-                                      right_d = svd_right$d,
-                                      tau = 0.5 * sum(limit),
-                                      B = B_focus)
+      tau_score <- multiple_score_calc_cpp(
+                        left = do.call(cbind, c(list(t_A), lambda_B)),
+                        right = right,
+                        right_u = svd_right$u,
+                        right_d = svd_right$d,
+                        tau = 0.5 * sum(limit),
+                        B = B_focus)
 
       if (tau_score$score < 0) {
        f_val[[1]] <- tau_score
@@ -137,51 +148,61 @@ bisection_data_multiple <- function(B_focus,
       }
   }
       if (round(tau_score$tau) == og_upper_lim) {
-        warning("Lagrange Multiplier is near upperbound. Consider increasing the upperbound.(default is 20) \n")
+        warning("Lagrange Multiplier is near upperbound.
+                Consider increasing the upperbound.(default is 20) \n")
       }
-      return(f_val[[which.min(abs(c(f_val[[1]]$score, f_val[[2]]$score)))]]) 
+      return(f_val[[which.min(abs(c(f_val[[1]]$score, f_val[[2]]$score)))]])
     }
 }
 
-
-#' product_svd_multiple
-#' 
-#' Solving for the unique components using SVD and QR in the instance of multiple backgrounds.
-#' 
+#' UCA for multiple backgrounds using data matrices
+#'
+#' Wrapper function for UCA with multiple background datasets with data
+#' matrices. We use a sequence of SVD and QR decomposition (Product-SVD).
+#' Use different algorithms to find the optimal Lagrangian
 #' @param A  Target Data Matrix. n1 x p dimensions
 #' @param B  List of k Background Data Matrix. n_k x p dimensions
-#' @param lambda contrastive parameters if known. used to start algorithm. defaults to NULL
-#' @param nv number of uca components to calculate
-#' @param algo which algorithm to use. default algo == "bisection". If algo = "optim", L-BFGS-S optimization is used instead. algo== "optim" can improve speed
-#' @param max_iter maximum number of iterations before giving up
-#' @param tol convergence criteria for coordinate descent
-#' @return list of tau, largest eigenvalue, and score
-product_svd_multiple <- function(A,
-                                 B,
-                                 lambda = NULL,
-                                 nv = 2L,
-                                 max_iter = 1E5L,
-                                 tol = 1E-6,
-                                 algo = "bisection",
-                                 ...) {
-  
+#' @param lambda initial guess for Lagrange Multiplier. Default NULL.
+#' algo = "bisection" only
+#' @param nv number of uca components to estimate
+#' @param algo which algorithm to use. default algo == "bisection". If
+#' algo = "cd", L-BFGS-B optimization is used instead for coordinate descent.
+#' @param max_iter maximum iterations for all algorithms if tolerance is not
+#' reached. default 1E5.
+#' @param tol tolerance for stopping criteria for all algorithms. default 1E-6
+#' @param ... additional parameters to pass in to `bisection_data_multiple()`
+#' and `optim_data_cd()`
+#' @return list of three elements:
+#'  * tau: the optimal lagrange multiplier(s)
+#'  * values: eigenvalue associated with tau(s)
+#'  * vectors: top `nv` eigenvectors associated with tau(s)
+data_multiple <- function(A,
+                          B,
+                          lambda = NULL,
+                          nv = 2L,
+                          max_iter = 1E5L,
+                          tol = 1E-6,
+                          algo = "bisection",
+                          ...) {
+
   #initialize starting point if one isn't supplied. greedy start
   if (length(lambda) == 0) {
-    #we use A and B here instead of divided b/c they divide in bisection_multiple function
-    # do not initialize the first one since it just gets overwritten in step 1 of coordinate descent.
+    # use A and B here instead of A/B_divided b/c already divided in
+    # `bisection_multiple`
+    # do not pre-initialize first iteration since it's overwritten in step 1 of
+    # coordinate descent.
     lambda <- sapply(seq_along(B),
                      function(zz) {
                          optim_data_cd(A, B[[zz]], ...)$tau
                      })
   }
-  
+
   t_A <- t(A)
   t_B <- lapply(B, t)
   right <- t(do.call(cbind, c(list(t_A), t_B)))
   svd_right <- arma_svd(right)
-  
-  score = Inf; 
-  
+  score <- Inf
+
   #coordinate descent
   if (algo == "bisection") {
     for (i in 1L:max_iter) {
@@ -203,7 +224,7 @@ product_svd_multiple <- function(A,
          break
       }
     }
-  } else if (algo == "optim") {
+  } else if (algo == "cd") {
     for (i in 1L:max_iter) {
       old_score <- score
       for (j in seq_along(B)) {

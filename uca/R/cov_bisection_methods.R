@@ -1,14 +1,16 @@
-#' score_calc
+#' Calculate the values of the Lagrangian
 #'
-#' Calculate the derivative of Lagrangian.
-#' 
+#' Return the value and derivative of the Lagrangian
+#'
 #' @param A Target Covariance Matrix
 #' @param B list of background covariance(s).
 #' @param tau lowerbound for root finding
-#' @return list of tau (the lagrangian), eigenvector associated with tau, and derivative value of the lagrange multiplier
+#' @return list of three elements:
+#'  * tau, the lagrange multiplier,
+#'  * eigenvalues associated with tau
+#'  * derivative value of the lagrangian
 #' @importFrom methods as
 #' @importFrom RSpectra eigs_sym
-#' 
 score_calc <- function(A, B, tau) {
   eigen_calc <- eigs_sym(A - tau * B, 1L, "LA")
   return(list(
@@ -19,27 +21,27 @@ score_calc <- function(A, B, tau) {
     tau = tau))
   }
 
-
-#' bisection_cov
+#' Use bisection to find the optimal lagrange multiplier for a single background
 #'
-#' Use bisection method to find the optimal Lagrangian for solving unique component analysis (uca)
-#' 
+#' Use bisection method to find the optimal Lagrange multiplier when provided
+#' covariance matrices and a single background matrix
 #' @param A Target Covariance Matrix
-#' @param B Background Covariance Matrix. 
+#' @param B Background Covariance Matrix.
 #' @param nv number of eigenvectors to use
 #' @param limit upperbound of lagrange multiplier
 #' @param maxit maxium number of iterations for the algorithm to run
 #' @param tol tolerance for when to stop the algorithm
-#' @return the final list of tau (the optimal lagrange multiplier), vector (eigenvector)
-#' associated with tau, value (eigenvalue), and score (derivative value of the lagrangian)
-
+#' @return list of two elements:
+#'  * tau: the lagrange multiplier
+#'  * score: eigenvalue associated with tau
 bisection_cov <- function(A, B, limit = 50, maxit = 1E5L, nv = 1, tol = 1E-6) {
   f_val <- vector(mode = "list", length = 2L)
   f_val[[1]] <- score_calc(A, B, 0)
   og_upper_lim <- f_val[[2]]$tau <- limit
 
   if (f_val[[1]]$score >= 0) {
-    warning("Redundant Constraint: Lagrange Multiplier is negative. Setting lambda to 0 \n");
+    warning("Redundant Constraint:
+            Lagrange Multiplier is negative. Setting lambda to 0 \n")
     return(f_val[[1]]);
   }else{
     for (iter in 1L:maxit) {
@@ -67,21 +69,28 @@ bisection_cov <- function(A, B, limit = 50, maxit = 1E5L, nv = 1, tol = 1E-6) {
   }
 }
 
-#' cov_multiple
+#' UCA for multiple backgrounds using covariance matrices
 #'
-#' UCA for multiple background datasets, with covariance matrices.
-#' Use different methods to find the optimal Lagrangian for solving UCA of each background dataset.
-#'
+#' Wrapper function for UCA with multiple background datasets with covariance
+#' matrices. Use different algorithms to find the optimal Lagrangian
 #' @param A Target Covariance Matrix
 #' @param B list of background covariance(s).
-#' @param lambda initial guess on what the Lagrange Multiplier should be. Default NULL
+#' @param lambda initial guess for Lagrange Multiplier. Default NULL.
+#' algo = "bisection" only
 #' @param nv number of uca components to estimate
-#' @param max_iter maximum iterations for coordinate descent, if tolerance is not reached. default 1E5
-#' @param tol tolerance for stopping criteria of coordinate descent. default 1E-6
-#' @param algo which algorithm to use. default algo == "bisection". If algo = "cd", L-BFGS-S optimization is used instead for coordinate descent. algo== "gd" than L-BFGS-S optimizes all lambda's simultaenously (gradient descent). 
-#' @param ... other parameters to pass in to bisection(...)
-#' @return for each background covariance matrix in B, return list of tau (the optimal lagrange multiplier), vectors(eigenvector)
-#'  associated with largest value (eigenvalue)
+#' @param max_iter maximum iterations for all algorithms if tolerance is not
+#' reached. default 1E5.
+#' @param tol tolerance for stopping criteria for all algorithms. default 1E-6
+#' @param algo which algorithm to use. default algo == "bisection". If
+#' algo = "cd", L-BFGS-B optimization is used instead for coordinate descent.
+#' algo = "gd" than L-BFGS-B optimizes all lambdas simultaenously with gradient
+#' descent
+#' @param ... additional parameters to pass in to `bisection()` and
+#' `optim_cov_cd()`
+#' @return list of three elements:
+#'  * tau: the optimal lagrange multiplier(s)
+#'  * values: eigenvalue associated with tau(s)
+#'  * vectors: top `nv` eigenvectors associated with tau(s)
 #' @importFrom RSpectra eigs_sym
 
 cov_multiple <- function(A,
@@ -134,5 +143,7 @@ cov_multiple <- function(A,
 
 
   dca <- eigs_sym(A - Reduce("+", Map("*", lambda, B)), nv, "LA")
- return(list(values = dca$values, vectors = dca$vectors, tau = lambda))
+ return(list(values = dca$values,
+             vectors = dca$vectors,
+             tau = lambda))
 }

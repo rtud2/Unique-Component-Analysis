@@ -134,11 +134,11 @@ uca <- function(A,
                              B)
       }
 
-      product_svd_multiple(A = A_divided,
-                           B = B_divided,
-                           nv = nv,
-                           algo = algo,
-                           ...)
+      data_multiple(A = A_divided,
+                    B = B_divided,
+                    nv = nv,
+                    algo = algo,
+                    ...)
 
       } else {
       #run single background
