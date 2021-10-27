@@ -3,7 +3,73 @@
 
 #' Unique Component Analysis
 #'
-#' Run unique component analysis
+#' @description
+#' `uca` performs unique component analysis on a given target numeric data or
+#' covariance matrix `A`, for a set of background data(s) or covariance 
+#' matrix(s) B. `uca` returns a list with the eigenvalues, eigenvectors, and 
+#' optimal contrastive parameter(s).
+#'
+#' @details
+#' For a single background, the unique component analysis (UCA) model is
+#'
+#'      max_v{v' (A - lambda B) v} such that (v' B v) / (v' v) = 1
+#'
+#' Where p x `nv` matrix v maximizes the above for a p x p target covariance
+#' matrix `A` and a p x p background covariance matrix `B`, where lambda
+#' satisfies (v' B v) / (v' v) = 1.
+#'
+#' To run UCA with a single background, `B` should be a matrix or a list of one
+#' element. By default, uca assumes p >> n, therefore A and B are n_{a} x p and
+#' n_{b} x p data matrices, respectively. Specify `method = "cov"` if A and B
+#'  are both p x p covariance matrices.
+#'
+#' For k backgrounds, the UCA model is:
+#'
+#'      max_v{v' (A - sum(lambda_j B_j)) v} such that (v' B_j v) / (v' v) = 1
+#'                                                    for j in 1:k
+#'
+#' To run UCA with a k background data, `B` should be a list of k elements,
+#' with matrices B_1 as B[[1]], ..., and B_k as B[[k]].
+#' By default, uca assumes p >> n, therefore A and B_1, ..., B_k are n_{a} x p,
+#' n_{b1} x p, ..., n_{bk} x p data matrices, respectively. Specify
+#' `method = "cov"` if A, B_1, ..., and B_k are all p x p covariance matrices.
+#'
+#' The fit is done by finding lambda (lambda_j's) and v which maximize the
+#' Lagrangian. This can be done with bisection, coordinate descent, or gradient
+#' descent, which can be specified by setting `algo = "bisection"`,
+#' `algo = "cd"`, and `algo = "gd"` respectively. Coordinate descent and
+#' gradient descent are implemented using the L-BFGS-B algorithm in `optim`.
+#'
+#' method = "data" circumvents computing the covariance matrices by using QR
+#' and SVD on a product of matrices. see and Tu et al. and Golub et al. for
+#' additional detail.
+#'
+#' @note
+#' gradient descent for multi-background uca is not yet implemented.
+#' @examples
+#' # UCA, single background, with data matrices
+#' x <- matrix(rnorm(150), 30, 5)
+#' y <- matrix(rnorm(250), 50, 5)
+#' res_data1 <- uca(x, y, method = "data")
+#'
+#'
+#' # UCA, single background, with covariance matrices
+#' A <- matrix(rnorm(25), 5, 5)
+#' B <- matrix(rnorm(25), 5, 5)
+#' res_cov1 <- uca(A = A, B = B, method = "cov")
+#'
+#'
+#' # UCA, multiple backgrounds, with data matrices, scaling everything
+#' x <- matrix(rnorm(150), 30, 5)
+#' y1 <- matrix(rnorm(250), 50, 5)
+#' y2 <- matrix(rnorm(250), 50, 5)
+#' res_data2 <- uca(x, list(y1, y2), method = "data", scale = T)
+#'
+#'
+#' # UCA, multiple backgrounds, with covariance matrices
+#'
+#'
+#'
 #' @param A Target Data or Covariance Matrix
 #' @param B list of background data or covariance matrices.
 #' @param nv number of uca components to estimate
