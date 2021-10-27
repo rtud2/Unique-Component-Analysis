@@ -14,9 +14,10 @@ NULL
 #' @param maxit maximum iterations
 #' @param tol tolerance for convergence criteria
 #' @return list of two elements:
-#'  * tau: the lagrange multiplier
-#'  * score: eigenvalue associated with tau
- 
+#' \itemize{
+#'  \item tau: the lagrange multiplier
+#'  \item score: eigenvalue associated with tau
+#'  }
 bisection_data <- function(A, B, limit = 20L, maxit = 1E5L, tol = 1E-6) {
   right <- rbind(A, B)
   svd_right <- arma_svd(right)
@@ -88,19 +89,12 @@ bisection_data <- function(A, B, limit = 20L, maxit = 1E5L, tol = 1E-6) {
 #' @param maxit maximum iterations
 #' @param tol tolerance for convergence criteria
 #' @return list of two elements:
-#'  * tau: the lagrange multiplier
-#'  * score: eigenvalue associated with tau
-bisection_data_multiple <- function(B_focus,
-                                    t_A,
-                                    t_B,
-                                    right,
-                                    svd_right,
-                                    lambda,
-                                    j,
-                                    limit = 20L,
-                                    maxit = 1E5,
-                                    tol = 1E-6) {
-
+#' \itemize{
+#'  \item tau: the lagrange multiplier
+#'  \item score: eigenvalue associated with tau
+#'  }
+bisection_data_multiple <- function(B_focus, t_A, t_B, right, svd_right, lambda,
+                                    j, limit = 20L, maxit = 1E5, tol = 1E-6) {
   #constants that don't really change if focused on j-th background
   old_right <- t(do.call(cbind, c(list(t_A),  t_B[-j])))
   lambda_B <- Map("*", -lambda, t_B)
@@ -173,18 +167,13 @@ bisection_data_multiple <- function(B_focus,
 #' @param ... additional parameters to pass in to `bisection_data_multiple()`
 #' and `optim_data_cd()`
 #' @return list of three elements:
-#'  * tau: the optimal lagrange multiplier(s)
-#'  * values: eigenvalue associated with tau(s)
-#'  * vectors: top `nv` eigenvectors associated with tau(s)
-data_multiple <- function(A,
-                          B,
-                          lambda = NULL,
-                          nv = 2L,
-                          max_iter = 1E5L,
-                          tol = 1E-6,
-                          algo = "bisection",
-                          ...) {
-
+#' \itemize{
+#'  \item tau: the optimal lagrange multiplier(s)
+#'  \item values: eigenvalue associated with tau(s)
+#'  \item vectors: top `nv` eigenvectors associated with tau(s)
+#'  }
+data_multiple <- function(A, B, lambda = NULL, nv = 2L, max_iter = 1E5L,
+                          tol = 1E-6, algo = "bisection", ...) {
   #initialize starting point if one isn't supplied. greedy start
   if (length(lambda) == 0) {
     # use A and B here instead of A/B_divided b/c already divided in

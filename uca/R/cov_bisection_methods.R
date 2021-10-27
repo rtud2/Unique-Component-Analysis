@@ -6,9 +6,11 @@
 #' @param B list of background covariance(s).
 #' @param tau lowerbound for root finding
 #' @return list of three elements:
-#'  * tau, the lagrange multiplier,
-#'  * eigenvalues associated with tau
-#'  * derivative value of the lagrangian
+#' \itemize{
+#'  \item tau, the lagrange multiplier,
+#'  \item eigenvalues associated with tau
+#'  \item derivative value of the lagrangian
+#'  }
 #' @importFrom methods as
 #' @importFrom RSpectra eigs_sym
 score_calc <- function(A, B, tau) {
@@ -32,8 +34,10 @@ score_calc <- function(A, B, tau) {
 #' @param maxit maxium number of iterations for the algorithm to run
 #' @param tol tolerance for when to stop the algorithm
 #' @return list of two elements:
-#'  * tau: the lagrange multiplier
-#'  * score: eigenvalue associated with tau
+#' \itemize{
+#'  \item tau: the lagrange multiplier
+#'  \item score: eigenvalue associated with tau
+#' }
 bisection_cov <- function(A, B, limit = 50, maxit = 1E5L, nv = 1, tol = 1E-6) {
   f_val <- vector(mode = "list", length = 2L)
   f_val[[1]] <- score_calc(A, B, 0)
@@ -88,9 +92,11 @@ bisection_cov <- function(A, B, limit = 50, maxit = 1E5L, nv = 1, tol = 1E-6) {
 #' @param ... additional parameters to pass in to `bisection()` and
 #' `optim_cov_cd()`
 #' @return list of three elements:
-#'  * tau: the optimal lagrange multiplier(s)
-#'  * values: eigenvalue associated with tau(s)
-#'  * vectors: top `nv` eigenvectors associated with tau(s)
+#' \itemize{
+#'  \item tau: the optimal lagrange multiplier(s)
+#'  \item values: eigenvalue associated with tau(s)
+#'  \item vectors: top `nv` eigenvectors associated with tau(s)
+#' }
 #' @importFrom RSpectra eigs_sym
 
 cov_multiple <- function(A,

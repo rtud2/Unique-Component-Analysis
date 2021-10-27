@@ -1,7 +1,9 @@
+#' @aliases uca-package
+"_PACKAGE"
+
 #' Unique Component Analysis
 #'
 #' Run unique component analysis
-#'
 #' @param A Target Data or Covariance Matrix
 #' @param B list of background data or covariance matrices.
 #' @param nv number of uca components to estimate
@@ -17,27 +19,24 @@
 #' bisection exists for backwards compatibility.
 #' @param ... additional parameters for `bisection_cov()`, `optim_cov_cd()`
 #' when `algo = "bisection"`:
-#'  * `limit` upper bound of lagrange multiplier
-#'  * `maxit` maximum number of iterations for algorithm to run
-#'  * `tol` tolerance to stop the algorithm
-#'  * `max_iter` maximum iteration for coordinate descent (multiple backgrounds)
+#' \itemize{
+#'  \item `limit` upper bound of lagrange multiplier
+#'  \item `maxit` maximum number of iterations for algorithm to run
+#'  \item `tol` tolerance to stop the algorithm
+#'  \item `max_iter` maximum iteration for coordinate descent (multi-background)
 #' when `algo = "cd"` or `algo = "gd"`:
 #'  * `maxit` maximum number of iterations for bfgs algorithm to run
 #' @return list of three elements:
-#'  * values (eigenvalues)
-#'  * vectors (eigenvectors) of unique component analysis
-#'  * tau optimal Lagrange Multiplier(s) associated with uca
+#' \itemize{
+#'  \item values (eigenvalues)
+#'  \item vectors (eigenvectors) of unique component analysis
+#'  \item tau optimal Lagrange Multiplier(s) associated with uca
+#'  }
 #' @importFrom RSpectra eigs_sym
 #' @export
 
-uca <- function(A,
-                B,
-                nv = 2,
-                method = "data",
-                center = FALSE,
-                scale = FALSE,
-                algo = "cd",
-                ...) {
+uca <- function(A, B, nv = 2, method = "data", center = FALSE, scale = FALSE,
+                algo = "cd", ...) {
   if (sum(class(B) %in% c("list", "matrix")) == 0) {
     stop("B is not a list of matrix, matrices")
   }

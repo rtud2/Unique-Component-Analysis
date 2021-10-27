@@ -33,9 +33,10 @@ gr_fun <- function(A, B, tau) {
 #' @param nv number of eigenvectors to use
 #' @param maxit maxium number of iterations for the algorithm to run
 #' @return list of two elements:
-#'  * values: optimal eigenvalue
-#'  * tau: the contrastive parameter (lagrange multiplier)
-
+#' \itemize{
+#'  \item values: optimal eigenvalue
+#'  \item tau: the contrastive parameter (lagrange multiplier)
+#'  }
 optim_cov_cd <- function(A, B, maxit = 5E2L, nv = 1) {
 
 optim_with_grad <- optim(par = 2,
@@ -87,10 +88,11 @@ obj_fun_multiple_gd <- function(A, B_unlist, tau) {
 #' @param nv number of eigenvectors to use
 #' @param maxit maxium number of iterations for the algorithm to run
 #' @return list of two elements:
-#'  * values: optimal eigenvalue
-#'  * tau: the contrastive parameter(s) (lagrange multiplier(s)) for each
+#' \itemize{
+#'  \item values: optimal eigenvalue
+#'  \item tau: the contrastive parameter(s) (lagrange multiplier(s)) for each
 #'  background in the multi. background setting
-
+#'  }
 optim_cov_bfgs_gd <- function(A, B, maxit = 5E2L, nv = 1) {
     n_bg <- length(B)
     gr_dsc_mthd <- optim(par = rep(2, n_bg),

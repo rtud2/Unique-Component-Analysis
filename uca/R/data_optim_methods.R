@@ -8,9 +8,10 @@
 #' @param B a n2 x p data matrix
 #' @param maxit maximum iterations
 #' @return list of two elements:
-#'  * values: eigenvalues
-#'  * tau: the contrastive parameter
-
+#' \itemize{
+#'  \item values: eigenvalues
+#'  \item tau: the contrastive parameter
+#'  }
 optim_data_cd <- function(A, B, maxit = 5E2L, nv = 1) {
   right <-  rbind(A, B)
   svd_right <- arma_svd(right)
@@ -50,14 +51,8 @@ optim_data_cd <- function(A, B, maxit = 5E2L, nv = 1) {
 #' @param j which background matrix are we focusing on
 #' @return value of the objective function
 #'
-obj_fn_multiple_cd <- function(lambda,
-                               B,
-                               t_A,
-                               t_B,
-                               lambda_B,
-                               right,
-                               svd_right,
-                               j) {
+obj_fn_multiple_cd <- function(lambda, B, t_A, t_B, lambda_B, right,
+                               svd_right, j) {
   lambda_B[[j]] <-  -lambda * t_B[[j]]
   left <- do.call(cbind, c(list(t_A), lambda_B))
   objective_fn <- multiple_score_calc_cpp(left,
@@ -83,14 +78,8 @@ obj_fn_multiple_cd <- function(lambda,
 #' @param j which background matrix are we focusing on
 #' @return value of the gradient fn
 
-gr_fn_multiple_cd <- function(lambda,
-                              B,
-                              t_A,
-                              t_B,
-                              lambda_B,
-                              right,
-                              svd_right,
-                              j) {
+gr_fn_multiple_cd <- function(lambda, B, t_A, t_B, lambda_B, right,
+                              svd_right, j) {
   lambda_B[[j]] <-  -lambda * t_B[[j]]
   left <- do.call(cbind, c(list(t_A), lambda_B))
   objective_gr <- multiple_score_calc_cpp(left,
@@ -115,17 +104,13 @@ gr_fn_multiple_cd <- function(lambda,
 #' @param svd_right svd of right data matrix object
 #' @param lambda the lagrange multiplier
 #' @return list of two elements:
-#'  * values: optimal eigenvalue
-#'  * tau: the contrastive parameter (lagrange multiplier) for single background
+#' \itemize{
+#'  \item values: optimal eigenvalue
+#'  \item tau: the contrastive parameter (lagrange multiplier) for single background
 #'  in the multi. background setting
-optim_cd_multiple <- function(B_focus,
-                              t_A,
-                              t_B,
-                              right,
-                              svd_right,
-                              lambda,
-                              j,
-                              maxit = 5E2) {
+#'  }
+optim_cd_multiple <- function(B_focus, t_A, t_B, right, svd_right, lambda,
+                              j, maxit = 5E2) {
 
   #constants that don't really change if focused on j-th background
   old_right <- t(do.call(cbind, c(list(t_A),  t_B[-j])))
