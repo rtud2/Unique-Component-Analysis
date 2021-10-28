@@ -12,11 +12,11 @@
 #' @details
 #' For a single background, the unique component analysis (UCA) model is
 #'
-#'      max_v{v' (A - lambda B) v} such that (v' B v) / (v' v) = 1
+#'\deqn{max_{v} v'(A - \lambda B)v \qquad \text{such that} (v'Bv) / (v'v) = 1}
 #'
 #' Where p x `nv` matrix v maximizes the above for a p x p target covariance
-#' matrix `A` and a p x p background covariance matrix `B`, where lambda
-#' satisfies (v' B v) / (v' v) = 1.
+#' matrix `A` and a p x p background covariance matrix `B`, where \eqn{\lambda}
+#' satisfies \eqn{(v' B v) / (v' v) = 1}.
 #'
 #' To run UCA with a single background, `B` should be a matrix or a list of one
 #' element. By default, uca assumes p >> n, therefore A and B are n_{a} x p and
@@ -25,20 +25,23 @@
 #'
 #' For k backgrounds, the UCA model is:
 #'
-#'      max_v{v' (A - sum(lambda_j B_j)) v} such that (v' B_j v) / (v' v) = 1
-#'                                                    for j in 1:k
+#' \deqn{max_{v} v'(A - \sum_{j=1}^{k}{\lambda_j B_j})v \qquad \text{such that}
+#'  (v' B_j v) / (v' v) = 1, \qquad \text{for } j in 1:k}
+#'
 #'
 #' To run UCA with a k background data, `B` should be a list of k elements,
-#' with matrices B_1 as B[[1]], ..., and B_k as B[[k]].
-#' By default, uca assumes p >> n, therefore A and B_1, ..., B_k are n_{a} x p,
-#' n_{b1} x p, ..., n_{bk} x p data matrices, respectively. Specify
-#' `method = "cov"` if A, B_1, ..., and B_k are all p x p covariance matrices.
+#' with matrices \eqn{B_1} as `B[[1]]`, ..., and \eqn{B_k} as `B[[k]]`.
+#' By default, uca assumes p >> n, therefore \eqn{A, B_1,\ldots, B_k} are 
+#' \eqn{n_{a} x p, n_{b1} x p, \ldots, n_{bk} x p} data matrices, respectively. 
+#' Specify `method = "cov"` if \eqn{A, B_1, \ldots, B_k} are all p x p 
+#' covariance matrices.
 #'
-#' The fit is done by finding lambda (lambda_j's) and v which maximize the
-#' Lagrangian. This can be done with bisection, coordinate descent, or gradient
-#' descent, which can be specified by setting `algo = "bisection"`,
-#' `algo = "cd"`, and `algo = "gd"` respectively. Coordinate descent and
-#' gradient descent are implemented using the L-BFGS-B algorithm in `optim`.
+#' The fit is done by finding \eqn{\lambda}( \eqn{\lambda_j}'s) and v which
+#' maximize the Lagrangian. This can be done with bisection, coordinate 
+#' descent, or gradient descent, which can be specified by setting
+#' `algo = "bisection"`, `algo = "cd"`, and `algo = "gd"` respectively.
+#' Coordinate descent and gradient descent are implemented using the L-BFGS-B
+#' algorithm in `optim`.
 #'
 #' method = "data" circumvents computing the covariance matrices by using QR
 #' and SVD on a product of matrices. see and Tu et al. and Golub et al. for
@@ -53,10 +56,10 @@
 #' res_data1 <- uca(x, y, method = "data")
 #'
 #'
-#' # UCA, single background, with covariance matrices
+#' # UCA, single background, with covariance matrices, using bisection
 #' A <- matrix(rnorm(25), 5, 5)
 #' B <- matrix(rnorm(25), 5, 5)
-#' res_cov1 <- uca(A = A, B = B, method = "cov")
+#' res_cov1 <- uca(A = A, B = B, method = "cov", algo = "bisection")
 #'
 #'
 #' # UCA, multiple backgrounds, with data matrices, scaling everything
@@ -66,8 +69,11 @@
 #' res_data2 <- uca(x, list(y1, y2), method = "data", scale = T)
 #'
 #'
-#' # UCA, multiple backgrounds, with covariance matrices
-#'
+#' # UCA, multiple backgrounds, with covariance matrices, using gradient desc.
+#' A <- matrix(rnorm(25), 5, 5)
+#' B1 <- matrix(rnorm(25), 5, 5)
+#' B2 <- matrix(rnorm(25), 5, 5)
+#' res_cov2 <- uca(A = A, B = list(B1, B2), method = "cov", algo = "gd")
 #'
 #'
 #' @param A Target Data or Covariance Matrix
