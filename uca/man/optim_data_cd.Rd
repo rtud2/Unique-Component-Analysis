@@ -5,7 +5,7 @@
 \title{BFGS implementation for single background using the data method
 (without using covariance matrix)}
 \usage{
-optim_data_cd(A, B, maxit = 500L, nv = 1)
+optim_data_cd(A, B, maxit = 500L)
 }
 \arguments{
 \item{A}{a n1 x p data matrix}

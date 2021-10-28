@@ -5,12 +5,11 @@
 #'
 #' @description
 #' `uca` performs unique component analysis on a given target numeric data or
-#' covariance matrix `A`, for a set of background data(s) or covariance 
-#' matrix(s) B. `uca` returns a list with the eigenvalues, eigenvectors, and 
+#' covariance matrix `A`, for a set of background data(s) or covariance
+#' matrix(s) B. `uca` returns a list with the eigenvalues, eigenvectors, and
 #' optimal contrastive parameter(s).
-#'
-#' @details
-#' For a single background, the unique component analysis (UCA) model is
+#' @aliases uca
+#' @details For a single background, the unique component analysis (UCA) model:
 #'
 #'\deqn{max_{v} v'(A - \lambda B)v \qquad \text{such that} (v'Bv) / (v'v) = 1}
 #'
@@ -28,16 +27,15 @@
 #' \deqn{max_{v} v'(A - \sum_{j=1}^{k}{\lambda_j B_j})v \qquad \text{such that}
 #'  (v' B_j v) / (v' v) = 1, \qquad \text{for } j in 1:k}
 #'
-#'
 #' To run UCA with a k background data, `B` should be a list of k elements,
 #' with matrices \eqn{B_1} as `B[[1]]`, ..., and \eqn{B_k} as `B[[k]]`.
-#' By default, uca assumes p >> n, therefore \eqn{A, B_1,\ldots, B_k} are 
-#' \eqn{n_{a} x p, n_{b1} x p, \ldots, n_{bk} x p} data matrices, respectively. 
-#' Specify `method = "cov"` if \eqn{A, B_1, \ldots, B_k} are all p x p 
+#' By default, uca assumes p >> n, therefore \eqn{A, B_1,\ldots, B_k} are
+#' \eqn{n_{a} x p, n_{b1} x p, \ldots, n_{bk} x p} data matrices, respectively.
+#' Specify `method = "cov"` if \eqn{A, B_1, \ldots, B_k} are all p x p
 #' covariance matrices.
 #'
 #' The fit is done by finding \eqn{\lambda}( \eqn{\lambda_j}'s) and v which
-#' maximize the Lagrangian. This can be done with bisection, coordinate 
+#' maximize the Lagrangian. This can be done with bisection, coordinate
 #' descent, or gradient descent, which can be specified by setting
 #' `algo = "bisection"`, `algo = "cd"`, and `algo = "gd"` respectively.
 #' Coordinate descent and gradient descent are implemented using the L-BFGS-B
@@ -66,7 +64,7 @@
 #' x <- matrix(rnorm(150), 30, 5)
 #' y1 <- matrix(rnorm(250), 50, 5)
 #' y2 <- matrix(rnorm(250), 50, 5)
-#' res_data2 <- uca(x, list(y1, y2), method = "data", scale = T)
+#' res_data2 <- uca(x, list(y1, y2), method = "data", scale = TRUE)
 #'
 #'
 #' # UCA, multiple backgrounds, with covariance matrices, using gradient desc.
@@ -89,13 +87,14 @@
 #' "bisection", "cd" (coordinate descent), and "gd" (gradient descent). For
 #' single background data, "cd" and "gd" are the same. default is "cd", but
 #' bisection exists for backwards compatibility.
-#' @param ... additional parameters for `bisection_cov()`, `optim_cov_cd()`
-#' when `algo = "bisection"`:
+#' @param ... additonal arguments for `bisection_cov()`, `optim_cov_cd()`
+#'  when \code{algo == "bisection"}
 #' \itemize{
 #'  \item `limit` upper bound of lagrange multiplier
 #'  \item `maxit` maximum number of iterations for algorithm to run
 #'  \item `tol` tolerance to stop the algorithm
 #'  \item `max_iter` maximum iteration for coordinate descent (multi-background)
+#'  }
 #' when `algo = "cd"` or `algo = "gd"`:
 #'  * `maxit` maximum number of iterations for bfgs algorithm to run
 #' @return list of three elements:
@@ -126,7 +125,7 @@ uca <- function(A, B, nv = 2, method = "data", center = FALSE, scale = FALSE,
       if (sum(sapply(lapply(B, dim), function(dims) {
                          all.equal(dims, dim(A))
             })) < length(B)) {
-        stop("at least one background dimension 
+        stop("at least one background dimension
              does not match target dimension")
       }
 

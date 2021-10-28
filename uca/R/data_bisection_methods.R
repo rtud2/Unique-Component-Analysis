@@ -77,7 +77,7 @@ bisection_data <- function(A, B, limit = 20L, maxit = 1E5L, tol = 1E-6) {
 #' Use bisection method to find the optimal Lagrange multiplier using data
 #' matrices and multiple background matrices. This is useful when constructing
 #' the covariance matrix is computationally intensive.
-#' @param B_focusn x p data matrix of background matrix to solve lagrangian for
+#' @param B_focus n x p data matrix of background matrix to solve lagrangian for
 #' @param t_A precomputed A transpose
 #' @param t_B precomputed B transpose
 #' @param right precomputed right long matrix: rbind(A, B)

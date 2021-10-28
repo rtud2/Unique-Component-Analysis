@@ -32,6 +32,7 @@ gr_fun <- function(A, B, tau) {
 #' @param B Background Covariance Matrix.
 #' @param nv number of eigenvectors to use
 #' @param maxit maxium number of iterations for the algorithm to run
+#' @importFrom stats optim
 #' @return list of two elements:
 #' \itemize{
 #'  \item values: optimal eigenvalue
@@ -87,6 +88,7 @@ obj_fun_multiple_gd <- function(A, B_unlist, tau) {
 #' @param B List of background Covariance Matrices
 #' @param nv number of eigenvectors to use
 #' @param maxit maxium number of iterations for the algorithm to run
+#' @importFrom stats optim
 #' @return list of two elements:
 #' \itemize{
 #'  \item values: optimal eigenvalue

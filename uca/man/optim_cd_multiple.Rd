@@ -19,6 +19,10 @@ optim_cd_multiple(B_focus, t_A, t_B, right, svd_right, lambda, j, maxit = 500)
 \item{svd_right}{svd of right data matrix object}
 
 \item{lambda}{the lagrange multiplier}
+
+\item{j}{index of background matrix focused on}
+
+\item{maxit}{maximum number of iterations for optim run. Default 5E2}
 }
 \value{
 list of two elements:

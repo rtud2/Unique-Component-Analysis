@@ -7,12 +7,13 @@
 #' @param A a n1 x p data matrix
 #' @param B a n2 x p data matrix
 #' @param maxit maximum iterations
+#' @importFrom stats optim
 #' @return list of two elements:
 #' \itemize{
 #'  \item values: eigenvalues
 #'  \item tau: the contrastive parameter
 #'  }
-optim_data_cd <- function(A, B, maxit = 5E2L, nv = 1) {
+optim_data_cd <- function(A, B, maxit = 5E2L) {
   right <-  rbind(A, B)
   svd_right <- arma_svd(right)
   t_A <- t(A)
@@ -48,6 +49,7 @@ optim_data_cd <- function(A, B, maxit = 5E2L, nv = 1) {
 #' @param right rbind(A, B), a (n1 + n2) x p data matrix
 #' @param svd_right svd of right data matrix object
 #' @param lambda the lagrange multiplier
+#' @param lambda_B list of background lagrange multiplier
 #' @param j which background matrix are we focusing on
 #' @return value of the objective function
 #'
@@ -75,6 +77,7 @@ obj_fn_multiple_cd <- function(lambda, B, t_A, t_B, lambda_B, right,
 #' @param right rbind(A, B), a (n1 + n2) x p data matrix
 #' @param svd_right svd of right data matrix object
 #' @param lambda the lagrange multiplier
+#' @param lambda_B list of background lagrange multiplier
 #' @param j which background matrix are we focusing on
 #' @return value of the gradient fn
 
@@ -103,6 +106,9 @@ gr_fn_multiple_cd <- function(lambda, B, t_A, t_B, lambda_B, right,
 #' @param right rbind(A, B), a (n1 + n2) x p data matrix
 #' @param svd_right svd of right data matrix object
 #' @param lambda the lagrange multiplier
+#' @param j index of background matrix focused on
+#' @param maxit maximum number of iterations for optim run. Default 5E2
+#' @importFrom stats optim
 #' @return list of two elements:
 #' \itemize{
 #'  \item values: optimal eigenvalue

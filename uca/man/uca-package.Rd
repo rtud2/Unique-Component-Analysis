@@ -6,5 +6,5 @@
 \alias{_PACKAGE}
 \title{uca: Unique Component Analysis}
 \description{
-Unique Component Analysis (UCA) looks for directions which maximize the covariance in a target dataset subject to minimizing the covariance in one or more background data set. This package allows you to work with either the original data matrix or the covariance matrix
+Unique Component Analysis (UCA) looks for directions which maximize the covariance in a target dataset subject to minimizing the covariance in one or more background data set. This package allows you to run UCA with either the original data matrix or the covariance matrix.
 }

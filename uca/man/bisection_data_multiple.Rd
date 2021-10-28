@@ -19,6 +19,8 @@ bisection_data_multiple(
 )
 }
 \arguments{
+\item{B_focus}{n x p data matrix of background matrix to solve lagrangian for}
+
 \item{t_A}{precomputed A transpose}
 
 \item{t_B}{precomputed B transpose}
@@ -37,8 +39,6 @@ each background data matrix}
 \item{maxit}{maximum iterations}
 
 \item{tol}{tolerance for convergence criteria}
-
-\item{B_focusn}{x p data matrix of background matrix to solve lagrangian for}
 }
 \value{
 list of two elements:

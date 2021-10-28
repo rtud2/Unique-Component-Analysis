@@ -16,6 +16,8 @@ gr_fn_multiple_cd(lambda, B, t_A, t_B, lambda_B, right, svd_right, j)
 
 \item{t_B}{list of transpose of B, a p x n2 data matrix}
 
+\item{lambda_B}{list of background lagrange multiplier}
+
 \item{right}{rbind(A, B), a (n1 + n2) x p data matrix}
 
 \item{svd_right}{svd of right data matrix object}
